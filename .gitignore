@@ -48,3 +48,5 @@ gradle-app.setting
 # IntelliJ
 out/
 
+# Spoon
+**/spooned/
