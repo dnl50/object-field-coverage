@@ -1,0 +1,11 @@
+ext {
+    junit4Version = '4.13'
+}
+
+dependencies {
+    implementation project(':plugin')
+
+    // JUnit + Mockito
+    implementation "junit:junit:${junit4Version}"
+    implementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
+}

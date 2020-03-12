@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+    id 'io.spring.dependency-management' version '1.0.6.RELEASE' apply false
+}
+
+group 'de.adesso'
+version '0.0.1-SNAPSHOT'
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    sourceCompatibility = 11
+    targetCompatibility = 11
+
+    repositories {
+        mavenCentral()
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    dependencyManagement {
+        dependencies {
+            dependency "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
+            dependency "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+            dependency "org.assertj:assertj-core:${assertJVersion}"
+            dependency "fr.inria.gforge.spoon:spoon-core:${spoonCoreVersion}"
+            dependency "org.projectlombok:lombok:${lombokVersion}"
+            dependency "org.apache.commons:commons-math3:${commonsMathVersion}"
+            dependency "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+        }
+    }
+
+    dependencies {
+        // Log4j
+        implementation 'org.slf4j:slf4j-log4j12'
+
+        // Spoon
+        implementation 'fr.inria.gforge.spoon:spoon-core'
+
+        // Apache Commons
+        implementation 'org.apache.commons:commons-math3'
+
+        // JUnit + Mockito + AssertJ
+        testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+        testImplementation 'org.mockito:mockito-junit-jupiter'
+        testImplementation 'org.assertj:assertj-core'
+
+        // Lombok
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+    }
+
+}
+
