@@ -52,7 +52,7 @@ public class DirectAccessAccessibilityAwareFieldFinder implements AccessibilityA
 
     /**
      * Checks if the field is accessible through direct field access according to the Java
-     * Language Specification $6.6.1 and $6.6.2.
+     * Language Specification §6.6.1 and §6.6.2.
      *
      * @param field
      *          The field which should be checked, not {@code null}.
@@ -61,7 +61,7 @@ public class DirectAccessAccessibilityAwareFieldFinder implements AccessibilityA
      *          The class which
      *
      * @return
-     *          {@code true}, iff one of the following conditions is fulfilled (see $6.6.1 of the Java Language
+     *          {@code true}, iff one of the following conditions is fulfilled (see §6.6.1 of the Java Language
      *          Specification for more details):
      *          <ul>
      *              <li>the {@code testClazz} is exactly the same class as the {@code field}'s declaring class</li>
@@ -69,7 +69,7 @@ public class DirectAccessAccessibilityAwareFieldFinder implements AccessibilityA
      *              <li>the field is declared <i>protected</i> and one of the following conditions is fulfilled</li>
      *              <ul>
      *                  <li>the {@code testClazz} is in the same package as the {@code field}'s declaring class</li>
-     *                  <li>the {@code testClazz} is a subclass of the {@code field}'s declaring class (see $6.6.2 of the JLS)</li>
+     *                  <li>the {@code testClazz} is a subclass of the {@code field}'s declaring class (see §6.6.2 of the JLS)</li>
      *                  <li>the {@code testClazz} is an inner class of the {@code field}'s declaring class</li>
      *              </ul>
      *              <li>the field is declared <i>package private</i> and one of the following conditions is fulfilled</li>
