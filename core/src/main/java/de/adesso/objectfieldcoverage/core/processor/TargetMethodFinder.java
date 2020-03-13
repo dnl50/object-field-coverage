@@ -4,11 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
-import spoon.support.reflect.reference.CtArrayTypeReferenceImpl;
-import spoon.support.reflect.reference.CtTypeReferenceImpl;
 
 import java.util.Arrays;
 import java.util.List;
@@ -94,9 +93,19 @@ public class TargetMethodFinder {
     private static final String METHOD_IDENTIFIER_REGEX = JAVA_PACKAGE_OR_TYPE_NAME_REGEX + "#" + IDENTIFIER_REGEX + "\\(" + METHOD_FORMAL_PARAMETER_LIST_REGEX + "?\\)";
 
     /**
-     * The predicate used to test a given method identifier. Build using the {@link #METHOD_IDENTIFIER_REGEX}.
+     * The predicate used to test a given method identifier. Built using the {@link #METHOD_IDENTIFIER_REGEX}.
      */
     private static final Predicate<String> METHOD_IDENTIFIER_MATCH_PREDICATE = Pattern.compile(METHOD_IDENTIFIER_REGEX).asMatchPredicate();
+
+    /**
+     * The predicate used to test if a given formal parameter is a primitive type parameter. Built using the {@link #UNANN_PRIMITIVE_TYPE_REGEX}.
+     */
+    private static final Predicate<String> UNANN_PRIMITIVE_TYPE_MATCH_PREDICATE = Pattern.compile(UNANN_PRIMITIVE_TYPE_REGEX).asMatchPredicate();
+
+    /**
+     * The type factory used internally to create the type references to identify the target methods.
+     */
+    private final TypeFactory typeFactory = new TypeFactory();
 
     public Optional<CtMethod<?>> findTargetMethod(String methodIdentifier, CtModel model) {
         Objects.requireNonNull(methodIdentifier, "methodIdentifier cannot be null!");
@@ -214,8 +223,36 @@ public class TargetMethodFinder {
         return null;
     }
 
-    private CtTypeReference<?> buildTypeReference(CtModel model) {
+    private CtTypeReference<?> buildTypeReference(String formalMethodParameter, CtModel model) {
+        if(UNANN_PRIMITIVE_TYPE_MATCH_PREDICATE.test(formalMethodParameter)) {
+            return buildPrimitiveTypeReference(formalMethodParameter);
+        }
+
+        //TODO: finish
         return null;
+    }
+
+    private CtTypeReference<?> buildPrimitiveTypeReference(String primitiveTypeParameter) {
+        switch (primitiveTypeParameter) {
+            case "boolean":
+                return typeFactory.BOOLEAN_PRIMITIVE;
+            case "byte":
+                 return typeFactory.BYTE_PRIMITIVE;
+            case "short":
+                return typeFactory.SHORT_PRIMITIVE;
+            case "int":
+                return typeFactory.INTEGER_PRIMITIVE;
+            case "long":
+                return typeFactory.LONG_PRIMITIVE;
+            case "char":
+                return typeFactory.CHARACTER_PRIMITIVE;
+            case "float":
+                return typeFactory.FLOAT_PRIMITIVE;
+            case "double":
+                return typeFactory.DOUBLE_PRIMITIVE;
+            default:
+                throw new IllegalArgumentException(String.format("'%s' is not a primitive type!", primitiveTypeParameter));
+        }
     }
 
     /**

@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtMethod;
 
 import java.util.List;
 
@@ -59,6 +60,27 @@ class TargetMethodFinderTest {
 
         // then
         assertThat(actualTargetMethodOptional).isEmpty();
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void findTargetMethodReturnsPopulatedOptionalWhenMethodIdentifierIsValidAndMethodExists(@Mock CtClass targetClassMock,
+                                                                                            @Mock CtMethod targetMethod) {
+        // given
+        var targetClassQualifiedName = "org.test.Test";
+        var targetMethodName = "test";
+        var givenMethodIdentifier = String.format("%s#%s()", targetClassQualifiedName, targetMethodName);
+
+        given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
+
+        given(targetClassMock.getQualifiedName()).willReturn(targetClassQualifiedName);
+        given(targetClassMock.getMethod(targetMethodName)).willReturn(targetMethod);
+
+        // when
+        var actualTargetMethodOptional = testSubject.findTargetMethod(givenMethodIdentifier, modelMock);
+
+        // then
+        assertThat(actualTargetMethodOptional).contains(targetMethod);
     }
 
     @Test
