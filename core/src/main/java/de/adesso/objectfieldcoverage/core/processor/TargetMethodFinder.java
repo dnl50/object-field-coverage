@@ -1,9 +1,11 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -15,7 +17,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+/**
+ * Utility class used to find a method in a given {@link CtModel} identified by a <i>method identifier</i>. See
+ * {@link de.adesso.objectfieldcoverage.core.annotation.TestTarget} for a detailed explanation.
+ */
 @Slf4j
 public class TargetMethodFinder {
 
@@ -84,7 +91,7 @@ public class TargetMethodFinder {
      * The regex for a Java <i>FormalParameterList</i> as specified by §8.4.1 of the Java Language Specification. References
      * the simplified regex for a {@link #METHOD_FORMAL_PARAMETER_REGEX FormalParameter}.
      */
-    private static final String METHOD_FORMAL_PARAMETER_LIST_REGEX = "((" + METHOD_FORMAL_PARAMETER_REGEX + ",)*" + METHOD_FORMAL_PARAMETER_REGEX + ")";
+    private static final String METHOD_FORMAL_PARAMETER_LIST_REGEX = "((" + METHOD_FORMAL_PARAMETER_REGEX + "(\\h)*,)*(\\h)*" + METHOD_FORMAL_PARAMETER_REGEX + ")";
 
     /**
      * The complete method identifier regex to validate a given method identifier with. Accepts JavaDoc-like method
@@ -107,6 +114,21 @@ public class TargetMethodFinder {
      */
     private final TypeFactory typeFactory = new TypeFactory();
 
+    /**
+     *
+     * @param methodIdentifier
+     *          The method identifier by which the target method is identified, not {@code null}. Must be
+     *          a valid method identifier. See {@link de.adesso.objectfieldcoverage.core.annotation.TestTarget}
+     *          for a detailed explanation.
+     *
+     * @param model
+     *          The model which contains the target method which should be retrieved, not {@code null}.
+     *
+     * @return
+     *          An optional containing the target method in case it is present in the given model or
+     *          an empty optional in case the target type is not present or the target type does
+     *          not have a method that matches the specified signature.
+     */
     public Optional<CtMethod<?>> findTargetMethod(String methodIdentifier, CtModel model) {
         Objects.requireNonNull(methodIdentifier, "methodIdentifier cannot be null!");
         Objects.requireNonNull(model, "model cannot be null!");
@@ -117,7 +139,7 @@ public class TargetMethodFinder {
         }
 
         return findTargetClassInModel(methodIdentifier, model)
-                .flatMap(targetClass -> findTargetMethodOnTargetClass(methodIdentifier, targetClass));
+                .flatMap(targetClass -> findTargetMethodOnTargetClass(methodIdentifier, targetClass, model));
     }
 
     /**
@@ -171,17 +193,26 @@ public class TargetMethodFinder {
      * @param targetClass
      *          The target class to find the method on, not {@code null}.
      *
+     * @param model
+     *          The model to get the type reference for the method parameters of, not {@code null}. Must contain
+     *          a reference type for each parameter specified in the given {@code methodIdentifier}.
+     *
      * @return
      *          An optional containing the target method in case a method on the given {@code targetClass}
      *          is present which has an equal name and the same parameter types or an empty optional
      *          if no such method is present.
      */
-    private Optional<CtMethod<?>> findTargetMethodOnTargetClass(String methodIdentifier, CtClass<?> targetClass) {
+    private Optional<CtMethod<?>> findTargetMethodOnTargetClass(String methodIdentifier, CtClass<?> targetClass, CtModel model) {
         var methodName = extractMethodName(methodIdentifier);
         var formalParameters = extractFormalParameters(methodIdentifier);
 
-        //TODO: use parameters as well
-        return Optional.ofNullable(targetClass.getMethod(methodName));
+        var typeReferencesForParameters = formalParameters.stream()
+                .map(formalParameter -> isArrayType(formalParameter)
+                        ? buildArrayTypeReference(formalParameter, model)
+                        : buildTypeReference(formalParameter, model))
+                .toArray(CtTypeReference[]::new);
+
+        return Optional.ofNullable(targetClass.getMethod(methodName, typeReferencesForParameters));
     }
 
     /**
@@ -196,13 +227,11 @@ public class TargetMethodFinder {
      *          A list containing all formal method parameters.
      */
     private List<String> extractFormalParameters(String methodIdentifier) {
-        var formalParameterListWithClosingBracket = methodIdentifier.split("#")[1]
-                .split("\\(")[1];
-
-        var formalParameterList = formalParameterListWithClosingBracket.substring(0,
-                formalParameterListWithClosingBracket.length() - 1);
-
-        return Arrays.asList(formalParameterList.split(","));
+        var formalParameterList = StringUtils.substringBetween(methodIdentifier, "(", ")");
+        return Arrays.stream(formalParameterList.split(","))
+                .map(String::trim)
+                .filter(Predicate.not(String::isBlank))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -219,19 +248,95 @@ public class TargetMethodFinder {
         return formalMethodParameter.endsWith("[]");
     }
 
-    private CtArrayTypeReference<?> buildArrayTypeReference(CtModel model) {
-        return null;
+    /**
+     *
+     * @param formalMethodParameter
+     *          The formal method parameter to build an array type reference from, not {@code null}. Must
+     *          be a valid {@link #UNANN_ARRAY_TYPE_REGEX UnannArrayType}.
+     *
+     * @param model
+     *          The model to get the type reference of, not {@code null}. Must contain
+     *          a reference type for the given {@code formalMethodParameter}.
+     *
+     * @return
+     *          The array type reference with its dimension set accordingly, not {@code null}.
+     */
+    private CtArrayTypeReference<?> buildArrayTypeReference(String formalMethodParameter, CtModel model) {
+        var arrayDimension = StringUtils.countMatches(formalMethodParameter, "[]");
+        var formalParameterWithoutDimensions = StringUtils.substringBefore(formalMethodParameter, "[");
+
+        var typeReference = buildTypeReference(formalParameterWithoutDimensions, model);
+        return typeFactory.createArrayReference(typeReference, arrayDimension);
     }
 
+    /**
+     * When the given {@code formalMethodParameter} is not fully qualified (does not contain a dot) a
+     * <i>java.lang.</i> and it is not a primitive type (e.g. <i>boolean</i>), a prefix is added, so classes
+     * from the java.lang package don't need to be fully qualified.
+     * <p/>
+     * When the {@code formalMethodParameter} is located in the <i>java</i> package (after eventually prefixing it
+     * when it was not fully qualified), a type reference is created using the actual <i>class</i>. Otherwise
+     * the given {@code model} is taken into account.
+     *
+     * @param formalMethodParameter
+     *          The formal method parameter, not {@code null}.
+     *
+     * @param model
+     *          The model to get the type reference of, not {@code null}. Must contain
+     *          a reference type for the given {@code formalMethodParameter}.
+     *
+     * @return
+     *          The type reference for the given {@code formalMethodParameter}.
+     */
     private CtTypeReference<?> buildTypeReference(String formalMethodParameter, CtModel model) {
         if(UNANN_PRIMITIVE_TYPE_MATCH_PREDICATE.test(formalMethodParameter)) {
             return buildPrimitiveTypeReference(formalMethodParameter);
         }
 
-        //TODO: finish
-        return null;
+        var isFullyQualified = formalMethodParameter.contains(".");
+        var fullyQualifiedClassName = isFullyQualified ? formalMethodParameter : String.format("java.lang.%s", formalMethodParameter);
+
+        if(fullyQualifiedClassName.startsWith("java.")) {
+            return buildJavaReferenceType(fullyQualifiedClassName);
+        }
+
+        return model.getAllTypes().stream()
+                .filter(type -> fullyQualifiedClassName.equals(type.getQualifiedName()))
+                .findFirst()
+                .map(CtType::getReference)
+                .orElseThrow(() -> new IllegalStateException(String.format("The model does not contain the type '%s'!",
+                        fullyQualifiedClassName)));
     }
 
+    /**
+     *
+     * @param fullyQualifiedClassName
+     *          The fully qualified class name of a class located in the <i>java</i> package, not
+     *          {@code null}.
+     *
+     * @return
+     *          A type reference for the class identified by the given {@code fullyQualifiedClassName}.
+     *
+     * @throws IllegalStateException
+     *          In case the class was not found using {@code this} class loader.
+     */
+    private CtTypeReference<?> buildJavaReferenceType(String fullyQualifiedClassName) {
+        try {
+            return typeFactory.createReference(Class.forName(fullyQualifiedClassName));
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(String.format("Class '%s' was not found!", fullyQualifiedClassName), e);
+        }
+    }
+
+    /**
+     *
+     * @param primitiveTypeParameter
+     *          The name primitive of the primitive type, not {@code null}. Must be one of <i>boolean, byte, short,
+     *          int, long, char, float</i> or <i>double</i> without any leading or trailing whitespace.
+     *
+     * @return
+     *          The type reference for the primitive type.
+     */
     private CtTypeReference<?> buildPrimitiveTypeReference(String primitiveTypeParameter) {
         switch (primitiveTypeParameter) {
             case "boolean":
