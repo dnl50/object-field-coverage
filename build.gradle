@@ -53,5 +53,9 @@ subprojects {
         annotationProcessor 'org.projectlombok:lombok'
     }
 
+    compileJava {
+        options.compilerArgs << '-Xlint:unchecked'
+    }
+
 }
 

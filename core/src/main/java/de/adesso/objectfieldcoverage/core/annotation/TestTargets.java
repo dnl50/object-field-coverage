@@ -13,7 +13,7 @@ public @interface TestTargets {
     /**
      *
      * @return
-     *          The test target annotations to specify the targeted methods
+     *          The test target annotations to specify the targeted methods.
      */
     TestTarget[] value();
 

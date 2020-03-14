@@ -178,10 +178,9 @@ public class TargetMethodFinder {
     private Optional<CtClass<?>> findTargetClassInModel(String methodIdentifier, CtModel model) {
         var qualifiedClassName = extractClassName(methodIdentifier);
 
-        return model.getElements(new TypeFilter<>(CtClass.class)).stream()
+        return model.getElements(new TypeFilter<CtClass<?>>(CtClass.class)).stream()
                 .filter(ctClass -> ctClass.getQualifiedName().equals(qualifiedClassName))
-                .findFirst()
-                .map(ctClass -> (CtClass<?>) ctClass);
+                .findFirst();
     }
 
     /**

@@ -37,7 +37,7 @@ public abstract class AbstractSpoonIntegrationTest {
     }
 
     protected CtClass<?> findClassWithName(CtModel model, String name) {
-        return model.getElements(new TypeFilter<>(CtClass.class)).stream()
+        return model.getElements(new TypeFilter<CtClass<?>>(CtClass.class)).stream()
                 .filter(clazz -> name.equals(clazz.getSimpleName()))
                 .findFirst()
                 .orElseThrow(NoSuchElementException::new);
