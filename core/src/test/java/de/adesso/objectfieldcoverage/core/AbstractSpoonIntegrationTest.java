@@ -5,7 +5,6 @@ import spoon.compiler.SpoonResource;
 import spoon.compiler.SpoonResourceHelper;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.io.File;
@@ -27,13 +26,6 @@ public abstract class AbstractSpoonIntegrationTest {
         launcher.run();
 
         return launcher.getModel();
-    }
-
-    protected CtType<?> findTypeWithName(CtModel model, String name) {
-        return model.getAllTypes().stream()
-                .filter(type -> name.equals(type.getSimpleName()))
-                .findFirst()
-                .orElseThrow(NoSuchElementException::new);
     }
 
     protected CtClass<?> findClassWithName(CtModel model, String name) {

@@ -22,7 +22,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds()";
 
-        var melonType = findTypeWithName(model, "Melon");
+        var melonType = findClassWithName(model, "Melon");
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(0);
 
         // when
@@ -38,7 +38,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(int)";
 
-        var melonType = findTypeWithName(model, "Melon");
+        var melonType = findClassWithName(model, "Melon");
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(1);
 
         // when
@@ -54,7 +54,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(java.lang.String)";
 
-        var melonType = findTypeWithName(model, "Melon");
+        var melonType = findClassWithName(model, "Melon");
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(2);
 
         // when
@@ -70,7 +70,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(String)";
 
-        var melonType = findTypeWithName(model, "Melon");
+        var melonType = findClassWithName(model, "Melon");
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(2);
 
         // when
@@ -86,7 +86,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(String, java.lang.String)";
 
-        var melonType = findTypeWithName(model, "Melon");
+        var melonType = findClassWithName(model, "Melon");
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(3);
 
         // when
@@ -102,7 +102,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#saveMelon(de.adesso.test.Melon)";
 
-        var melonServiceType = findTypeWithName(model, "MelonService");
+        var melonServiceType = findClassWithName(model, "MelonService");
         var expectedMethod = melonServiceType.getMethodsByName("saveMelon").get(0);
 
         // when
@@ -118,7 +118,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#deleteMelons(de.adesso.test.Melon[])";
 
-        var melonServiceType = findTypeWithName(model, "MelonService");
+        var melonServiceType = findClassWithName(model, "MelonService");
         var expectedMethod = melonServiceType.getMethodsByName("deleteMelons").get(1);
 
         // when
@@ -134,7 +134,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#deleteMelons(java.util.List)";
 
-        var melonServiceType = findTypeWithName(model, "MelonService");
+        var melonServiceType = findClassWithName(model, "MelonService");
         var expectedMethod = melonServiceType.getMethodsByName("deleteMelons").get(0);
 
         // when

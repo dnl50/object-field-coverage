@@ -21,7 +21,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsCarTest() throws Exception {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/CarTest.java");
-        var carType = findTypeWithName(model, "Car");
+        var carType = findClassWithName(model, "Car");
         var testClazz = findClassWithName(model, "CarTest");
 
         var expectedFields = List.of(
@@ -42,7 +42,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsEngineInnerClass() throws Exception {
         // given
         var model = buildModel("finder/direct-access/Car.java");
-        var carType = findTypeWithName(model, "Car");
+        var carType = findClassWithName(model, "Car");
         var testClazz = findClassWithName(model, "Engine");
 
         var expectedFields = List.of(
@@ -65,7 +65,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsRetailerStaticInnerClass() throws Exception {
         // given
         var model = buildModel("finder/direct-access/Car.java");
-        var carType = findTypeWithName(model, "Car");
+        var carType = findClassWithName(model, "Car");
         var testClazz = findClassWithName(model, "Retailer");
 
         var expectedFields = List.of(
@@ -88,7 +88,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsTruckSubClass() throws Exception {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Truck.java");
-        var carType = findTypeWithName(model, "Car");
+        var carType = findClassWithName(model, "Car");
         var testClazz = findClassWithName(model, "Truck");
 
         var expectedFields = List.of(
@@ -108,7 +108,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsPlaneClassFromOtherPackage() throws Exception {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Plane.java");
-        var carType = findTypeWithName(model, "Car");
+        var carType = findClassWithName(model, "Car");
         var testClazz = findClassWithName(model, "Plane");
 
         var expectedFields = List.of(

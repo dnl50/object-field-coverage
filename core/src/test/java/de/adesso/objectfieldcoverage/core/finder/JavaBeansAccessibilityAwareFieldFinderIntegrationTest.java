@@ -21,18 +21,18 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
     void findAccessibleFieldsReturnsExpectedFieldsInUserClass() throws Exception {
         // given
         var model = buildModel("finder/getter/User.java");
-        var userType = findTypeWithName(model, "User");
+        var userClass = findClassWithName(model, "User");
 
         var expectedFields = List.of(
-                userType.getField("id"),
-                userType.getField("name"),
-                userType.getField("admin"),
-                userType.getField("locked"),
-                userType.getField("staticString")
+                userClass.getField("id"),
+                userClass.getField("name"),
+                userClass.getField("admin"),
+                userClass.getField("locked"),
+                userClass.getField("staticString")
         );
 
         // when
-        var actualFields = testSubject.findAccessibleFields(null, userType);
+        var actualFields = testSubject.findAccessibleFields(userClass, userClass);
 
         // then
         assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);

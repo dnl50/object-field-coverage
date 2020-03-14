@@ -3,12 +3,10 @@ package de.adesso.objectfieldcoverage.core.finder;
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import spoon.reflect.declaration.*;
-import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtField;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * {@link AccessibilityAwareFieldFinder} implementation which finds fields for which a getter method
@@ -18,35 +16,24 @@ import java.util.stream.Collectors;
  * <b>Note:</b> This implementation also applies the same naming convention to <i>static</i> fields.
  */
 @Slf4j
-public class JavaBeansAccessibilityAwareFieldFinder implements AccessibilityAwareFieldFinder {
+public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFieldFinder {
 
     /**
      *
      * @param testClazz
-     *          The test class which contains test methods which access the given
-     *          {@code type}'s fields, may be {@code null}.
+     *          The test class whose methods could potentially access the given {@code type}'s
+     *          fields, not {@code null}.
      *
-     * @param type
-     *          The {@link CtClass} for which the accessible fields should be found, not
-     *          {@code null}.
+     * @param field
+     *          The field to check, not {@code null}.
      *
      * @return
-     *          A list containing the {@link CtField}s for which a Java Beans Getter method is
-     *          present, not {@code null}.
+     *          {@code true}, if the a Java Beans Getter Method is present on the given {@code field}'s
+     *          declaring type. {@code false} is returned otherwise.
      */
     @Override
-    public List<CtField<?>> findAccessibleFields(CtClass<?> testClazz, CtType<?> type) {
-        Objects.requireNonNull(type, "type cannot be null!");
-
-        if(type.isInterface()) {
-            log.info("Given type is an interface! Returning empty list... (Type: {})", type);
-            return List.of();
-        }
-
-        return type.getAllFields().stream()
-                .map(CtFieldReference::getFieldDeclaration)
-                .filter(this::hasJavaBeansGetterMethod)
-                .collect(Collectors.toList());
+    protected boolean isFieldAccessible(CtClass<?> testClazz, CtField<?> field) {
+        return this.hasJavaBeansGetterMethod(field);
     }
 
     /**

@@ -5,6 +5,9 @@ ext {
 dependencies {
     implementation project(':plugin')
 
+    // Runtime Lombok Annotations
+    implementation "org.projectlombok:lombok"
+
     // JUnit + Mockito
     implementation "junit:junit:${junit4Version}"
     implementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
