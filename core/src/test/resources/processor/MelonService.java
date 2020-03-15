@@ -17,4 +17,12 @@ public class MelonService {
         return melon;
     }
 
+    public <T> void unboundGenericMethod(T obj) {
+        // method body here
+    }
+
+    public <T extends Number> void boundGenericMethod(Number number) {
+        // method body here
+    }
+
 }

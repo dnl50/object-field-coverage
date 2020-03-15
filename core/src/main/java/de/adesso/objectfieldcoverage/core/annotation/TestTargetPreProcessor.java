@@ -10,14 +10,14 @@ public class TestTargetPreProcessor {
 
     public CtMethod<?> addTestTargetAnnotation(CtMethod<?> testMethod) {
         if(isAlreadyAnnotated(testMethod)) {
-            log.debug("Test target of method '{}#{}' already specified!",
+            log.debug("Test target of method '{}#{}' already specified! Not adding any more annotation!",
                     testMethod.getDeclaringType().getQualifiedName(),
                     testMethod.getSimpleName());
 
             return testMethod;
         }
 
-        log.warn("Preprocessor not implemented yet!");
+        log.error("TestTargetPreProcessor not implemented yet!");
         return testMethod;
     }
 

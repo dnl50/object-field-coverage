@@ -2,11 +2,9 @@ package de.adesso.objectfieldcoverage.api.assertion.primitive.numeric;
 
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveType;
 import org.apache.commons.math3.fraction.Fraction;
-import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.code.CtExpression;
 
 import java.util.List;
-import java.util.Optional;
 
 public class IntegralTypeAssertion<S extends Number> extends NumericTypeAssertion<S> {
 
@@ -29,16 +27,10 @@ public class IntegralTypeAssertion<S extends Number> extends NumericTypeAssertio
         return type;
     }
 
-    @Override
-    public Optional<CtVariableRead<S>> getAssertedVariableRead() {
-        // TODO implement
-        return Optional.empty();
-    }
 
     @Override
-    public Optional<CtAbstractInvocation<S>> getAssertedAbstractInvocation() {
-        // TODO implement
-        return Optional.empty();
+    public CtExpression<S> getAssertedExpression() {
+        //TODO: implement
+        return null;
     }
-
 }

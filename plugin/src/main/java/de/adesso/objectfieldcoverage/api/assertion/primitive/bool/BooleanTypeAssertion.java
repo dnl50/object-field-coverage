@@ -6,18 +6,13 @@ import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformati
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.math3.fraction.Fraction;
-import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtVariableRead;
-
-import java.util.Optional;
+import spoon.reflect.code.CtExpression;
 
 @RequiredArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class BooleanTypeAssertion extends PrimitiveTypeAssertion<Boolean> {
 
-    private final CtVariableRead<Boolean> assertedVariableRead;
-
-    private final CtAbstractInvocation<Boolean> assertedInvocation;
+    private final CtExpression<Boolean> assertedBooleanExpression;
 
     @Override
     public PrimitiveType getAssertedPrimitiveType() {
@@ -25,13 +20,8 @@ public class BooleanTypeAssertion extends PrimitiveTypeAssertion<Boolean> {
     }
 
     @Override
-    public Optional<CtVariableRead<Boolean>> getAssertedVariableRead() {
-        return Optional.ofNullable(assertedVariableRead);
-    }
-
-    @Override
-    public Optional<CtAbstractInvocation<Boolean>> getAssertedAbstractInvocation() {
-        return Optional.ofNullable(assertedInvocation);
+    public CtExpression<Boolean> getAssertedExpression() {
+        return assertedBooleanExpression;
     }
 
     @Override

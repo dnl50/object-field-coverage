@@ -18,7 +18,7 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
     }
 
     @Test
-    void findAccessibleFieldsReturnsExpectedFieldsInUserClass() throws Exception {
+    void findAccessibleFieldsReturnsExpectedFieldsInUserClass() {
         // given
         var model = buildModel("finder/getter/User.java");
         var userClass = findClassWithName(model, "User");

@@ -17,7 +17,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithNoParameters() throws Exception {
+    void findTargetMethodWithNoParameters() {
         // given
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds()";
@@ -33,7 +33,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithPrimitiveParameter() throws Exception {
+    void findTargetMethodWithPrimitiveParameter() {
         // given
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(int)";
@@ -49,7 +49,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithQualifiedJavaLangParameter() throws Exception {
+    void findTargetMethodWithQualifiedJavaLangParameter() {
         // given
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(java.lang.String)";
@@ -65,7 +65,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithNonQualifiedJavaLangParameter() throws Exception {
+    void findTargetMethodWithNonQualifiedJavaLangParameter() {
         // given
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(String)";
@@ -81,7 +81,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithQualifiedAndNonQualifiedJavaLangParameters() throws Exception {
+    void findTargetMethodWithQualifiedAndNonQualifiedJavaLangParameters() {
         // given
         var model = buildModel("processor/Melon.java");
         var givenMethodIdentifier = "de.adesso.test.Melon#incrementSeeds(String, java.lang.String)";
@@ -97,7 +97,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithQualifiedModelClass() throws Exception {
+    void findTargetMethodWithQualifiedModelClass() {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#saveMelon(de.adesso.test.Melon)";
@@ -113,7 +113,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithQualifiedModelClassArray() throws Exception {
+    void findTargetMethodWithQualifiedModelClassArray() {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#deleteMelons(de.adesso.test.Melon[])";
@@ -129,7 +129,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodWithQualifiedGenericJavaUtilClass() throws Exception {
+    void findTargetMethodWithQualifiedGenericJavaUtilClass() {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#deleteMelons(java.util.List)";
@@ -145,7 +145,39 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodReturnsEmptyOptionalWhenClassNotInModel() throws Exception {
+    void findTargetMethodWithUnboundGenericArgument() {
+        // given
+        var model = buildModel("processor/Melon.java", "processor/MelonService.java");
+        var givenMethodIdentifier = "de.adesso.test.MelonService#unboundGenericMethod(Object)";
+
+        var melonServiceType = findClassWithName(model, "MelonService");
+        var expectedMethod = melonServiceType.getMethodsByName("unboundGenericMethod").get(0);
+
+        // when
+        var actualMethod = testSubject.findTargetMethod(givenMethodIdentifier, model);
+
+        // then
+        assertThat(actualMethod).contains(expectedMethod);
+    }
+
+    @Test
+    void findTargetMethodWithBoundGenericArgument() {
+        // given
+        var model = buildModel("processor/Melon.java", "processor/MelonService.java");
+        var givenMethodIdentifier = "de.adesso.test.MelonService#boundGenericMethod(Number)";
+
+        var melonServiceType = findClassWithName(model, "MelonService");
+        var expectedMethod = melonServiceType.getMethodsByName("boundGenericMethod").get(0);
+
+        // when
+        var actualMethod = testSubject.findTargetMethod(givenMethodIdentifier, model);
+
+        // then
+        assertThat(actualMethod).contains(expectedMethod);
+    }
+
+    @Test
+    void findTargetMethodReturnsEmptyOptionalWhenClassNotInModel() {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.NotPresent#notPresent()";
@@ -158,7 +190,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodReturnsEmptyOptionalWhenMethodWithNameNotPresent() throws Exception {
+    void findTargetMethodReturnsEmptyOptionalWhenMethodWithNameNotPresent() {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#notPresent()";
@@ -171,7 +203,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodReturnsEmptyOptionalWhenMethodWithParameterNotPresent() throws Exception {
+    void findTargetMethodReturnsEmptyOptionalWhenMethodWithParameterNotPresent() {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var givenMethodIdentifier = "de.adesso.test.MelonService#deleteMelons(String)";
@@ -184,7 +216,7 @@ class TargetMethodFinderIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetMethodThrowsExceptionWhenModelDoesNotContainQualifiedParameterType() throws Exception {
+    void findTargetMethodThrowsExceptionWhenModelDoesNotContainQualifiedParameterType()  {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java");
         var parameterType = "de.adesso.test.Test";

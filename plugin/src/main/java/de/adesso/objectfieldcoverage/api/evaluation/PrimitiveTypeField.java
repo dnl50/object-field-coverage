@@ -6,6 +6,14 @@ import spoon.reflect.declaration.CtField;
 
 import java.util.List;
 
+/**
+ * {@link AssertedField} implementation for primitive types and their wrapper classes. Does not
+ * have any accessible child fields and can therefore be seen as a leaf inside the accessible field
+ * tree.
+ *
+ * @param <T>
+ *          The type of the field.
+ */
 @EqualsAndHashCode
 @RequiredArgsConstructor
 public class PrimitiveTypeField<T> implements AssertedField<T> {

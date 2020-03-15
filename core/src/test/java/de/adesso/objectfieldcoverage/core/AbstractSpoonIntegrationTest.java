@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractSpoonIntegrationTest {
 
-    protected CtModel buildModel(String... sourceFilePaths) throws Exception {
+    protected CtModel buildModel(String... sourceFilePaths) {
         var launcher = new Launcher();
 
         getSpoonResources(sourceFilePaths)

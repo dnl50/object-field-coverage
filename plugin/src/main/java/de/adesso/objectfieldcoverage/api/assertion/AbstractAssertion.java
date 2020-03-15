@@ -2,16 +2,11 @@ package de.adesso.objectfieldcoverage.api.assertion;
 
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import org.apache.commons.math3.fraction.Fraction;
-import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtVariableRead;
-
-import java.util.Optional;
+import spoon.reflect.code.CtExpression;
 
 public interface AbstractAssertion<T> {
 
-    Optional<CtVariableRead<T>> getAssertedVariableRead();
-
-    Optional<CtAbstractInvocation<T>> getAssertedAbstractInvocation();
+    CtExpression<T> getAssertedExpression();
 
     Fraction calculateMetricValue(AssertionEvaluationInformation evaluationInformation);
 

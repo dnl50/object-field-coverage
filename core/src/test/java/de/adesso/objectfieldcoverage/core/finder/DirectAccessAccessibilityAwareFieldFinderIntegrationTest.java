@@ -18,7 +18,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     }
 
     @Test
-    void findAccessibleFieldsCarTest() throws Exception {
+    void findAccessibleFieldsCarTest() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/CarTest.java");
         var carType = findClassWithName(model, "Car");
@@ -39,7 +39,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     }
 
     @Test
-    void findAccessibleFieldsEngineInnerClass() throws Exception {
+    void findAccessibleFieldsEngineInnerClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java");
         var carType = findClassWithName(model, "Car");
@@ -62,7 +62,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     }
 
     @Test
-    void findAccessibleFieldsRetailerStaticInnerClass() throws Exception {
+    void findAccessibleFieldsRetailerStaticInnerClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java");
         var carType = findClassWithName(model, "Car");
@@ -85,7 +85,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     }
 
     @Test
-    void findAccessibleFieldsTruckSubClass() throws Exception {
+    void findAccessibleFieldsTruckSubClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Truck.java");
         var carType = findClassWithName(model, "Car");
@@ -105,7 +105,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     }
 
     @Test
-    void findAccessibleFieldsPlaneClassFromOtherPackage() throws Exception {
+    void findAccessibleFieldsPlaneClassFromOtherPackage() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Plane.java");
         var carType = findClassWithName(model, "Car");
