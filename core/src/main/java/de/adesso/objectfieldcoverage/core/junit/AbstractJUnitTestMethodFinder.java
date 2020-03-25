@@ -47,7 +47,8 @@ public abstract class AbstractJUnitTestMethodFinder implements TestMethodFinder 
                 .map(CtClass::getAllMethods)
                 .flatMap(Set::stream)
                 .distinct();
-        var directDeclaredMethodStream = testClazz.getAllMethods().stream();
+        var directDeclaredMethodStream = testClazz.getAllMethods()
+                .stream();
 
         return Stream.concat(innerClassMethodStream, directDeclaredMethodStream)
                 .filter(testMethodPredicate())

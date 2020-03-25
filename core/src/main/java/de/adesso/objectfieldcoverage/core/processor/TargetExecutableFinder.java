@@ -4,8 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtConstructor;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.factory.ConstructorFactory;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -20,11 +22,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Utility class used to find a method in a given {@link CtModel} identified by a <i>method identifier</i>. See
+ * Utility class used to find an executable in a given {@link CtModel} identified by a <i>method identifier</i>. See
  * {@link de.adesso.objectfieldcoverage.core.annotation.TestTarget} for a detailed explanation.
  */
 @Slf4j
-public class TargetMethodFinder {
+public class TargetExecutableFinder {
 
     /**
      * The simplified regex for a Java <i>Identifier</i> as specified by §3.8 of the Java Language specification. Does match
@@ -115,6 +117,7 @@ public class TargetMethodFinder {
     private final TypeFactory typeFactory = new TypeFactory();
 
     /**
+     * <b>Note:</b> Constructors are viewed as a special kind of method.
      *
      * @param methodIdentifier
      *          The method identifier by which the target method is identified, not {@code null}. Must be
@@ -125,11 +128,11 @@ public class TargetMethodFinder {
      *          The model which contains the target method which should be retrieved, not {@code null}.
      *
      * @return
-     *          An optional containing the target method in case it is present in the given model or
+     *          An optional containing the target executable in case it is present in the given model or
      *          an empty optional in case the target type is not present or the target type does
      *          not have a method that matches the specified signature.
      */
-    public Optional<CtMethod<?>> findTargetMethod(String methodIdentifier, CtModel model) {
+    public Optional<CtExecutable<?>> findTargetExecutable(String methodIdentifier, CtModel model) {
         Objects.requireNonNull(methodIdentifier, "methodIdentifier cannot be null!");
         Objects.requireNonNull(model, "model cannot be null!");
 
@@ -139,7 +142,7 @@ public class TargetMethodFinder {
         }
 
         return findTargetClassInModel(methodIdentifier, model)
-                .flatMap(targetClass -> findTargetMethodOnTargetClass(methodIdentifier, targetClass, model));
+                .flatMap(targetClass -> findTargetExecutableOnTargetClass(methodIdentifier, targetClass, model));
     }
 
     /**
@@ -197,11 +200,11 @@ public class TargetMethodFinder {
      *          a reference type for each parameter specified in the given {@code methodIdentifier}.
      *
      * @return
-     *          An optional containing the target method in case a method on the given {@code targetClass}
-     *          is present which has an equal name and the same parameter types or an empty optional
-     *          if no such method is present.
+     *          An optional containing the target executable in case a method or constructor on the given
+     *          {@code targetClass} is present which has an equal name and the same parameter types or an
+     *          empty optional if no such method or constructor is present.
      */
-    private Optional<CtMethod<?>> findTargetMethodOnTargetClass(String methodIdentifier, CtClass<?> targetClass, CtModel model) {
+    private Optional<? extends CtExecutable<?>> findTargetExecutableOnTargetClass(String methodIdentifier, CtClass<?> targetClass, CtModel model) {
         var methodName = extractMethodName(methodIdentifier);
         var formalParameters = extractFormalParameters(methodIdentifier);
 
@@ -211,7 +214,92 @@ public class TargetMethodFinder {
                         : buildTypeReference(formalParameter, model))
                 .toArray(CtTypeReference[]::new);
 
+        if(isConstructorCandidate(methodName, targetClass)) {
+            var constructorOptional = findConstructor(typeReferencesForParameters, targetClass);
+
+            if(constructorOptional.isPresent()) {
+                return constructorOptional;
+            } else {
+                log.warn("Target method name of method '{}' on type '{}' indicates that this method is a constructor " +
+                        "but no constructor with matching parameters was found! Fallback to regular method!", methodName,
+                        targetClass.getQualifiedName());
+            }
+        }
+
         return Optional.ofNullable(targetClass.getMethod(methodName, typeReferencesForParameters));
+    }
+
+    /**
+     *
+     * @param methodName
+     *          The simple name of the method specified in the method identifier, not blank.
+     *
+     * @param targetClass
+     *          The class which the method identifier references, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the simple name of the given {@code targetClass} is equal to the
+     *          given {@code methodName}. {@code false} is returned otherwise.
+     */
+    private boolean isConstructorCandidate(String methodName, CtClass<?> targetClass) {
+        var simpleClassName = targetClass.getSimpleName();
+        return methodName.equals(simpleClassName);
+    }
+
+    /**
+     * When the given {@code typeReferencesForParameters} array is empty, a default constructor is searched
+     * on the given target class. If no default constructor is explicitly declared on the given
+     * {@code targetClass} and no other constructor is present, a new default constructor will be generated.
+     *
+     * @param typeReferencesForParameters
+     *          The {@link CtTypeReference}s for the parameters of the constructor, not {@code null}.
+     *
+     * @param targetClass
+     *          The target class to find a constructor with the given type references for, not {@code null}.
+     *
+     * @param <T>
+     *          The type of the class.
+     *
+     * @return
+     *          An optional containing a constructor whose parameters match the given {@link CtTypeReference}s
+     *          or an empty optional in case no such constructor is present.
+     */
+    @SuppressWarnings("rawtypes")
+    private <T> Optional<CtConstructor<T>> findConstructor(CtTypeReference[] typeReferencesForParameters, CtClass<T> targetClass) {
+        if(typeReferencesForParameters.length == 0 && targetClass.getConstructors().isEmpty()) {
+            return Optional.of(createImplicitDefaultConstructor(targetClass));
+        }
+
+        return Optional.ofNullable(targetClass.getConstructor(typeReferencesForParameters));
+    }
+
+    /**
+     * Creates a new default constructor on the given {@code targetClass} in case no other constructor
+     * is present as defined by §8.8.9 of the Java Language Specification.
+     *
+     * @param targetClass
+     *          The {@link CtClass} to create a default constructor for, not {@code null}.
+     *
+     * @param <T>
+     *          The type of the target class.
+     *
+     * @throws IllegalStateException
+     *          When the given {@code targetClass} already has at least one constructor declared.
+     */
+    private <T> CtConstructor<T> createImplicitDefaultConstructor(CtClass<T> targetClass) {
+        if(targetClass.getConstructors().isEmpty()) {
+            var targetClassFactory = targetClass.getFactory();
+
+            var implicitConstructor = new ConstructorFactory(targetClassFactory)
+                    .createDefault(targetClass);
+            implicitConstructor.setImplicit(true);
+
+            return implicitConstructor;
+        } else {
+            log.warn("No default constructor can be generated for '{}', because other constructors are present!",
+                    targetClass.getQualifiedName());
+            throw new IllegalStateException("Cannot generate implicit default constructor! ");
+        }
     }
 
     /**

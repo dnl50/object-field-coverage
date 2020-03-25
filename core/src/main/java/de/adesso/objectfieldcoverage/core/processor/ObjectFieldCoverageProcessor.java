@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.TypeFactory;
 
@@ -40,7 +41,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
 
     private final TestTargetPreProcessor testTargetPreProcessor;
 
-    private final TargetMethodFinder targetMethodFinder;
+    private final TargetExecutableFinder targetExecutableFinder;
 
     //TODO: use Java ServiceLoader
     public ObjectFieldCoverageProcessor() {
@@ -49,7 +50,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         this.testMethodFinders = List.of(new JUnitJupiterTestMethodFinder(), new JUnit4TestMethodFinder());
         this.assertionFinders = List.of(new JUnitAssertionFinder());
         this.testTargetPreProcessor = new TestTargetPreProcessor();
-        this.targetMethodFinder = new TargetMethodFinder();
+        this.targetExecutableFinder = new TargetExecutableFinder();
     }
 
     @Override
@@ -71,7 +72,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     private void processTestMethod(CtMethod<?> testMethod, CtClass<?> testClazz) {
         log.info("Starting processing of test method '{}'!", testMethod.getSimpleName());
 
-        var targetMethods = findTargetMethods(testMethod);
+        var targetExecutables = findTargetExecutables(testMethod);
         var assertionsInTestMethod = assertionFinders.stream()
                 .map(assertionFinder -> assertionFinder.findAssertions(testMethod))
                 .flatMap(List::stream)
@@ -93,13 +94,13 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
      *          must must contain at least one {@link TestTarget} annotation in case it is present.
      *
      * @return
-     *          A list containing the target methods which are specified using the method identifiers
+     *          A list containing the target executables which are specified using the method identifiers
      *          given in the annotation(s).
      */
-    private List<CtMethod<?>> findTargetMethods(CtMethod<?> testMethod) {
+    private List<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod) {
         var testTargetAnnotation = testMethod.getAnnotation(TestTarget.class);
         if(Objects.nonNull(testTargetAnnotation)) {
-            return List.of(findTargetMethod(testTargetAnnotation));
+            return List.of(findTargetExecutable(testTargetAnnotation));
         }
 
         var testTargetsAnnotation = testMethod.getAnnotation(TestTargets.class);
@@ -115,7 +116,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
             }
 
             return Arrays.stream(testTargetsAnnotation.value())
-                    .map(this::findTargetMethod)
+                    .map(this::findTargetExecutable)
                     .collect(Collectors.toList());
         }
 
@@ -131,48 +132,48 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
      *          The annotation containing the method identifier, not {@code null}.
      *
      * @return
-     *          The target method.
+     *          The target executable.
      *
      * @throws TargetMethodNotFoundException
-     *          When no method was found in the underlying {@link spoon.reflect.CtModel} using the
+     *          When no executable was found in the underlying {@link spoon.reflect.CtModel} using the
      *          given {@code methodIdentifier}.
      *
      * @throws IllegalMethodSignatureException
-     *          When the target method is a <i>void</i> function and the {@code exceptionExpected}
+     *          When the target executable is a <i>void</i> function and the {@code exceptionExpected}
      *          flag of the given {@code testTargetAnnotation} is set to {@code false}.
      */
-    private CtMethod<?> findTargetMethod(TestTarget testTargetAnnotation) {
+    private CtExecutable<?> findTargetExecutable(TestTarget testTargetAnnotation) {
         var methodIdentifier = testTargetAnnotation.value();
         var exceptionExpected = testTargetAnnotation.exceptionExpected();
 
         var underlyingModel = this.getFactory().getModel();
-        var targetMethod = targetMethodFinder.findTargetMethod(methodIdentifier, underlyingModel)
+        var targetExecutable = targetExecutableFinder.findTargetExecutable(methodIdentifier, underlyingModel)
                 .orElseThrow(() -> new TargetMethodNotFoundException(methodIdentifier));
 
-        if(!exceptionExpected && isVoidMethod(targetMethod)) {
-            var exceptionMessage = String.format("The target method '%s' is a void method, but the exceptionExpected flag is set to false!",
+        if(!exceptionExpected && isVoidExecutable(targetExecutable)) {
+            var exceptionMessage = String.format("The target executable '%s' is a void method, but the exceptionExpected flag is set to false!",
                     methodIdentifier);
 
             log.error(exceptionMessage);
             throw new IllegalMethodSignatureException(exceptionMessage);
         }
 
-        return targetMethod;
+        return targetExecutable;
     }
 
     /**
      *
-     * @param method
-     *          The method to check, not {@code null}.
+     * @param executable
+     *          The executable to check, not {@code null}.
      *
      * @return
-     *          {@code true}, if the {@link CtMethod#getType() return type} of the given method
-     *          is either {@link Void} or the method is declared as <i>void</i>. {@code false}
+     *          {@code true}, if the {@link CtMethod#getType() return type} of the given executable
+     *          is either {@link Void} or the executable is declared as <i>void</i>. {@code false}
      *          is returned otherwise.
      */
-    private boolean isVoidMethod(CtMethod<?> method) {
+    private boolean isVoidExecutable(CtExecutable<?> executable) {
         var typeFactory = new TypeFactory();
-        var methodReturnType = method.getType();
+        var methodReturnType = executable.getType();
 
         return typeFactory.VOID_PRIMITIVE.equals(methodReturnType) || typeFactory.VOID.equals(methodReturnType);
     }

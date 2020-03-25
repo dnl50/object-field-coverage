@@ -19,7 +19,7 @@ public class MelonTest {
         var actualResult = testMelon.hasSeeds();
 
         // then
-        Assertions.assertEquals(actualResult, expectedResult);
+        Assertions.assertEquals(expectedResult, actualResult);
     }
 
 }

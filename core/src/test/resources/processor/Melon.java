@@ -4,10 +4,6 @@ public class Melon {
 
     private int seeds = 0;
 
-    public Melon() {
-
-    }
-
     public Melon(int seeds) {
         this.seeds = seeds;
     }
