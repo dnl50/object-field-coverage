@@ -5,6 +5,7 @@ import spoon.compiler.SpoonResource;
 import spoon.compiler.SpoonResourceHelper;
 import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.io.File;
@@ -28,9 +29,16 @@ public abstract class AbstractSpoonIntegrationTest {
         return launcher.getModel();
     }
 
-    protected CtClass<?> findClassWithName(CtModel model, String name) {
+    protected CtClass<?> findClassWithSimpleName(CtModel model, String simpleName) {
         return model.getElements(new TypeFilter<CtClass<?>>(CtClass.class)).stream()
-                .filter(clazz -> name.equals(clazz.getSimpleName()))
+                .filter(clazz -> simpleName.equals(clazz.getSimpleName()))
+                .findFirst()
+                .orElseThrow(NoSuchElementException::new);
+    }
+
+    protected CtMethod<?> findMethodWithSimpleName(CtClass<?> clazz, String simpleName) {
+        return clazz.getMethods().stream()
+                .filter(method -> method.getSimpleName().equals(simpleName))
                 .findFirst()
                 .orElseThrow(NoSuchElementException::new);
     }

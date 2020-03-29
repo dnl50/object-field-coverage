@@ -21,7 +21,7 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
     void dataAnnotatedClass() throws Exception {
         // given
         var model = buildModel("finder/lombok/DataBox.java");
-        var boxClass = findClassWithName(model, "DataBox");
+        var boxClass = findClassWithSimpleName(model, "DataBox");
 
         var expectedFields = List.of(
                 boxClass.getField("width"),
@@ -40,7 +40,7 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
     void getterAnnotatedClass() throws Exception {
         // given
         var model = buildModel("finder/lombok/TypeGetterBox.java");
-        var boxClass = findClassWithName(model, "TypeGetterBox");
+        var boxClass = findClassWithSimpleName(model, "TypeGetterBox");
 
         var expectedFields = List.of(
                 boxClass.getField("width"),
@@ -59,7 +59,7 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
     void fieldAnnotatedClass() throws Exception {
         // given
         var model = buildModel("finder/lombok/FieldGetterBox.java");
-        var boxClass = findClassWithName(model, "FieldGetterBox");
+        var boxClass = findClassWithSimpleName(model, "FieldGetterBox");
 
         var expectedFields = List.of(
                 boxClass.getField("width"),
@@ -77,8 +77,8 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
     void fieldAnnotationTakesPrecedenceOverClassAnnotation() throws Exception {
         // given
         var model = buildModel("finder/lombok/TypeAndFieldGetterBox.java", "finder/lombok/DataBox.java");
-        var boxClass = findClassWithName(model, "TypeAndFieldGetterBox");
-        var testClazz = findClassWithName(model, "DataBox");
+        var boxClass = findClassWithSimpleName(model, "TypeAndFieldGetterBox");
+        var testClazz = findClassWithSimpleName(model, "DataBox");
 
         var expectedFields = List.of(
                 boxClass.getField("width"),

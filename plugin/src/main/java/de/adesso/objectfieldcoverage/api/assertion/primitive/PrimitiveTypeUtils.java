@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.factory.TypeFactory;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Objects;
 
@@ -64,6 +65,38 @@ public class PrimitiveTypeUtils {
         }
 
         return new BooleanTypeAssertion((CtExpression<Boolean>) expression);
+    }
+
+    /**
+     *
+     * @param primitiveTypeName
+     *          The name primitive of the primitive type, not {@code null}. Must be one of <i>boolean, byte, short,
+     *          int, long, char, float</i> or <i>double</i> without any leading or trailing whitespace.
+     *
+     * @return
+     *          The type reference for the primitive type identified by its simple name.
+     */
+    public static CtTypeReference<?> getPrimitiveTypeReference(String primitiveTypeName) {
+        switch (primitiveTypeName) {
+            case "boolean":
+                return TYPE_FACTORY.BOOLEAN_PRIMITIVE;
+            case "byte":
+                return TYPE_FACTORY.BYTE_PRIMITIVE;
+            case "short":
+                return TYPE_FACTORY.SHORT_PRIMITIVE;
+            case "int":
+                return TYPE_FACTORY.INTEGER_PRIMITIVE;
+            case "long":
+                return TYPE_FACTORY.LONG_PRIMITIVE;
+            case "char":
+                return TYPE_FACTORY.CHARACTER_PRIMITIVE;
+            case "float":
+                return TYPE_FACTORY.FLOAT_PRIMITIVE;
+            case "double":
+                return TYPE_FACTORY.DOUBLE_PRIMITIVE;
+            default:
+                throw new IllegalArgumentException(String.format("'%s' is not a primitive type!", primitiveTypeName));
+        }
     }
 
 }

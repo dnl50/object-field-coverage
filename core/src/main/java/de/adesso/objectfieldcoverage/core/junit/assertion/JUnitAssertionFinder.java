@@ -21,6 +21,7 @@ public class JUnitAssertionFinder implements AssertionFinder {
 
     private AbstractAssertion<?> createAbstractAssertion(CtInvocation<Void> invocation) {
         //TODO:
+        // - check if JUnit 4's "expected" value is set for a exception assertion
         // - implement for other types than boolean/Boolean
         // - take other assertEquals signatures into account
         // - take assertFalse/assertTrue/assertNull/assertNotNull into account

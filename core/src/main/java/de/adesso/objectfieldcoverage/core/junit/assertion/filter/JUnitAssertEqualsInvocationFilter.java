@@ -2,6 +2,8 @@ package de.adesso.objectfieldcoverage.core.junit.assertion.filter;
 
 import spoon.reflect.reference.CtExecutableReference;
 
+import java.util.Set;
+
 /**
  * {@link AbstractJUnitAssertionInvocationFilter} implementation which filters for {@code assertEquals} method
  * invocations.
@@ -21,7 +23,8 @@ public class JUnitAssertEqualsInvocationFilter extends AbstractJUnitAssertionInv
      */
     @Override
     protected boolean methodSignatureOfInvocationMatches(CtExecutableReference<Void> executableRef) {
-        return "assertEquals".equals(executableRef.getSimpleName());
+        var executableSimpleName = executableRef.getSimpleName();
+        return Set.of("assertEquals", "assertNull").contains(executableSimpleName);
     }
 
 }

@@ -15,11 +15,8 @@ public class MelonTest {
         var testMelon = new Melon(1);
         var expectedResult = true;
 
-        // when
-        var actualResult = testMelon.hasSeeds();
-
-        // then
-        Assertions.assertEquals(expectedResult, actualResult);
+        // when / then
+        Assertions.assertEquals(expectedResult, testMelon.hasSeeds());
     }
 
 }

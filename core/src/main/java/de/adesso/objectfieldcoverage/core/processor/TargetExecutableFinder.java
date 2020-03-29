@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
+import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.CtModel;
@@ -264,8 +265,7 @@ public class TargetExecutableFinder {
      *          An optional containing a constructor whose parameters match the given {@link CtTypeReference}s
      *          or an empty optional in case no such constructor is present.
      */
-    @SuppressWarnings("rawtypes")
-    private <T> Optional<CtConstructor<T>> findConstructor(CtTypeReference[] typeReferencesForParameters, CtClass<T> targetClass) {
+    private <T> Optional<CtConstructor<T>> findConstructor(CtTypeReference<?>[] typeReferencesForParameters, CtClass<T> targetClass) {
         if(typeReferencesForParameters.length == 0 && targetClass.getConstructors().isEmpty()) {
             return Optional.of(createImplicitDefaultConstructor(targetClass));
         }
@@ -377,7 +377,7 @@ public class TargetExecutableFinder {
      */
     private CtTypeReference<?> buildTypeReference(String formalMethodParameter, CtModel model) {
         if(UNANN_PRIMITIVE_TYPE_MATCH_PREDICATE.test(formalMethodParameter)) {
-            return buildPrimitiveTypeReference(formalMethodParameter);
+            return PrimitiveTypeUtils.getPrimitiveTypeReference(formalMethodParameter);
         }
 
         var isFullyQualified = formalMethodParameter.contains(".");
@@ -412,38 +412,6 @@ public class TargetExecutableFinder {
             return typeFactory.createReference(Class.forName(fullyQualifiedClassName));
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(String.format("Class '%s' was not found!", fullyQualifiedClassName), e);
-        }
-    }
-
-    /**
-     *
-     * @param primitiveTypeParameter
-     *          The name primitive of the primitive type, not {@code null}. Must be one of <i>boolean, byte, short,
-     *          int, long, char, float</i> or <i>double</i> without any leading or trailing whitespace.
-     *
-     * @return
-     *          The type reference for the primitive type.
-     */
-    private CtTypeReference<?> buildPrimitiveTypeReference(String primitiveTypeParameter) {
-        switch (primitiveTypeParameter) {
-            case "boolean":
-                return typeFactory.BOOLEAN_PRIMITIVE;
-            case "byte":
-                 return typeFactory.BYTE_PRIMITIVE;
-            case "short":
-                return typeFactory.SHORT_PRIMITIVE;
-            case "int":
-                return typeFactory.INTEGER_PRIMITIVE;
-            case "long":
-                return typeFactory.LONG_PRIMITIVE;
-            case "char":
-                return typeFactory.CHARACTER_PRIMITIVE;
-            case "float":
-                return typeFactory.FLOAT_PRIMITIVE;
-            case "double":
-                return typeFactory.DOUBLE_PRIMITIVE;
-            default:
-                throw new IllegalArgumentException(String.format("'%s' is not a primitive type!", primitiveTypeParameter));
         }
     }
 

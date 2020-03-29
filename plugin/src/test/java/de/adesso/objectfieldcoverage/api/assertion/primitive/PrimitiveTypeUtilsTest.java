@@ -105,4 +105,119 @@ class PrimitiveTypeUtilsTest {
                 .hasMessage("The given expression's return type is not compatible!");
     }
 
+    @Test
+    void getPrimitiveTypeReferenceReturnsBooleanPrimitiveForBoolean() {
+        // given
+        var givenPrimitiveTypeName = "boolean";
+        var expectedTypeRef = new TypeFactory().BOOLEAN_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceReturnsBytePrimitiveForByte() {
+        // given
+        var givenPrimitiveTypeName = "byte";
+        var expectedTypeRef = new TypeFactory().BYTE_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceReturnsShortPrimitiveForShort() {
+        // given
+        var givenPrimitiveTypeName = "short";
+        var expectedTypeRef = new TypeFactory().SHORT_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceReturnsIntPrimitiveForInt() {
+        // given
+        var givenPrimitiveTypeName = "int";
+        var expectedTypeRef = new TypeFactory().INTEGER_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceReturnsLongPrimitiveForLong() {
+        // given
+        var givenPrimitiveTypeName = "long";
+        var expectedTypeRef = new TypeFactory().LONG_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceReturnsCharPrimitiveForChar() {
+        // given
+        var givenPrimitiveTypeName = "char";
+        var expectedTypeRef = new TypeFactory().CHARACTER_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceReturnsFloatPrimitiveForFloat() {
+        // given
+        var givenPrimitiveTypeName = "float";
+        var expectedTypeRef = new TypeFactory().FLOAT_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceReturnsDoublePrimitiveForDouble() {
+        // given
+        var givenPrimitiveTypeName = "double";
+        var expectedTypeRef = new TypeFactory().DOUBLE_PRIMITIVE;
+
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceThrowsExceptionForOtherString() {
+        // given
+        var givenPrimitiveTypeName = "unknown";
+
+        // when / then
+        assertThatThrownBy(() -> PrimitiveTypeUtils.getPrimitiveTypeReference(givenPrimitiveTypeName))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("'%s' is not a primitive type!", givenPrimitiveTypeName);
+    }
+
 }

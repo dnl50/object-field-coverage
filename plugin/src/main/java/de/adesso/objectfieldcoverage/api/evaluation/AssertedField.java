@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface AssertedField<T> {
 
-    CtField<T> getCtField();
+    CtField<T> getField();
 
     List<AssertedField<?>> getAccessibleChildFields();
 

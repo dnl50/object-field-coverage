@@ -21,8 +21,8 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsCarTest() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/CarTest.java");
-        var carType = findClassWithName(model, "Car");
-        var testClazz = findClassWithName(model, "CarTest");
+        var carType = findClassWithSimpleName(model, "Car");
+        var testClazz = findClassWithSimpleName(model, "CarTest");
 
         var expectedFields = List.of(
                 carType.getField("publicStaticManufacturer"),
@@ -42,8 +42,8 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsEngineInnerClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java");
-        var carType = findClassWithName(model, "Car");
-        var testClazz = findClassWithName(model, "Engine");
+        var carType = findClassWithSimpleName(model, "Car");
+        var testClazz = findClassWithSimpleName(model, "Engine");
 
         var expectedFields = List.of(
                 carType.getField("publicStaticManufacturer"),
@@ -65,8 +65,8 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsRetailerStaticInnerClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java");
-        var carType = findClassWithName(model, "Car");
-        var testClazz = findClassWithName(model, "Retailer");
+        var carType = findClassWithSimpleName(model, "Car");
+        var testClazz = findClassWithSimpleName(model, "Retailer");
 
         var expectedFields = List.of(
                 carType.getField("publicStaticManufacturer"),
@@ -88,8 +88,8 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsTruckSubClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Truck.java");
-        var carType = findClassWithName(model, "Car");
-        var testClazz = findClassWithName(model, "Truck");
+        var carType = findClassWithSimpleName(model, "Car");
+        var testClazz = findClassWithSimpleName(model, "Truck");
 
         var expectedFields = List.of(
                 carType.getField("publicStaticManufacturer"),
@@ -108,8 +108,8 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     void findAccessibleFieldsPlaneClassFromOtherPackage() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Plane.java");
-        var carType = findClassWithName(model, "Car");
-        var testClazz = findClassWithName(model, "Plane");
+        var carType = findClassWithSimpleName(model, "Car");
+        var testClazz = findClassWithSimpleName(model, "Plane");
 
         var expectedFields = List.of(
                 carType.getField("publicStaticManufacturer"),

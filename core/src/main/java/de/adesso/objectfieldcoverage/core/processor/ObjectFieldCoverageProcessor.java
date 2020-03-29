@@ -12,6 +12,7 @@ import de.adesso.objectfieldcoverage.core.finder.lombok.LombokAccessibilityAware
 import de.adesso.objectfieldcoverage.core.junit.JUnit4TestMethodFinder;
 import de.adesso.objectfieldcoverage.core.junit.JUnitJupiterTestMethodFinder;
 import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitAssertionFinder;
+import de.adesso.objectfieldcoverage.core.processor.evaluation.EvaluationTreeBuilder;
 import de.adesso.objectfieldcoverage.core.processor.exception.IllegalMethodSignatureException;
 import de.adesso.objectfieldcoverage.core.processor.exception.TargetMethodNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import spoon.reflect.factory.TypeFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 //TODO: properly implement, currently just a draft implementation
@@ -72,11 +74,28 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     private void processTestMethod(CtMethod<?> testMethod, CtClass<?> testClazz) {
         log.info("Starting processing of test method '{}'!", testMethod.getSimpleName());
 
+        var treeBuilder = new EvaluationTreeBuilder(fieldFinders);
         var targetExecutables = findTargetExecutables(testMethod);
-        var assertionsInTestMethod = assertionFinders.stream()
+
+        //TODO: make sure target executables are invoked in test method or sub-method called from
+        // test method
+
+        // assertion -> evaluation information map
+        var assertionMap = assertionFinders.stream()
                 .map(assertionFinder -> assertionFinder.findAssertions(testMethod))
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        assertion -> treeBuilder.buildEvaluationInformation(assertion.getAssertedExpression().getType(), testClazz)
+                ));
+
+        assertionMap.entrySet().forEach(entry -> {
+            var assertion = entry.getKey();
+            var evaluationInformation = entry.getValue();
+
+            var result = assertion.calculateMetricValue(evaluationInformation);
+            log.info("Result: {}", result);
+        });
 
         //TODO:
         // - build assertion evaluation obj for asserted asserted type of each assertion

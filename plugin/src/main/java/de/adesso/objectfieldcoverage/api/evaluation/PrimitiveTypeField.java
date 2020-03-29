@@ -23,7 +23,7 @@ public class PrimitiveTypeField<T> implements AssertedField<T> {
     private final CtField<T> field;
 
     @Override
-    public CtField<T> getCtField() {
+    public CtField<T> getField() {
         return field;
     }
 

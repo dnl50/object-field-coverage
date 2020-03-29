@@ -18,7 +18,7 @@ public class ReferenceTypeField<T> implements AssertedField<T> {
     private final List<AssertedField<?>> accessibleChildFields;
 
     @Override
-    public CtField<T> getCtField() {
+    public CtField<T> getField() {
         return field;
     }
 
