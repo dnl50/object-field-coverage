@@ -1,21 +1,14 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import de.adesso.objectfieldcoverage.core.util.TargetExecutableFinder;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest {
-
-    private TargetExecutableFinder testSubject;
-
-    @BeforeEach
-    void setUp() {
-        this.testSubject = new TargetExecutableFinder();
-    }
 
     @Test
     void findTargetExecutableGeneratesDefaultConstructorWhenNoOtherConstructorPresent() {
@@ -24,7 +17,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var givenMethodIdentifier = "de.adesso.test.Building#Building()";
 
         // when
-        var actualConstructor = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualConstructor = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         var softly = new SoftAssertions();
@@ -48,7 +41,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
                 .get();
 
         // when
-        var actualConstructor = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualConstructor = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualConstructor).contains(expectedConstructor);
@@ -64,7 +57,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(0);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -80,7 +73,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(1);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -96,7 +89,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(2);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -112,7 +105,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(2);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -128,7 +121,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonType.getMethodsByName("incrementSeeds").get(3);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -144,7 +137,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonServiceType.getMethodsByName("saveMelon").get(0);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -160,7 +153,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonServiceType.getMethodsByName("deleteMelons").get(1);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -176,7 +169,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonServiceType.getMethodsByName("deleteMelons").get(0);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -192,7 +185,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonServiceType.getMethodsByName("unboundGenericMethod").get(0);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -208,7 +201,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var expectedMethod = melonServiceType.getMethodsByName("boundGenericMethod").get(0);
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).contains(expectedMethod);
@@ -221,7 +214,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var givenMethodIdentifier = "de.adesso.test.Melon#Melon()";
 
         // when
-        var actualConstructor = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualConstructor = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualConstructor).isEmpty();
@@ -234,7 +227,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var givenMethodIdentifier = "de.adesso.test.NotPresent#notPresent()";
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).isEmpty();
@@ -247,7 +240,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var givenMethodIdentifier = "de.adesso.test.MelonService#notPresent()";
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).isEmpty();
@@ -260,7 +253,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var givenMethodIdentifier = "de.adesso.test.MelonService#deleteMelons(String)";
 
         // when
-        var actualMethod = testSubject.findTargetExecutable(givenMethodIdentifier, model);
+        var actualMethod = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model);
 
         // then
         assertThat(actualMethod).isEmpty();
@@ -274,7 +267,7 @@ class TargetExecutableFinderIntegrationTest extends AbstractSpoonIntegrationTest
         var givenMethodIdentifier = String.format("de.adesso.test.MelonService#deleteMelons(%s)", parameterType);
 
         // when / then
-        assertThatThrownBy(() -> testSubject.findTargetExecutable(givenMethodIdentifier, model))
+        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, model))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("The model does not contain the type '%s'!", parameterType);
     }

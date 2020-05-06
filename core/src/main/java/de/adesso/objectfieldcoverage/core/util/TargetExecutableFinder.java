@@ -1,6 +1,8 @@
-package de.adesso.objectfieldcoverage.core.processor;
+package de.adesso.objectfieldcoverage.core.util;
 
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.CtModel;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
  * {@link de.adesso.objectfieldcoverage.core.annotation.TestTarget} for a detailed explanation.
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TargetExecutableFinder {
 
     /**
@@ -115,7 +118,7 @@ public class TargetExecutableFinder {
     /**
      * The type factory used internally to create the type references to identify the target methods.
      */
-    private final TypeFactory typeFactory = new TypeFactory();
+    private static final TypeFactory typeFactory = new TypeFactory();
 
     /**
      * <b>Note:</b> Constructors are viewed as a special kind of method.
@@ -133,7 +136,7 @@ public class TargetExecutableFinder {
      *          an empty optional in case the target type is not present or the target type does
      *          not have a method that matches the specified signature.
      */
-    public Optional<CtExecutable<?>> findTargetExecutable(String methodIdentifier, CtModel model) {
+    public static Optional<CtExecutable<?>> findTargetExecutable(String methodIdentifier, CtModel model) {
         Objects.requireNonNull(methodIdentifier, "methodIdentifier cannot be null!");
         Objects.requireNonNull(model, "model cannot be null!");
 
@@ -156,7 +159,7 @@ public class TargetExecutableFinder {
      *          {@code true}, if the given {@code methodIdentifier} matches the
      *          {@link #METHOD_IDENTIFIER_REGEX}. {@code false} is returned otherwise.
      */
-    private boolean matchesMethodIdentifierPattern(String methodIdentifier) {
+    private static boolean matchesMethodIdentifierPattern(String methodIdentifier) {
         if(METHOD_IDENTIFIER_MATCH_PREDICATE.test(methodIdentifier)) {
             return true;
         }
@@ -179,7 +182,7 @@ public class TargetExecutableFinder {
      *          the given {@code methodIdentifier} or an empty optional if no such class is
      *          present in the given {@code model}.
      */
-    private Optional<CtClass<?>> findTargetClassInModel(String methodIdentifier, CtModel model) {
+    private static Optional<CtClass<?>> findTargetClassInModel(String methodIdentifier, CtModel model) {
         var qualifiedClassName = extractClassName(methodIdentifier);
 
         return model.getElements(new TypeFilter<CtClass<?>>(CtClass.class)).stream()
@@ -205,7 +208,7 @@ public class TargetExecutableFinder {
      *          {@code targetClass} is present which has an equal name and the same parameter types or an
      *          empty optional if no such method or constructor is present.
      */
-    private Optional<? extends CtExecutable<?>> findTargetExecutableOnTargetClass(String methodIdentifier, CtClass<?> targetClass, CtModel model) {
+    private static Optional<? extends CtExecutable<?>> findTargetExecutableOnTargetClass(String methodIdentifier, CtClass<?> targetClass, CtModel model) {
         var methodName = extractMethodName(methodIdentifier);
         var formalParameters = extractFormalParameters(methodIdentifier);
 
@@ -242,7 +245,7 @@ public class TargetExecutableFinder {
      *          {@code true}, if the simple name of the given {@code targetClass} is equal to the
      *          given {@code methodName}. {@code false} is returned otherwise.
      */
-    private boolean isConstructorCandidate(String methodName, CtClass<?> targetClass) {
+    private static boolean isConstructorCandidate(String methodName, CtClass<?> targetClass) {
         var simpleClassName = targetClass.getSimpleName();
         return methodName.equals(simpleClassName);
     }
@@ -265,7 +268,7 @@ public class TargetExecutableFinder {
      *          An optional containing a constructor whose parameters match the given {@link CtTypeReference}s
      *          or an empty optional in case no such constructor is present.
      */
-    private <T> Optional<CtConstructor<T>> findConstructor(CtTypeReference<?>[] typeReferencesForParameters, CtClass<T> targetClass) {
+    private static <T> Optional<CtConstructor<T>> findConstructor(CtTypeReference<?>[] typeReferencesForParameters, CtClass<T> targetClass) {
         if(typeReferencesForParameters.length == 0 && targetClass.getConstructors().isEmpty()) {
             return Optional.of(createImplicitDefaultConstructor(targetClass));
         }
@@ -286,7 +289,7 @@ public class TargetExecutableFinder {
      * @throws IllegalStateException
      *          When the given {@code targetClass} already has at least one constructor declared.
      */
-    private <T> CtConstructor<T> createImplicitDefaultConstructor(CtClass<T> targetClass) {
+    private static <T> CtConstructor<T> createImplicitDefaultConstructor(CtClass<T> targetClass) {
         if(targetClass.getConstructors().isEmpty()) {
             var targetClassFactory = targetClass.getFactory();
 
@@ -313,7 +316,7 @@ public class TargetExecutableFinder {
      * @return
      *          A list containing all formal method parameters.
      */
-    private List<String> extractFormalParameters(String methodIdentifier) {
+    private static List<String> extractFormalParameters(String methodIdentifier) {
         var formalParameterList = StringUtils.substringBetween(methodIdentifier, "(", ")");
         return Arrays.stream(formalParameterList.split(","))
                 .map(String::trim)
@@ -331,7 +334,7 @@ public class TargetExecutableFinder {
      *          {@code true}, iff the given {@code formalMethodParameter} ends with array dimension
      *          brackets (<i>[]</i>).
      */
-    private boolean isArrayType(String formalMethodParameter) {
+    private static boolean isArrayType(String formalMethodParameter) {
         return formalMethodParameter.endsWith("[]");
     }
 
@@ -348,7 +351,7 @@ public class TargetExecutableFinder {
      * @return
      *          The array type reference with its dimension set accordingly, not {@code null}.
      */
-    private CtArrayTypeReference<?> buildArrayTypeReference(String formalMethodParameter, CtModel model) {
+    private static CtArrayTypeReference<?> buildArrayTypeReference(String formalMethodParameter, CtModel model) {
         var arrayDimension = StringUtils.countMatches(formalMethodParameter, "[]");
         var formalParameterWithoutDimensions = StringUtils.substringBefore(formalMethodParameter, "[");
 
@@ -375,7 +378,7 @@ public class TargetExecutableFinder {
      * @return
      *          The type reference for the given {@code formalMethodParameter}.
      */
-    private CtTypeReference<?> buildTypeReference(String formalMethodParameter, CtModel model) {
+    private static CtTypeReference<?> buildTypeReference(String formalMethodParameter, CtModel model) {
         if(UNANN_PRIMITIVE_TYPE_MATCH_PREDICATE.test(formalMethodParameter)) {
             return PrimitiveTypeUtils.getPrimitiveTypeReference(formalMethodParameter);
         }
@@ -407,7 +410,7 @@ public class TargetExecutableFinder {
      * @throws IllegalStateException
      *          In case the class was not found using {@code this} class loader.
      */
-    private CtTypeReference<?> buildJavaReferenceType(String fullyQualifiedClassName) {
+    private static CtTypeReference<?> buildJavaReferenceType(String fullyQualifiedClassName) {
         try {
             return typeFactory.createReference(Class.forName(fullyQualifiedClassName));
         } catch (ClassNotFoundException e) {
@@ -426,7 +429,7 @@ public class TargetExecutableFinder {
      * @return
      *          The method name.
      */
-    private String extractMethodName(String methodIdentifier) {
+    private static String extractMethodName(String methodIdentifier) {
         return methodIdentifier.split("#")[1]
                 .split("\\(")[0];
     }
@@ -442,7 +445,7 @@ public class TargetExecutableFinder {
      * @return
      *          The class name.
      */
-    private String extractClassName(String methodIdentifier) {
+    private static String extractClassName(String methodIdentifier) {
         return methodIdentifier.split("#")[0];
     }
 

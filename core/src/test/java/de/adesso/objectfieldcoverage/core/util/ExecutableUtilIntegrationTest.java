@@ -1,16 +1,23 @@
 package de.adesso.objectfieldcoverage.core.util;
 
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import de.adesso.objectfieldcoverage.core.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.core.util.exception.IllegalMethodSignatureException;
+import de.adesso.objectfieldcoverage.core.util.exception.TargetMethodNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ExecutableUtilIntegrationTest extends AbstractSpoonIntegrationTest {
+
+    private CtModel spoonModel;
 
     private CtClass<?> executableUtilTestClass;
 
@@ -20,7 +27,7 @@ class ExecutableUtilIntegrationTest extends AbstractSpoonIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        var spoonModel = buildModel("util/ExecutableUtilTest.java");
+        this.spoonModel = buildModel("util/ExecutableUtilTest.java");
         this.executableUtilTestClass = findClassWithSimpleName(spoonModel, "ExecutableUtilTest");
         this.noArgMethodToInvoke = findMethodWithSimpleName(executableUtilTestClass, "noArgMethodToInvoke");
         this.singleArgMethodToInvoke = findMethodWithSimpleName(executableUtilTestClass, "singleArgMethodToInvoke");
@@ -296,6 +303,95 @@ class ExecutableUtilIntegrationTest extends AbstractSpoonIntegrationTest {
 
         // then
         assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void findTargetExecutablesReturnsSingleExecutableWhenTestTargetAnnotationPresent() {
+        // given
+        var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "singleKnownNonVoidTestTarget");
+        var expectedExecutable = findMethodWithSimpleName(executableUtilTestClass, "intPrimitiveType");
+
+        // when
+        var actualExecutables = ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel);
+
+        // then
+        assertThat(actualExecutables).containsExactly(expectedExecutable);
+    }
+
+    @Test
+    void findTargetExecutablesReturnsSingleVoidExecutableWhenTestTargetAnnotationPresentAndExceptionExpectedFlagSet() {
+        // given
+        var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "singleKnownVoidTestTargetWithFlagSet");
+        var expectedExecutable = findMethodWithSimpleName(executableUtilTestClass, "voidMethod");
+
+        // when
+        var actualExecutables = ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel);
+
+        // then
+        assertThat(actualExecutables).containsExactly(expectedExecutable);
+    }
+
+    @Test
+    void findTargetExecutablesReturnsMultipleExecutablesWhenTestTargetsAnnotationPresent() {
+        // given
+        var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "multipleKnownNonVoidTestTarget");
+        var firstExpectedExecutable = findMethodWithSimpleName(executableUtilTestClass, "intPrimitiveType");
+        var secondExpectedExecutable = findMethodWithSimpleName(executableUtilTestClass, "booleanPrimitiveType");
+
+        // when
+        var actualExecutables = ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel);
+
+        // then
+        assertThat(actualExecutables).containsExactlyInAnyOrder(firstExpectedExecutable,
+                secondExpectedExecutable);
+    }
+
+    @Test
+    void findTargetExecutablesThrowsExceptionWhenTargetExecutableIsVoidAndExceptionExpectedFlagNotSet() {
+        // given
+        var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "singleKnownVoidTestTarget");
+        var methodIdentifier = annotatedMethod.getAnnotation(TestTarget.class).value();
+
+        // when / then
+        assertThatThrownBy(() -> ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel))
+                .isInstanceOf(IllegalMethodSignatureException.class)
+                .hasMessage("The target executable '%s' is a void method, but the exceptionExpected flag is set to false!",
+                        methodIdentifier);
+    }
+
+    @Test
+    void findTargetExecutablesThrowsExceptionWhenTestMethodNotAnnotated() {
+        // given
+        var nonAnnotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "singleArgMethodToInvoke");
+
+        // when / then
+        assertThatThrownBy(() -> ExecutableUtil.findTargetExecutables(nonAnnotatedMethod, spoonModel))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Given test method '%s' neither annotated with @TestTarget nor with @TestTargets",
+                        nonAnnotatedMethod.getSimpleName());
+    }
+
+    @Test
+    void findTargetExecutablesThrowsExceptionWhenTestTargetsAnnotationEmpty() {
+        // given
+        var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "emptyTestTargets");
+
+        // when / then
+        assertThatThrownBy(() -> ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("@TestTargets annotation on test method %s is empty!", annotatedMethod.getSimpleName());
+    }
+
+    @Test
+    void findTargetExecutablesReturnsThrowsExceptionWhenExecutableNotFound() {
+        // given
+        var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "singleUnknownTestTarget");
+        var methodIdentifier = annotatedMethod.getAnnotation(TestTarget.class).value();
+
+        // when / then
+        assertThatThrownBy(() -> ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel))
+                .isInstanceOf(TargetMethodNotFoundException.class)
+                .hasMessage("Method '%s' not found in current model!", methodIdentifier);
     }
 
 }

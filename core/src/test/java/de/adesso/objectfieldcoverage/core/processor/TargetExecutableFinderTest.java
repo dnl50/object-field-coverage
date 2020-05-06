@@ -1,6 +1,6 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
-import org.junit.jupiter.api.BeforeEach;
+import de.adesso.objectfieldcoverage.core.util.TargetExecutableFinder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -30,13 +30,6 @@ class TargetExecutableFinderTest {
     @Mock
     private CtModel modelMock;
 
-    private TargetExecutableFinder testSubject;
-
-    @BeforeEach
-    void setUp() {
-        this.testSubject = new TargetExecutableFinder();
-    }
-
     @Test
     void findTargetExecutableReturnsEmptyOptionalWhenMethodIdentifierIsValidButClassDoesNotExist() {
         // given
@@ -45,7 +38,7 @@ class TargetExecutableFinderTest {
         given(modelMock.getElements(any())).willReturn(List.of());
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).isEmpty();
@@ -66,7 +59,7 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getMethod(targetMethodName)).willReturn(null);
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).isEmpty();
@@ -90,7 +83,7 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getConstructor()).willReturn(targetConstructorMock);
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetConstructorMock);
@@ -122,7 +115,7 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetConstructorMock);
@@ -145,7 +138,7 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getMethod(targetMethodName)).willReturn(targetMethodMock);
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethodMock);
@@ -180,7 +173,7 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethod);
@@ -217,7 +210,7 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethodMock);
@@ -260,7 +253,7 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethodMock);
@@ -295,7 +288,7 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethodMock);
@@ -333,7 +326,7 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethodMock);
@@ -370,7 +363,7 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethodMock);
@@ -404,7 +397,7 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getMethod(targetMethodName, parameterTypeReferenceMock)).willReturn(targetMethodMock);
 
         // when
-        var actualTargetMethodOptional = testSubject.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
 
         // then
         assertThat(actualTargetMethodOptional).contains(targetMethodMock);
@@ -426,7 +419,7 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getQualifiedName()).willReturn(targetClassQualifiedName);
 
         // when / then
-        assertThatThrownBy(() -> testSubject.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("The model does not contain the type '%s'!", qualifiedClassName);
     }
@@ -446,7 +439,7 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getQualifiedName()).willReturn(targetClassQualifiedName);
 
         // when / then
-        assertThatThrownBy(() -> testSubject.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Class '%s' was not found!", qualifiedClassName);
     }
@@ -467,7 +460,7 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getQualifiedName()).willReturn(targetClassQualifiedName);
 
         // when / then
-        assertThatThrownBy(() -> testSubject.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Class '%s' was not found!", expectedQualifiedClassName);
     }
@@ -645,7 +638,7 @@ class TargetExecutableFinderTest {
 
     private void assertIllegalArgumentExceptionIsThrown(String givenMethodIdentifier) {
         // when / then
-        assertThatThrownBy(() -> testSubject.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Given method identifier '%s' is not a valid identifier!", givenMethodIdentifier);
     }
