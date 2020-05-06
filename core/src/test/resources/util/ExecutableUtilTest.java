@@ -41,4 +41,16 @@ public class ExecutableUtilTest {
         this.singleArgMethodToInvoke();
     }
 
+    public void voidMethod() {
+
+    }
+
+    public Void voidTypeMethod() {
+        return null;
+    }
+
+    public int intPrimitiveType() {
+        return 0;
+    }
+
 }

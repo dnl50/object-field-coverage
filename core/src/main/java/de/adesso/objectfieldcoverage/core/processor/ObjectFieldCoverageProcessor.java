@@ -15,13 +15,13 @@ import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitAssertionFinder;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.EvaluationTreeBuilder;
 import de.adesso.objectfieldcoverage.core.processor.exception.IllegalMethodSignatureException;
 import de.adesso.objectfieldcoverage.core.processor.exception.TargetMethodNotFoundException;
+import de.adesso.objectfieldcoverage.core.util.ExecutableUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.factory.TypeFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -169,7 +169,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         var targetExecutable = targetExecutableFinder.findTargetExecutable(methodIdentifier, underlyingModel)
                 .orElseThrow(() -> new TargetMethodNotFoundException(methodIdentifier));
 
-        if(!exceptionExpected && isVoidExecutable(targetExecutable)) {
+        if(!exceptionExpected && ExecutableUtil.isVoidExecutable(targetExecutable)) {
             var exceptionMessage = String.format("The target executable '%s' is a void method, but the exceptionExpected flag is set to false!",
                     methodIdentifier);
 
@@ -178,23 +178,6 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         }
 
         return targetExecutable;
-    }
-
-    /**
-     *
-     * @param executable
-     *          The executable to check, not {@code null}.
-     *
-     * @return
-     *          {@code true}, if the {@link CtMethod#getType() return type} of the given executable
-     *          is either {@link Void} or the executable is declared as <i>void</i>. {@code false}
-     *          is returned otherwise.
-     */
-    private boolean isVoidExecutable(CtExecutable<?> executable) {
-        var typeFactory = new TypeFactory();
-        var methodReturnType = executable.getType();
-
-        return typeFactory.VOID_PRIMITIVE.equals(methodReturnType) || typeFactory.VOID.equals(methodReturnType);
     }
 
 }

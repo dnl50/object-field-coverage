@@ -262,4 +262,40 @@ class ExecutableUtilIntegrationTest extends AbstractSpoonIntegrationTest {
         assertThat(actualInvocationCount).isEqualTo(expectedInvocationCount);
     }
 
+    @Test
+    void isVoidExecutableReturnsTrueWhenExecutableIsDeclaredVoid() {
+        // given
+        var voidMethod = findMethodWithSimpleName(executableUtilTestClass, "voidMethod");
+
+        // when
+        var actualResult = ExecutableUtil.isVoidExecutable(voidMethod);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isVoidExecutableReturnsTrueWhenExecutableReturnsVoidType() {
+        // given
+        var voidTypeMethod = findMethodWithSimpleName(executableUtilTestClass, "voidTypeMethod");
+
+        // when
+        var actualResult = ExecutableUtil.isVoidExecutable(voidTypeMethod);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isVoidExecutableReturnsFalseWhenOtherType() {
+        // given
+        var intPrimitiveMethod = findMethodWithSimpleName(executableUtilTestClass, "intPrimitiveType");
+
+        // when
+        var actualResult = ExecutableUtil.isVoidExecutable(intPrimitiveMethod);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
 }

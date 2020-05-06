@@ -6,6 +6,7 @@ import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.Collection;
@@ -110,6 +111,23 @@ public class ExecutableUtil {
                 .map(CtAbstractInvocation::getExecutable)
                 .filter(executableRef::equals)
                 .count();
+    }
+
+    /**
+     *
+     * @param executable
+     *          The executable to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the {@link CtMethod#getType() return type} of the given executable
+     *          is either {@link Void} or the executable is declared as <i>void</i>. {@code false}
+     *          is returned otherwise.
+     */
+    public static boolean isVoidExecutable(CtExecutable<?> executable) {
+        var typeFactory = new TypeFactory();
+        var methodReturnType = executable.getType();
+
+        return typeFactory.VOID_PRIMITIVE.equals(methodReturnType) || typeFactory.VOID.equals(methodReturnType);
     }
 
 }

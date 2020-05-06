@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.core.finder;
 
+import de.adesso.objectfieldcoverage.api.AccessibleField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,11 +33,13 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
     }
 
     @Test
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     void findAccessibleFieldsReturnsPublicField(@Mock CtType typeMock,
                                                 @Mock CtClass testClazzMock,
                                                 @Mock CtField fieldMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
+
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
         given(fieldMock.isPublic()).willReturn(true);
@@ -45,7 +48,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -56,6 +59,8 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
                                                                                @Mock CtType fieldDeclaringTypeMock,
                                                                                @Mock CtPackage packageMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
+
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
@@ -69,7 +74,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -82,6 +87,8 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
                                                                               @Mock CtTypeReference fieldDeclaringTypeReference,
                                                                               @Mock CtPackage testClassPackageMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
+
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
@@ -98,7 +105,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -134,6 +141,8 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
                                                                                     @Mock CtType fieldDeclaringTypeMock,
                                                                                     @Mock CtPackage packageMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
+
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
@@ -146,7 +155,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -158,6 +167,8 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
                                                                                  @Mock CtPackage packageMock,
                                                                                  @Mock CtPackage testClassPackageMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
+
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
@@ -171,7 +182,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -181,6 +192,8 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
                                                                  @Mock CtField fieldMock,
                                                                  @Mock CtType fieldDeclaringTypeMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
+
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
@@ -192,7 +205,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -220,6 +233,8 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
                                                                               @Mock CtClass testClazzMock,
                                                                               @Mock CtField fieldMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
+
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(testClazzMock);
@@ -228,7 +243,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

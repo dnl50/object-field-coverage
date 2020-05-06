@@ -1,12 +1,14 @@
 package de.adesso.objectfieldcoverage.core.finder.lombok;
 
+import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import spoon.reflect.declaration.CtField;
 
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.stream.Collectors;
 
 class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIntegrationTest {
 
@@ -18,26 +20,40 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
     }
 
     @Test
-    void dataAnnotatedClass() throws Exception {
+    void dataAnnotatedClass() {
         // given
         var model = buildModel("finder/lombok/DataBox.java");
         var boxClass = findClassWithSimpleName(model, "DataBox");
 
         var expectedFields = List.of(
-                boxClass.getField("width"),
                 boxClass.getField("height"),
-                boxClass.getField("depth")
+                boxClass.getField("depth"),
+                boxClass.getField("empty"),
+                boxClass.getField("full")
         );
 
         // when
         var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass);
 
         // then
-        assertThat(accessibleFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var accessibleCtFields = accessibleFields.stream()
+                .map(AccessibleField::getActualField)
+                .map(CtField.class::cast)
+                .collect(Collectors.toSet());
+
+        var softly = new SoftAssertions();
+
+        softly.assertThat(accessibleCtFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        softly.assertThat(boxClass.getMethod("getHeight")).isNotNull();
+        softly.assertThat(boxClass.getMethod("getDepth")).isNotNull();
+        softly.assertThat(boxClass.getMethod("isEmpty")).isNotNull();
+        softly.assertThat(boxClass.getMethod("isFull")).isNotNull();
+
+        softly.assertAll();
     }
 
     @Test
-    void getterAnnotatedClass() throws Exception {
+    void getterAnnotatedClass() {
         // given
         var model = buildModel("finder/lombok/TypeGetterBox.java");
         var boxClass = findClassWithSimpleName(model, "TypeGetterBox");
@@ -48,15 +64,27 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
                 boxClass.getField("depth")
         );
 
-        // when
+               // when
         var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass);
 
         // then
-        assertThat(accessibleFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var accessibleCtFields = accessibleFields.stream()
+                .map(AccessibleField::getActualField)
+                .map(CtField.class::cast)
+                .collect(Collectors.toSet());
+
+        var softly = new SoftAssertions();
+
+        softly.assertThat(accessibleCtFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        softly.assertThat(boxClass.getMethod("getWidth")).isNotNull();
+        softly.assertThat(boxClass.getMethod("getHeight")).isNotNull();
+        softly.assertThat(boxClass.getMethod("getDepth")).isNotNull();
+
+        softly.assertAll();
     }
 
     @Test
-    void fieldAnnotatedClass() throws Exception {
+    void fieldAnnotatedClass() {
         // given
         var model = buildModel("finder/lombok/FieldGetterBox.java");
         var boxClass = findClassWithSimpleName(model, "FieldGetterBox");
@@ -70,15 +98,26 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
         var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass);
 
         // then
-        assertThat(accessibleFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var accessibleCtFields = accessibleFields.stream()
+                .map(AccessibleField::getActualField)
+                .map(CtField.class::cast)
+                .collect(Collectors.toSet());
+
+        var softly = new SoftAssertions();
+
+        softly.assertThat(accessibleCtFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        softly.assertThat(boxClass.getMethod("getWidth")).isNotNull();
+        softly.assertThat(boxClass.getMethod("getHeight")).isNotNull();
+
+        softly.assertAll();
     }
 
     @Test
-    void fieldAnnotationTakesPrecedenceOverClassAnnotation() throws Exception {
+    void fieldAnnotationTakesPrecedenceOverClassAnnotation() {
         // given
         var model = buildModel("finder/lombok/TypeAndFieldGetterBox.java", "finder/lombok/DataBox.java");
         var boxClass = findClassWithSimpleName(model, "TypeAndFieldGetterBox");
-        var testClazz = findClassWithSimpleName(model, "DataBox");
+        var testClass = findClassWithSimpleName(model, "DataBox");
 
         var expectedFields = List.of(
                 boxClass.getField("width"),
@@ -86,10 +125,21 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
         );
 
         // when
-        var accessibleFields = testSubject.findAccessibleFields(testClazz, boxClass);
+        var accessibleFields = testSubject.findAccessibleFields(testClass, boxClass);
 
         // then
-        assertThat(accessibleFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var accessibleCtFields = accessibleFields.stream()
+                .map(AccessibleField::getActualField)
+                .map(CtField.class::cast)
+                .collect(Collectors.toSet());
+
+        var softly = new SoftAssertions();
+
+        softly.assertThat(accessibleCtFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        softly.assertThat(boxClass.getMethod("getWidth")).isNotNull();
+        softly.assertThat(boxClass.getMethod("getHeight")).isNotNull();
+
+        softly.assertAll();
     }
 
 }

@@ -1,6 +1,7 @@
 package de.adesso.objectfieldcoverage.core.processor.evaluation;
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
+import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,7 @@ public class EvaluationTreeBuilder {
      * @return
      *          A set containing the accessible fields of the given {@code assertedType}.
      */
-    private Set<CtField<?>> findAccessibleFields(CtType<?> assertedType, CtClass<?> testClazz) {
+    private Set<AccessibleField<?>> findAccessibleFields(CtType<?> assertedType, CtClass<?> testClazz) {
         return fieldFinders.stream()
                 .map(fieldFinder -> fieldFinder.findAccessibleFields(testClazz, assertedType))
                 .flatMap(Collection::stream)

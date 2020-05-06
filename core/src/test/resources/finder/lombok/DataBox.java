@@ -11,4 +11,13 @@ public class DataBox {
 
     private int depth;
 
+    private boolean empty;
+
+    private Boolean full;
+
+    // overrides lombok generated public getter
+    protected int getWidth() {
+        return width;
+    }
+
 }

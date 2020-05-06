@@ -8,7 +8,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtPackage;
+import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtTypeReference;
+
+import java.util.Collection;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -261,6 +265,11 @@ class AccessibilityAwareFieldFinderTest {
         @Override
         protected boolean isFieldAccessible(CtClass<?> testClazz, CtField<?> field) {
             return true;
+        }
+
+        @Override
+        protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtClass<?> testClazz, CtField<T> field) {
+            return Set.of();
         }
 
     }

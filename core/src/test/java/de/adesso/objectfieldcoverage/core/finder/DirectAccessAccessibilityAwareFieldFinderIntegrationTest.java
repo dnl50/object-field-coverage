@@ -1,12 +1,13 @@
 package de.adesso.objectfieldcoverage.core.finder;
 
+import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.stream.Collectors;
 
 class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIntegrationTest {
 
@@ -18,6 +19,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
     }
 
     @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsCarTest() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/CarTest.java");
@@ -31,14 +33,27 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 carType.getField("packagePrivateManufacturer")
         );
 
+        var expectedAccessibleFields = expectedFields.stream()
+                .map(accessibleField -> new AccessibleField(accessibleField, accessibleField))
+                .collect(Collectors.toList());
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
 
         // then
-        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var softly = new SoftAssertions();
+
+        softly.assertThat(actualAccessibleFields).hasSize(4);
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(0));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(1));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(2));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(3));
+
+        softly.assertAll();
     }
 
     @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsEngineInnerClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java");
@@ -54,14 +69,29 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 carType.getField("privateManufacturer")
         );
 
+        var expectedAccessibleFields = expectedFields.stream()
+                .map(accessibleField -> new AccessibleField(accessibleField, accessibleField))
+                .collect(Collectors.toList());
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
 
         // then
-        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var softly = new SoftAssertions();
+
+        softly.assertThat(actualAccessibleFields).hasSize(6);
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(0));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(1));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(2));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(3));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(4));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(5));
+
+        softly.assertAll();
     }
 
     @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsRetailerStaticInnerClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java");
@@ -77,14 +107,29 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 carType.getField("privateManufacturer")
         );
 
+        var expectedAccessibleFields = expectedFields.stream()
+                .map(accessibleField -> new AccessibleField(accessibleField, accessibleField))
+                .collect(Collectors.toList());
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
 
         // then
-        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var softly = new SoftAssertions();
+
+        softly.assertThat(actualAccessibleFields).hasSize(6);
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(0));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(1));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(2));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(3));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(4));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(5));
+
+        softly.assertAll();
     }
 
     @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsTruckSubClass() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Truck.java");
@@ -97,14 +142,26 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 carType.getField("protectedManufacturer")
         );
 
+        var expectedAccessibleFields = expectedFields.stream()
+                .map(accessibleField -> new AccessibleField(accessibleField, accessibleField))
+                .collect(Collectors.toList());
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
 
         // then
-        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var softly = new SoftAssertions();
+
+        softly.assertThat(actualAccessibleFields).hasSize(3);
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(0));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(1));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(2));
+
+        softly.assertAll();
     }
 
     @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsPlaneClassFromOtherPackage() {
         // given
         var model = buildModel("finder/direct-access/Car.java", "finder/direct-access/Plane.java");
@@ -116,11 +173,21 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 carType.getField("publicManufacturer")
         );
 
+        var expectedAccessibleFields = expectedFields.stream()
+                .map(accessibleField -> new AccessibleField(accessibleField, accessibleField))
+                .collect(Collectors.toList());
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
 
         // then
-        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+        var softly = new SoftAssertions();
+
+        softly.assertThat(actualAccessibleFields).hasSize(2);
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(0));
+        softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(1));
+
+        softly.assertAll();
     }
 
 }

@@ -4,6 +4,10 @@ import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtTypedElement;
+
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * {@link AccessibilityAwareFieldFinder} implementation searching for fields which are accessible
@@ -59,6 +63,27 @@ public class DirectAccessAccessibilityAwareFieldFinder extends AccessibilityAwar
         }
 
         return isInnerClassOfDeclaringType(field, testClazz);
+    }
+
+    /**
+     *
+     * @param testClazz
+     *          The test class whose methods can access the given {@code field},
+     *          not {@code null}.
+     *
+     * @param field
+     *          The field which can be accessed by inside the given {@code testClazz},
+     *          not {@code null}.
+     *
+     * @param <T>
+     *          The type of the field.
+     *
+     * @return
+     *          A set containing the given {@code field} as its only element.
+     */
+    @Override
+    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtClass<?> testClazz, CtField<T> field) {
+        return Set.of(field);
     }
 
 }

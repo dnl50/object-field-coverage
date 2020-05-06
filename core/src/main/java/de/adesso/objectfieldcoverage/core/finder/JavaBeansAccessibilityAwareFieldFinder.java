@@ -5,8 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtTypedElement;
 
+import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * {@link AccessibilityAwareFieldFinder} implementation which finds fields for which a getter method
@@ -33,7 +38,38 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      */
     @Override
     protected boolean isFieldAccessible(CtClass<?> testClazz, CtField<?> field) {
-        return this.hasJavaBeansGetterMethod(field);
+        return this.findJavaBeansGetterMethod(field).isPresent();
+    }
+
+    /**
+     *
+     * @param testClazz
+     *          The test class whose methods can access the given {@code field},
+     *          not {@code null}.
+     *
+     * @param field
+     *          The field which can be accessed by inside the given {@code testClazz},
+     *          not {@code null}.
+     *
+     * @param <T>
+     *          The type of the field.
+     *
+     * @return
+     *          A set containing the given {@code field}'s Java Beans Getter method which is present
+     *          on the {@code field}'s declaring class as its only element.
+     *
+     * @throws IllegalStateException
+     *          When no Java Beans Getter method is present for the {@code field} on the
+     *          {@code field}'s declaring class.
+     */
+    @Override
+    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtClass<?> testClazz, CtField<T> field) {
+        var getterMethod = this.findJavaBeansGetterMethod(field)
+                .orElseThrow(() -> new IllegalStateException(
+                        String.format("No Java Beans Getter method present for field '%s'!", field.getSimpleName())
+                ));
+
+        return Set.of(getterMethod);
     }
 
     /**
@@ -52,11 +88,11 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      *          The {@link CtField} to find the Java Beans getter method for, not {@code null}.
      *
      * @return
-     *          {@code true}, if a Java Beans getter method for the given {@code field}
-     *          is present on the declaring class, or {@code false} otherwise. The getter method must be
-     *          can be static when the given {@code field} is static as well.
+     *          An optional containing the Java Beans getter method for the given {@code field} in case it is
+     *          is present on the declaring class, or an empty optional otherwise. The getter method can be declared
+     *          static when the given {@code field} is static as well.
      */
-    private boolean hasJavaBeansGetterMethod(CtField<?> field) {
+    private <T> Optional<CtMethod<T>> findJavaBeansGetterMethod(CtField<T> field) {
         var getterPrefix = javaBeansGetterMethodPrefix(field);
         var capitalizedFieldSimpleName = StringUtils.capitalize(field.getSimpleName());
         var javaBeansGetterName = String.format("%s%s", getterPrefix, capitalizedFieldSimpleName);
@@ -66,8 +102,15 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
         var getterMethod = field.getDeclaringType()
                 .getMethod(fieldType, javaBeansGetterName);
 
-        return Objects.nonNull(getterMethod) && getterMethod.isPublic() &&
-                (getterCanBeStatic || !getterMethod.isStatic());
+        var getterMethodExists = Objects.nonNull(getterMethod);
+        var getterMethodIsPublic = getterMethodExists && getterMethod.isPublic();
+        var getterMethodIsStatic = getterMethodExists && getterMethod.isStatic();
+
+        if(getterMethodExists && getterMethodIsPublic && (getterCanBeStatic || !getterMethodIsStatic)) {
+            return Optional.of(getterMethod);
+        }
+
+        return Optional.empty();
     }
 
     /**

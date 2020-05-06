@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.core.finder;
 
+import de.adesso.objectfieldcoverage.api.AccessibleField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -40,6 +42,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                                                                            @Mock CtType fieldTypeMock,
                                                                            @Mock CtMethod getterMethodMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
         var booleanFieldSimpleName = "activated";
         var expectedJavaBeansGetterMethodName = "isActivated";
 
@@ -61,7 +64,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -73,6 +76,8 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                                                                                @Mock CtType fieldTypeMock,
                                                                                @Mock CtMethod getterMethodMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
+
         var booleanFieldSimpleName = "activated";
         var expectedJavaBeansGetterMethodName = "isActivated";
 
@@ -94,7 +99,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -203,6 +208,8 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                                                                         @Mock CtType fieldTypeMock,
                                                                         @Mock CtMethod getterMethodMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
+
         var fieldSimpleName = "name";
         var expectedJavaBeansGetterMethodName = "getName";
 
@@ -224,7 +231,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -236,6 +243,8 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                                                                                     @Mock CtType fieldTypeMock,
                                                                                     @Mock CtMethod getterMethodMock) {
         // given
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
+
         var fieldSimpleName = "name";
         var expectedJavaBeansGetterMethodName = "getName";
 
@@ -258,7 +267,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
 
         // then
-        assertThat(actualFields).containsExactly(fieldMock);
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
