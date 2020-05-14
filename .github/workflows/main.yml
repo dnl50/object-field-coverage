@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
       
       - name: Build spoon artifact without running tests
         run: mvn -f spoon-core/pom.xml clean package -Djar.finalName=$SPOON_ARTIFACT_NAME -DskipTests -P release
