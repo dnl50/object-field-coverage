@@ -5,10 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtPackage;
-import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.declaration.*;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
@@ -263,12 +260,12 @@ class AccessibilityAwareFieldFinderTest {
     private static class DefaultAccessibilityAwareFieldFinder extends AccessibilityAwareFieldFinder {
 
         @Override
-        protected boolean isFieldAccessible(CtClass<?> testClazz, CtField<?> field) {
+        protected boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
             return true;
         }
 
         @Override
-        protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtClass<?> testClazz, CtField<T> field) {
+        protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
             return Set.of();
         }
 

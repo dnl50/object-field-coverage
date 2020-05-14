@@ -3,9 +3,9 @@ package de.adesso.objectfieldcoverage.core.finder;
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
 
 import java.util.Collection;
@@ -25,8 +25,8 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
 
     /**
      *
-     * @param testClazz
-     *          The test class whose methods could potentially access the given {@code type}'s
+     * @param accessingType
+     *          The class whose methods could potentially access the given {@code type}'s
      *          fields, not {@code null}.
      *
      * @param field
@@ -37,18 +37,18 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      *          declaring type. {@code false} is returned otherwise.
      */
     @Override
-    protected boolean isFieldAccessible(CtClass<?> testClazz, CtField<?> field) {
+    protected boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
         return this.findJavaBeansGetterMethod(field).isPresent();
     }
 
     /**
      *
-     * @param testClazz
-     *          The test class whose methods can access the given {@code field},
+     * @param accessingType
+     *          The class whose methods can access the given {@code field},
      *          not {@code null}.
      *
      * @param field
-     *          The field which can be accessed by inside the given {@code testClazz},
+     *          The field which can be accessed by inside the given {@code accessingType},
      *          not {@code null}.
      *
      * @param <T>
@@ -63,7 +63,7 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      *          {@code field}'s declaring class.
      */
     @Override
-    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtClass<?> testClazz, CtField<T> field) {
+    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
         var getterMethod = this.findJavaBeansGetterMethod(field)
                 .orElseThrow(() -> new IllegalStateException(
                         String.format("No Java Beans Getter method present for field '%s'!", field.getSimpleName())

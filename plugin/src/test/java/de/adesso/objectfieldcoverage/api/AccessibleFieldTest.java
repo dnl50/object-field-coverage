@@ -6,6 +6,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtTypedElement;
 
 import java.util.Set;
 
@@ -94,6 +95,55 @@ class AccessibleFieldTest {
 
         // then
         assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void isAccessibleThroughElementReturnsTrueWhenElementIsContained(@Mock CtField<String> fieldMock,
+                                                                     @Mock CtTypedElement<String> typedElementMock) {
+        // given
+        var testSubject = new AccessibleField<>(fieldMock, typedElementMock);
+
+        // when
+        var actualResult = testSubject.isAccessibleThroughElement(typedElementMock);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isAccessibleThroughElementReturnsFalseWhenElementIsNotContained(@Mock CtField<String> fieldMock,
+                                                                         @Mock CtTypedElement<String> typedElementMock) {
+        // given
+        var testSubject = new AccessibleField<>(fieldMock, Set.of());
+
+        // when
+        var actualResult = testSubject.isAccessibleThroughElement(typedElementMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void uniteAllUnitsAccessGrantingElements(@Mock CtField firstFieldMock,
+                                             @Mock CtField secondFieldMock,
+                                             @Mock CtTypedElement firstFieldAccessGrantingElementMock,
+                                             @Mock CtTypedElement secondFieldAccessGrantingElementMock) {
+        // given
+        var firstGivenAccessibleField = new AccessibleField<>(firstFieldMock, firstFieldMock);
+        var secondGivenAccessibleField = new AccessibleField<>(firstFieldMock, firstFieldAccessGrantingElementMock);
+        var thirdGivenAccessibleField = new AccessibleField<>(secondFieldMock, secondFieldMock);
+        var fourthGivenAccessibleField = new AccessibleField<>(secondFieldMock, secondFieldAccessGrantingElementMock);
+
+        var firstExpectedAccessibleField = new AccessibleField<>(firstFieldMock, Set.of(firstFieldMock, firstFieldAccessGrantingElementMock));
+        var secondExpectedAccessibleField = new AccessibleField<>(secondFieldMock, Set.of(secondFieldMock, secondFieldAccessGrantingElementMock));
+
+        // when
+        var actualResult = AccessibleField.uniteAll(Set.<AccessibleField<?>>of(firstGivenAccessibleField, secondGivenAccessibleField,
+                thirdGivenAccessibleField, fourthGivenAccessibleField));
+
+        // then
+        assertThat(actualResult).containsExactlyInAnyOrder(firstExpectedAccessibleField, secondExpectedAccessibleField);
     }
 
 }

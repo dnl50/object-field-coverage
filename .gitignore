@@ -50,3 +50,6 @@ out/
 
 # Spoon
 **/spooned/
+
+# local JARs
+libs

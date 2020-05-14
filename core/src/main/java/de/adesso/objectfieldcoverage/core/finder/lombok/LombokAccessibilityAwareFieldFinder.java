@@ -5,8 +5,8 @@ import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
 
 import java.util.Collection;
@@ -46,8 +46,8 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
 
     /**
      *
-     * @param testClazz
-     *          The test class whose methods could potentially access the given {@code type}'s
+     * @param accessingType
+     *          The class whose methods could potentially access the given {@code type}'s
      *          fields, not {@code null}.
      *
      * @param field
@@ -55,21 +55,21 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      *
      * @return
      *          {@code true}, if the given field has a generated getter which is accessible
-     *          by the given {@code testClazz}' methods. {@code false} is returned otherwise.
+     *          by the given {@code accessingType}. {@code false} is returned otherwise.
      */
     @Override
-    protected boolean isFieldAccessible(CtClass<?> testClazz, CtField<?> field) {
-        return this.hasAccessibleGeneratedGetter(testClazz, field);
+    protected boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
+        return this.hasAccessibleGeneratedGetter(accessingType, field);
     }
 
     /**
      *
-     * @param testClazz
-     *          The test class whose methods can access the given {@code field},
+     * @param accessingType
+     *          The type whose methods can access the given {@code field},
      *          not {@code null}.
      *
      * @param field
-     *          The field which can be accessed by inside the given {@code testClazz},
+     *          The field which can be accessed by inside the given {@code accessingType},
      *          not {@code null}.
      *
      * @param <T>
@@ -82,7 +82,7 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      * @see LombokGetterMethodGenerator#generateGetterMethod(CtField, AccessLevel)
      */
     @Override
-    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtClass<?> testClazz, CtField<T> field) {
+    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
         var getterAccessLevel = getAccessLevelOfGeneratedGetter(field);
         return Set.of(lombokGetterMethodGenerator.generateGetterMethod(field, getterAccessLevel));
     }
@@ -91,11 +91,11 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      * Returns {@code true} if one of the following conditions is fulfilled for the generated getter:
      * <ul>
      *     <li>the getter is declared <i>public</i></li>
-     *     <li>the getter is declared <i>protected</i> and the {@code testClazz} is in the same
+     *     <li>the getter is declared <i>protected</i> and the {@code accessingType} is in the same
      *     package as or a sub-class of the {@code field}'s declaring type</li>
-     *     <li>the getter is declared <i>package private</i> and the {@code testClazz} is in the same
+     *     <li>the getter is declared <i>package private</i> and the {@code accessingType} is in the same
      *     package as or an inner class of the {@code field}'s declaring type</li>
-     *     <li>the getter is declared <i>private</i> and the {@code testClazz} is an inner class
+     *     <li>the getter is declared <i>private</i> and the {@code accessingType} is an inner class
      *     of the {@code field}'s declaring type</li>
      * </ul>
      *
@@ -105,8 +105,8 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      * <b>Note:</b> {@link AccessLevel#MODULE} and {@link AccessLevel#PACKAGE} are regarded as
      * equal.
      *
-     * @param testClazz
-     *          The test class whose methods could potentially access the given {@code field},
+     * @param accessingType
+     *          The type whose methods could potentially access the given {@code field},
      *          not {@code null}.
      *
      * @param field
@@ -114,11 +114,11 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      *
      * @return
      *          {@code true}, if lombok generates a getter which is accessible from the given
-     *          {@code testClazz}' methods. {@code false} is returned otherwise.
+     *          {@code accessingType}' methods. {@code false} is returned otherwise.
      *
      * @see LombokGetterMethodGenerator#isGetterMethodWithDifferentAccessModifierPresent(CtField, AccessLevel)
      */
-    private boolean hasAccessibleGeneratedGetter(CtClass<?> testClazz, CtField<?> field) {
+    private boolean hasAccessibleGeneratedGetter(CtType<?> accessingType, CtField<?> field) {
         if(!isFieldOrDeclaringClassAnnotatedWithGetter(field)) {
             return false;
         }
@@ -133,11 +133,11 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
             case PUBLIC:
                 return true;
             case PROTECTED:
-                return isInSamePackageAsDeclaringType(field, testClazz) || isRealSubClassOfDeclaringClass(field, testClazz);
+                return isInSamePackageAsDeclaringType(field, accessingType) || isRealSubClassOfDeclaringClass(field, accessingType);
             case PACKAGE: case MODULE:
-                return isInSamePackageAsDeclaringType(field, testClazz) || isInnerClassOfDeclaringType(field, testClazz);
+                return isInSamePackageAsDeclaringType(field, accessingType) || isInnerClassOfDeclaringType(field, accessingType);
             case PRIVATE:
-                return isInnerClassOfDeclaringType(field, testClazz);
+                return isInnerClassOfDeclaringType(field, accessingType);
             default:
                 return false;
         }

@@ -1,6 +1,5 @@
 package de.adesso.objectfieldcoverage.api;
 
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
@@ -20,33 +19,33 @@ public abstract class AccessibilityAwareFieldFinder {
 
     /**
      *
-     * @param testClazz
-     *          The test class whose methods could potentially access the given {@code field},
+     * @param accessingType
+     *          The class whose methods could potentially access the given {@code field},
      *          not {@code null}.
      *
      * @param field
      *          The field to check, not {@code null}.
      *
      * @return
-     *          {@code true}, if the given {@code field} is accessible in the given {@code testClazz}'
-     *          methods. {@code false} is returned otherwise.
+     *          {@code true}, if the given {@code field} is accessible from the given {@code accessingType}.
+     *          {@code false} is returned otherwise.
      */
-    protected abstract boolean isFieldAccessible(CtClass<?> testClazz, CtField<?> field);
+    protected abstract boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field);
 
     /**
      * This method is required since it is important to know through which typed element (e.g. the field
-     * itself or a getter method) a given {@link CtField} can be accessed in a given {@link CtClass}.
+     * itself or a getter method) a given {@link CtField} can be accessed in a given {@link CtType}.
      * </P>
      * <b>Example</b>: Further down the line in the analysis process it must be known that the
      * {@code getX()} method is an alias for the field {@code x}, so an assertion on the the invocation result of the
      * {@code getX()} method inside a test method is counted as an assertion on field {@code x}.
      *
-     * @param testClazz
-     *          The test class whose methods can access the given {@code field},
+     * @param accessingType
+     *          The class whose methods can access the given {@code field},
      *          not {@code null}.
      *
      * @param field
-     *          The field which can be accessed by inside the given {@code testClazz},
+     *          The field which can be accessed by inside the given {@code accessingType},
      *          not {@code null}.
      *
      * @param <T>
@@ -54,29 +53,29 @@ public abstract class AccessibilityAwareFieldFinder {
      *
      * @return
      *          The typed elements which grant access to the given {@code field}. Must contain at least one
-     *          element when {@link #isFieldAccessible(CtClass, CtField)} returns {@code true}. Implementations
+     *          element when {@link #isFieldAccessible(CtType, CtField)} returns {@code true}. Implementations
      *          might throw unchecked exceptions otherwise.
      */
-    protected abstract <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtClass<?> testClazz, CtField<T> field);
+    protected abstract <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field);
 
     /**
      *
-     * @param testClazz
-     *          The test class whose methods could potentially access the given {@code type}'s
+     * @param accessingType
+     *          The type whose methods could potentially access the given {@code type}'s
      *          fields, not {@code null}.
      *
      * @param type
      *          The type to get the accessible fields of, not {@code null}.
      *
      * @return
-     *          A list of all fields which are accessible from the given {@code testClazz} combined with the
+     *          A list of all fields which are accessible from the given {@code accessingType} combined with the
      *          typed element which grants access to the field. Includes fields which are directly declared in
      *          the given {@code type} or in any super-type. An empty list is returned in case the
      *          given {@code type} is an interface.
      */
     @SuppressWarnings("unchecked")
-    public List<AccessibleField<?>> findAccessibleFields(CtClass<?> testClazz, CtType<?> type) {
-        Objects.requireNonNull(testClazz, "testClazz cannot be null!");
+    public List<AccessibleField<?>> findAccessibleFields(CtType<?> accessingType, CtType<?> type) {
+        Objects.requireNonNull(accessingType, "accessingType cannot be null!");
         Objects.requireNonNull(type, "type cannot be null!");
 
         if(type.isInterface()) {
@@ -85,9 +84,9 @@ public abstract class AccessibilityAwareFieldFinder {
 
         return type.getAllFields().stream()
                 .map(CtFieldReference::getFieldDeclaration)
-                .filter(field -> this.isFieldAccessible(testClazz, field))
+                .filter(field -> this.isFieldAccessible(accessingType, field))
                 .map(field -> {
-                    var accessGrantingElements = this.findAccessGrantingElements(testClazz, field);
+                    var accessGrantingElements = this.findAccessGrantingElements(accessingType, field);
 
                     @SuppressWarnings("rawtypes")
                     var accessibleField = (AccessibleField<?>) new AccessibleField(field, Set.copyOf(accessGrantingElements));
@@ -150,27 +149,27 @@ public abstract class AccessibilityAwareFieldFinder {
     }
 
     /**
-     * Walks up the super-class chain of the given {@code testClazz} until either
+     * Walks up the super-class chain of the given {@code type} until either
      * the given {@code field}'s declaring class is reached or the super-class
      * is {@code null}.
      *
      * @param field
      *          The field to get the declaring class of, not {@code null}.
      *
-     * @param testClazz
-     *          The test class which contains the test methods which could potentially
+     * @param type
+     *          The type which contains the methods which could potentially
      *          access the given {@code field}, not {@code null}.
      *
      * @return
-     *          {@code true}, if the given {@code testClazz} is a <i>real</i> subclass of the declaring
+     *          {@code true}, if the given {@code type} is a <i>real</i> subclass of the declaring
      *          class of the given {@code field}. {@code false} is returned otherwise.
      */
-    protected boolean isRealSubClassOfDeclaringClass(CtField<?> field, CtClass<?> testClazz) {
+    protected boolean isRealSubClassOfDeclaringClass(CtField<?> field, CtType<?> type) {
         var fieldDeclaringType = field.getDeclaringType();
 
-        var currentSuperClassReferenceType = testClazz.getSuperclass();
+        var currentSuperClassReferenceType = type.getSuperclass();
 
-        while(Objects.nonNull(currentSuperClassReferenceType)) {
+        while(currentSuperClassReferenceType != null) {
             var currentSuperClassType = currentSuperClassReferenceType.getTypeDeclaration();
             if(fieldDeclaringType.equals(currentSuperClassType)) {
                 return true;
@@ -184,52 +183,52 @@ public abstract class AccessibilityAwareFieldFinder {
 
     /**
      * Compares the packages of the given {@code field}'s declaring type and the
-     * given {@code testClazz}.
+     * given {@code type}.
      *
      * @param field
      *          The field to get the declaring type of, not {@code null}.
      *
-     * @param testClazz
-     *          The test class which contains the test methods which could potentially
+     * @param type
+     *          The type which contains the methods which could potentially
      *          access the given {@code field}, not {@code null}.
      *
      * @return
      *          {@code true}, if the declaring type of the given {@code field} is in the
-     *          same package as the given {@code testClazz}. {@code false} is returned otherwise.
+     *          same package as the given {@code type}. {@code false} is returned otherwise.
      */
-    protected boolean isInSamePackageAsDeclaringType(CtField<?> field, CtClass<?> testClazz) {
+    protected boolean isInSamePackageAsDeclaringType(CtField<?> field, CtType<?> type) {
         var declaringTypePackage = field.getDeclaringType()
                 .getPackage();
-        var testClazzPackage = testClazz.getPackage();
+        var typePackage = type.getPackage();
 
-        return declaringTypePackage.equals(testClazzPackage);
+        return declaringTypePackage.equals(typePackage);
     }
 
     /**
-     * Walks up the declaring type chain of the given {@code testClazz} until it either
+     * Walks up the declaring type chain of the given {@code type} until it either
      * reaches the given {@code field}'s declaring type or the declaring type is {@code null}.
      *
      * @param field
      *          The field to get the declaring class of, not {@code null}.
      *
-     * @param testClazz
-     *          The test class which contains the test methods which could potentially
+     * @param type
+     *          The type which contains the methods which could potentially
      *          access the given {@code field}, not {@code null}.
      *
      * @return
-     *          {@code true}, if the given {@code testClazz} is a inner class of the given
-     *          {@code field}'s declaring class. {@code false} is returned otherwise.
+     *          {@code true}, if the given {@code type} is a inner type of the given
+     *          {@code field}'s declaring type. {@code false} is returned otherwise.
      */
-    protected boolean isInnerClassOfDeclaringType(CtField<?> field, CtClass<?> testClazz) {
+    protected boolean isInnerClassOfDeclaringType(CtField<?> field, CtType<?> type) {
         var fieldDeclaringType = field.getDeclaringType();
 
-        var testClassDeclaringType = testClazz.getDeclaringType();
-        while(Objects.nonNull(testClassDeclaringType)) {
-            if(fieldDeclaringType.equals(testClassDeclaringType)) {
+        var classDeclaringType = type.getDeclaringType();
+        while(Objects.nonNull(classDeclaringType)) {
+            if(fieldDeclaringType.equals(classDeclaringType)) {
                 return true;
             }
 
-            testClassDeclaringType = testClassDeclaringType.getDeclaringType();
+            classDeclaringType = classDeclaringType.getDeclaringType();
         }
 
         return false;

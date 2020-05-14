@@ -3,9 +3,7 @@ package de.adesso.objectfieldcoverage.core.processor;
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.AssertionFinder;
 import de.adesso.objectfieldcoverage.api.TestMethodFinder;
-import de.adesso.objectfieldcoverage.core.annotation.TestTarget;
 import de.adesso.objectfieldcoverage.core.annotation.TestTargetPreProcessor;
-import de.adesso.objectfieldcoverage.core.annotation.TestTargets;
 import de.adesso.objectfieldcoverage.core.finder.DirectAccessAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.JavaBeansAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.lombok.LombokAccessibilityAwareFieldFinder;
@@ -13,8 +11,6 @@ import de.adesso.objectfieldcoverage.core.junit.JUnit4TestMethodFinder;
 import de.adesso.objectfieldcoverage.core.junit.JUnitJupiterTestMethodFinder;
 import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitAssertionFinder;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.EvaluationTreeBuilder;
-import de.adesso.objectfieldcoverage.core.processor.exception.IllegalMethodSignatureException;
-import de.adesso.objectfieldcoverage.core.processor.exception.TargetMethodNotFoundException;
 import de.adesso.objectfieldcoverage.core.util.ExecutableUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +19,9 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,8 +39,6 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
 
     private final TestTargetPreProcessor testTargetPreProcessor;
 
-    private final TargetExecutableFinder targetExecutableFinder;
-
     //TODO: use Java ServiceLoader
     public ObjectFieldCoverageProcessor() {
         this.fieldFinders = List.of(new LombokAccessibilityAwareFieldFinder(), new DirectAccessAccessibilityAwareFieldFinder(),
@@ -52,7 +46,6 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         this.testMethodFinders = List.of(new JUnitJupiterTestMethodFinder(), new JUnit4TestMethodFinder());
         this.assertionFinders = List.of(new JUnitAssertionFinder());
         this.testTargetPreProcessor = new TestTargetPreProcessor();
-        this.targetExecutableFinder = new TargetExecutableFinder();
     }
 
     @Override
@@ -75,10 +68,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         log.info("Starting processing of test method '{}'!", testMethod.getSimpleName());
 
         var treeBuilder = new EvaluationTreeBuilder(fieldFinders);
-        var targetExecutables = findTargetExecutables(testMethod);
-
-        //TODO: make sure target executables are invoked in test method or sub-method called from
-        // test method
+        var targetExecutables = ExecutableUtil.findTargetExecutables(testMethod, getFactory().getModel());
 
         // assertion -> evaluation information map
         var assertionMap = assertionFinders.stream()
@@ -98,7 +88,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         });
 
         //TODO:
-        // - build assertion evaluation obj for asserted asserted type of each assertion
+        // - build assertion evaluation obj for asserted type of each assertion
         //   - primitive types? root = leaf
         //   - String?
 
@@ -108,76 +98,26 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     /**
      *
      * @param testMethod
-     *          The test method to find the target methods of, not {@code null}. Must be annotated
-     *          with either {@link TestTarget} or {@link TestTargets}. The {@link TestTargets}
-     *          must must contain at least one {@link TestTarget} annotation in case it is present.
+     *          The test method in which the given {@code executables} should get invoked, not {@code null}.
+     *
+     * @param executables
+     *          The corresponding executables, not {@code null}.
      *
      * @return
-     *          A list containing the target executables which are specified using the method identifiers
-     *          given in the annotation(s).
+     *          A set containing all executables
      */
-    private List<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod) {
-        var testTargetAnnotation = testMethod.getAnnotation(TestTarget.class);
-        if(Objects.nonNull(testTargetAnnotation)) {
-            return List.of(findTargetExecutable(testTargetAnnotation));
-        }
+    private Set<CtExecutable<?>> filterExecutables(CtMethod<?> testMethod, Collection<CtExecutable<?>> executables) {
+        return executables.stream()
+                .filter(executable -> {
+                    if(!ExecutableUtil.isExecutableInvoked(testMethod, executable)) {
+                        log.warn("Executable '{}' not invoked in method '{}'!", executable.getSignature(),
+                                testMethod.getSignature());
+                        return false;
+                    }
 
-        var testTargetsAnnotation = testMethod.getAnnotation(TestTargets.class);
-        if(Objects.nonNull(testTargetsAnnotation)) {
-            var testTargetAnnotations = testTargetsAnnotation.value();
-
-            if(testTargetAnnotations.length == 0) {
-                var exceptionMessage = String.format("@TestTargets annotation on test method %s is empty!",
-                        testMethod.getSimpleName());
-
-                log.error(exceptionMessage);
-                throw new IllegalArgumentException(exceptionMessage);
-            }
-
-            return Arrays.stream(testTargetsAnnotation.value())
-                    .map(this::findTargetExecutable)
-                    .collect(Collectors.toList());
-        }
-
-        var exceptionMessage = String.format("Given test method '%s' neither annotated with @TestTarget nor with @TestTargets",
-                testMethod.getSimpleName());
-        log.error(exceptionMessage);
-        throw new IllegalArgumentException(exceptionMessage);
-    }
-
-    /**
-     *
-     * @param testTargetAnnotation
-     *          The annotation containing the method identifier, not {@code null}.
-     *
-     * @return
-     *          The target executable.
-     *
-     * @throws TargetMethodNotFoundException
-     *          When no executable was found in the underlying {@link spoon.reflect.CtModel} using the
-     *          given {@code methodIdentifier}.
-     *
-     * @throws IllegalMethodSignatureException
-     *          When the target executable is a <i>void</i> function and the {@code exceptionExpected}
-     *          flag of the given {@code testTargetAnnotation} is set to {@code false}.
-     */
-    private CtExecutable<?> findTargetExecutable(TestTarget testTargetAnnotation) {
-        var methodIdentifier = testTargetAnnotation.value();
-        var exceptionExpected = testTargetAnnotation.exceptionExpected();
-
-        var underlyingModel = this.getFactory().getModel();
-        var targetExecutable = targetExecutableFinder.findTargetExecutable(methodIdentifier, underlyingModel)
-                .orElseThrow(() -> new TargetMethodNotFoundException(methodIdentifier));
-
-        if(!exceptionExpected && ExecutableUtil.isVoidExecutable(targetExecutable)) {
-            var exceptionMessage = String.format("The target executable '%s' is a void method, but the exceptionExpected flag is set to false!",
-                    methodIdentifier);
-
-            log.error(exceptionMessage);
-            throw new IllegalMethodSignatureException(exceptionMessage);
-        }
-
-        return targetExecutable;
+                    return true;
+                })
+                .collect(Collectors.toSet());
     }
 
 }

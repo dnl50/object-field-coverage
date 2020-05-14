@@ -25,13 +25,13 @@ public class EvaluationTreeBuilder {
 
     /**
      * A map which contains entries mapping a (asserted type, test class) pair to a set of accessible
-     * fields. Result cache to increase performance.
+     * fields. Basically a result cache to increase performance.
      */
     private final HashMap<Pair<CtTypeReference<?>, CtClass<?>>, Set<CtField<?>>> analyzedTypes = new HashMap<>();
 
     /**
      * A map which contains entries mapping a (asserted type, test class) pair to the resulting
-     * evaluation instance. A result cache to increase performance.
+     * evaluation instance. Basically a result cache to increase performance.
      */
     private final HashMap<Pair<CtTypeReference<?>, CtType<?>>, AssertionEvaluationInformation> typeInformation = new HashMap<>();
 

@@ -6,8 +6,10 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypedElement;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -92,6 +94,55 @@ public class AccessibleField<T> {
     public boolean isAccessibleThroughMethod() {
         return accessGrantingElements.stream()
                 .anyMatch(element -> element instanceof CtMethod);
+    }
+
+    /**
+     *
+     * @param typedElement
+     *          The element to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code typedElement} is contained in the
+     *          {@link AccessibleField#getAccessGrantingElements() access granting elements}.
+     */
+    public boolean isAccessibleThroughElement(CtTypedElement<T> typedElement) {
+        return accessGrantingElements.contains(typedElement);
+    }
+
+    /**
+     * Static utility method which unites {@link AccessibleField} instances which have the same
+     * {@link AccessibleField#getActualField() actual field} into a single {@link AccessibleField}
+     * instance. Uses the {@link AccessibleField#unite(AccessibleField)} method internally.
+     *
+     * @param accessibleFields
+     *          A collection containing multiple {@link AccessibleField} instances for different
+     *          {@link CtField}s, not {@code null}.
+     *
+     * @return
+     *          A set containing a single {@link AccessibleField} instance for each {@link CtField}.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Set<AccessibleField<?>> uniteAll(Collection<? extends AccessibleField<?>> accessibleFields) {
+        var groupedByFieldMap = accessibleFields.stream()
+                .collect(Collectors.groupingBy(AccessibleField::getActualField));
+
+        var resultSet = new HashSet<AccessibleField<?>>();
+
+        groupedByFieldMap.values().forEach(accessibleFieldsForCtField -> {
+            AccessibleField unitedAccessibleField = null;
+
+            for(var accessibleField : accessibleFieldsForCtField) {
+                if(unitedAccessibleField == null) {
+                    unitedAccessibleField = accessibleField;
+                } else {
+                    unitedAccessibleField = unitedAccessibleField.unite(accessibleField);
+                }
+            }
+
+            resultSet.add(unitedAccessibleField);
+        });
+
+        return resultSet;
     }
 
 }
