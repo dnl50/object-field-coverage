@@ -52,10 +52,10 @@ jobs:
         with:
           name: spoon-core
           
-      - name: Copy artifact to local maven repository
+      - name: Copy artifact to libs directory
         run: |
-          mkdir -p lib
-          mv spoon-core/${{env.SPOON_ARTIFACT_NAME}}.jar lib/
+          mkdir -p libs
+          mv spoon-core/${{env.SPOON_ARTIFACT_NAME}}.jar libs/
       
       - name: Cache Gradle packages
         uses: actions/cache@v1
