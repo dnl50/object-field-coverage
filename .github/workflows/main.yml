@@ -12,7 +12,7 @@ jobs:
       
       - uses: actions/checkout@v2
         with:
-          repository: 'https://github.com/dnl50/spoon.git'
+          repository: dnl50/spoon
           ref: 'spoon-core-8.1.0-equals-fix'
           path: 'spoon-core'
       
