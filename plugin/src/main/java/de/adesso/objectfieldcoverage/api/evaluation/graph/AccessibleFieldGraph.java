@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.core.graph;
+package de.adesso.objectfieldcoverage.api.evaluation.graph;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,13 +32,18 @@ import java.util.*;
  * @implNote The iteration order is unspecified since it uses a {@link Set} iterator internally.
  *
  * @see de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder
- * @see de.adesso.objectfieldcoverage.core.graph.util.AccessibleFieldGraphBuilder
  * @see AccessibleFieldGraphNode
  */
 @Getter
-@EqualsAndHashCode
 @ToString
+@EqualsAndHashCode
 public class AccessibleFieldGraph implements Iterable<AccessibleFieldGraphNode> {
+
+    /**
+     * An empty graph with no {@link #getRootNodes() root nodes} and therefore no
+     * nodes at all.
+     */
+    public static final AccessibleFieldGraph EMPTY_GRAPH = new AccessibleFieldGraph(Set.of());
 
     /**
      * These are the nodes from which the graph was built.

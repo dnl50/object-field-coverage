@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.core.graph;
+package de.adesso.objectfieldcoverage.api.evaluation.graph;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import lombok.AllArgsConstructor;
@@ -64,6 +64,18 @@ public class AccessibleFieldGraphNode {
      */
     public void addChildren(Collection<? extends AccessibleFieldGraphNode> children) {
         this.children.addAll(children);
+    }
+
+    /**
+     * If this method returns {@code true}, it is guaranteed that the {@link #getChildren() children}
+     * set of this node is empty, because primitive types do not contain fields.
+     *
+     * @return
+     *          The result of the {@link AccessibleField#isPrimitiveTypeField()} method invocation
+     *          on the contained {@link #getAccessibleField() accessible field}.
+     */
+    public boolean isPrimitiveTypeNode() {
+        return accessibleField.isPrimitiveTypeField();
     }
 
     /**

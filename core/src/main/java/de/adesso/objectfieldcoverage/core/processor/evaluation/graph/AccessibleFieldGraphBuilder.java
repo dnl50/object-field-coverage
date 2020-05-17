@@ -1,11 +1,10 @@
-package de.adesso.objectfieldcoverage.core.graph.util;
+package de.adesso.objectfieldcoverage.core.processor.evaluation.graph;
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.AccessibleField;
-import de.adesso.objectfieldcoverage.core.graph.AccessibleFieldGraph;
-import de.adesso.objectfieldcoverage.core.graph.AccessibleFieldGraphNode;
+import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
+import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
 import lombok.extern.slf4j.Slf4j;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
@@ -13,8 +12,6 @@ import spoon.reflect.reference.CtTypeReference;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-//TODO: JavaDoc
 
 @Slf4j
 public class AccessibleFieldGraphBuilder {
@@ -55,9 +52,27 @@ public class AccessibleFieldGraphBuilder {
      */
     private final Map<CtTypeReference<?>, Set<AccessibleFieldGraphNode>> typeRefToNodesMap;
 
+    /**
+     * Static entrypoint method for building a {@link AccessibleFieldGraph}.
+     *
+     * @param fieldFinders
+     *          The {@link AccessibilityAwareFieldFinder}s which are used to find accessible fields
+     *          in the given {@code clazzContainingFieldsToAccess} and all transitively reachable fields,
+     *          not {@code null}.
+     *
+     * @param accessingType
+     *          The {@link CtType} which wants to access {@link CtField}s inside the {@code clazzContainingFieldsToAccess}
+     *          and all transitively reachable fields, not {@code null}.
+     *
+     * @param clazzContainingFieldsToAccess
+     *          The {@link CtType} to start the graph building process at, not {@code null}.
+     *
+     * @return
+     *          The resulting {@link AccessibleFieldGraph}.
+     */
     public static AccessibleFieldGraph buildGraph(Collection<? extends AccessibilityAwareFieldFinder> fieldFinders,
                                                   CtType<?> accessingType,
-                                                  CtClass<?> clazzContainingFieldsToAccess) {
+                                                  CtType<?> clazzContainingFieldsToAccess) {
         Objects.requireNonNull(fieldFinders, "The AccessibilityAwareFieldFinder collection cannot be null!");
         Objects.requireNonNull(accessingType, "The CtType for which the graph should be bulit cannot be null!");
         Objects.requireNonNull(clazzContainingFieldsToAccess, "The CtType to start the built process at cannot be null!");
@@ -68,7 +83,7 @@ public class AccessibleFieldGraphBuilder {
 
     /**
      * <b>Note:</b> Declared private since the entry point for this class is the static
-     * {@link #buildGraph(Collection, CtType, CtClass)} method.
+     * {@link #buildGraph(Collection, CtType, CtType)} method.
      *
      * @param fieldFinders
      *          The {@link AccessibilityAwareFieldFinder}s which are used to build the individual graph nodes with,
@@ -90,11 +105,16 @@ public class AccessibleFieldGraphBuilder {
     /**
      *
      * @param startingPoint
-     *          The {@link CtType} which will be the first
+     *          The {@link CtType} which will be the first type to analyze for accessible fields,
+     *          not {@code null}.
      *
      * @return
+     *          The resulting {@link AccessibleFieldGraph}.
      */
     private AccessibleFieldGraph buildGraphInternal(CtType<?> startingPoint) {
+        log.info("Starting graph build process (starting type: '{}', accessing type: '{}')!",
+                startingPoint.getQualifiedName(), accessingType.getQualifiedName());
+
         var isFirstLoop = true;
         var processedFieldDeclaringTypes = new HashSet<CtType<?>>();
         var fieldDeclaringTypeProcessingQueue = new LinkedList<CtType<?>>();
@@ -106,7 +126,14 @@ public class AccessibleFieldGraphBuilder {
             var currentlyProcessedType = fieldDeclaringTypeProcessingQueue.removeFirst();
             processedFieldDeclaringTypes.add(currentlyProcessedType);
 
+            log.info("Looking for new fields in '{}' (accessing type: '{}')...",
+                    currentlyProcessedType.getQualifiedName(), accessingType.getQualifiedName());
+
             var accessibleFieldsInProcessedType = this.findAccessibleFields(currentlyProcessedType);
+
+            log.info("Found {} accessible fields in '{}'!",
+                    currentlyProcessedType.getQualifiedName(), accessibleFieldsInProcessedType.size());
+
             var newlyCreatedNodes = this.createNewNodes(accessibleFieldsInProcessedType);
 
             if(isFirstLoop) {
@@ -127,13 +154,18 @@ public class AccessibleFieldGraphBuilder {
             isFirstLoop = false;
         } while(!fieldDeclaringTypeProcessingQueue.isEmpty());
 
-        // set children nodes
+        // set children nodes in each created node at the end of the process so no
+        // update is required in the meantime
         processedFieldDeclaringTypes.forEach(processedFieldDeclaringType -> {
             var existingNodesForCurrentTypeRef = typeRefToNodesMap.getOrDefault(processedFieldDeclaringType.getReference(), Set.of());
             var childNodesForCurrentTypeRef = typeToChildNodesMap.getOrDefault(processedFieldDeclaringType, Set.of());
 
             existingNodesForCurrentTypeRef.forEach(node -> node.addChildren(childNodesForCurrentTypeRef));
         });
+
+        log.info("Finished graph build process (starting type: '{}', accessing type: '{}')! The resulting tree has" +
+                "{} root nodes and {} nodes in total!", startingPoint.getQualifiedName(), accessingType.getQualifiedName(),
+                rootNodes.size(), typeRefToNodesMap.values().stream().mapToInt(Set::size).sum());
 
         return new AccessibleFieldGraph(rootNodes);
     }

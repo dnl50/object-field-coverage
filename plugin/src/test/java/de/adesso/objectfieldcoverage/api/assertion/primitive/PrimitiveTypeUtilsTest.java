@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -56,6 +57,48 @@ class PrimitiveTypeUtilsTest {
 
         // then
         assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void isPrimitiveTypeFieldReturnsTrueWhenFieldTypeIsIntegerPrimitive(@Mock CtField<Integer> field) {
+        // given
+        var intPrimitiveTypeRef = new TypeFactory().INTEGER_PRIMITIVE;
+
+        given(field.getType()).willReturn(intPrimitiveTypeRef);
+
+        // when
+        var actualResult = PrimitiveTypeUtils.isPrimitiveTypeField(field);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isPrimitiveTypeFieldReturnsTrueWhenFieldTypeIsIntegerWrapper(@Mock CtField<Integer> field) {
+        // given
+        var intPrimitiveTypeRef = new TypeFactory().INTEGER;
+
+        given(field.getType()).willReturn(intPrimitiveTypeRef);
+
+        // when
+        var actualResult = PrimitiveTypeUtils.isPrimitiveTypeField(field);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isPrimitiveTypeFieldReturnsFalseWhenFieldTypeIsOtherReferenceType(@Mock CtField<String> field) {
+        // given
+        var intPrimitiveTypeRef = new TypeFactory().createReference(String.class);
+
+        given(field.getType()).willReturn(intPrimitiveTypeRef);
+
+        // when
+        var actualResult = PrimitiveTypeUtils.isPrimitiveTypeField(field);
+
+        // then
+        assertThat(actualResult).isTrue();
     }
 
     @Test
