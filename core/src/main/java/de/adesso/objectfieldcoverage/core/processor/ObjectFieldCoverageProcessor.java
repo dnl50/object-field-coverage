@@ -10,7 +10,6 @@ import de.adesso.objectfieldcoverage.core.finder.lombok.LombokAccessibilityAware
 import de.adesso.objectfieldcoverage.core.junit.JUnit4TestMethodFinder;
 import de.adesso.objectfieldcoverage.core.junit.JUnitJupiterTestMethodFinder;
 import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitAssertionFinder;
-import de.adesso.objectfieldcoverage.core.processor.evaluation.EvaluationTreeBuilder;
 import de.adesso.objectfieldcoverage.core.util.ExecutableUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,6 @@ import spoon.reflect.declaration.CtMethod;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 //TODO: properly implement, currently just a draft implementation
@@ -67,25 +65,25 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     private void processTestMethod(CtMethod<?> testMethod, CtClass<?> testClazz) {
         log.info("Starting processing of test method '{}'!", testMethod.getSimpleName());
 
-        var treeBuilder = new EvaluationTreeBuilder(fieldFinders);
-        var targetExecutables = ExecutableUtil.findTargetExecutables(testMethod, getFactory().getModel());
-
-        // assertion -> evaluation information map
-        var assertionMap = assertionFinders.stream()
-                .map(assertionFinder -> assertionFinder.findAssertions(testMethod))
-                .flatMap(List::stream)
-                .collect(Collectors.toMap(
-                        Function.identity(),
-                        assertion -> treeBuilder.buildEvaluationInformation(assertion.getAssertedExpression().getType(), testClazz)
-                ));
-
-        assertionMap.entrySet().forEach(entry -> {
-            var assertion = entry.getKey();
-            var evaluationInformation = entry.getValue();
-
-            var result = assertion.calculateMetricValue(evaluationInformation);
-            log.info("Result: {}", result);
-        });
+//        var treeBuilder = new EvaluationTreeBuilder(fieldFinders);
+//        var targetExecutables = ExecutableUtil.findTargetExecutables(testMethod, getFactory().getModel());
+//
+//        // assertion -> evaluation information map
+//        var assertionMap = assertionFinders.stream()
+//                .map(assertionFinder -> assertionFinder.findAssertions(testMethod))
+//                .flatMap(List::stream)
+//                .collect(Collectors.toMap(
+//                        Function.identity(),
+//                        assertion -> treeBuilder.buildEvaluationInformation(assertion.getAssertedExpression().getType(), testClazz)
+//                ));
+//
+//        assertionMap.entrySet().forEach(entry -> {
+//            var assertion = entry.getKey();
+//            var evaluationInformation = entry.getValue();
+//
+//            var result = assertion.calculateMetricValue(evaluationInformation);
+//            log.info("Result: {}", result);
+//        });
 
         //TODO:
         // - build assertion evaluation obj for asserted type of each assertion

@@ -1,11 +1,12 @@
-package de.adesso.objectfieldcoverage.core.graph.util;
+package de.adesso.objectfieldcoverage.core.processor.evaluation.graph.util;
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.AccessibleField;
+import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
+import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
 import de.adesso.objectfieldcoverage.core.finder.JavaBeansAccessibilityAwareFieldFinder;
-import de.adesso.objectfieldcoverage.core.graph.AccessibleFieldGraph;
-import de.adesso.objectfieldcoverage.core.graph.AccessibleFieldGraphNode;
+import de.adesso.objectfieldcoverage.core.processor.evaluation.graph.AccessibleFieldGraphBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -11,17 +11,14 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class EvaluationTreeBuilder {
-
-    /**
-     * The field finders which are used to find all accessible fields in the
-     * asserted types.
-     */
-    private final List<AccessibilityAwareFieldFinder> fieldFinders;
 
     /**
      * A map which contains entries mapping a (asserted type, test class) pair to a set of accessible

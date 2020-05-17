@@ -4,10 +4,12 @@ import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAss
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Utility class providing some basic util methods related to the construction of {@link PrimitiveTypeAssertion}s.
@@ -20,6 +22,28 @@ public class PrimitiveTypeUtils {
      * and their wrapper classes.
      */
     private static final TypeFactory TYPE_FACTORY = new TypeFactory();
+
+    /**
+     * A set containing all type references of all 8 primitive types and their corresponding
+     * wrapper classes.
+     */
+    private static final Set<CtTypeReference<?>> PRIMITIVE_TYPE_REFERENCES;
+
+    /*
+     * static initializer block for the PRIMITIVE_TYPE_REFERENCES set.
+     */
+    static {
+        PRIMITIVE_TYPE_REFERENCES = Set.of(
+                TYPE_FACTORY.BOOLEAN_PRIMITIVE, TYPE_FACTORY.BOOLEAN,
+                TYPE_FACTORY.CHARACTER_PRIMITIVE, TYPE_FACTORY.CHARACTER,
+                TYPE_FACTORY.BYTE_PRIMITIVE, TYPE_FACTORY.BYTE,
+                TYPE_FACTORY.SHORT_PRIMITIVE, TYPE_FACTORY.SHORT,
+                TYPE_FACTORY.INTEGER_PRIMITIVE, TYPE_FACTORY.INTEGER,
+                TYPE_FACTORY.LONG_PRIMITIVE, TYPE_FACTORY.LONG,
+                TYPE_FACTORY.FLOAT_PRIMITIVE, TYPE_FACTORY.FLOAT,
+                TYPE_FACTORY.DOUBLE_PRIMITIVE, TYPE_FACTORY.DOUBLE
+        );
+    }
 
     /**
      * Static utility method to evaluate whether a given {@link CtExpression} can be used
@@ -39,6 +63,22 @@ public class PrimitiveTypeUtils {
 
         return TYPE_FACTORY.BOOLEAN_PRIMITIVE.equals(expressionType) ||
                 TYPE_FACTORY.BOOLEAN.equals(expressionType);
+    }
+
+    /**
+     *
+     * @param field
+     *          The field to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code field}'s {@link CtField#getType() type} is
+     *          a {@link CtTypeReference#isPrimitive() primitive type} or a primitive types
+     *          wrapper classes. {@code false} is returned otherwise.
+     */
+    public static boolean isPrimitiveTypeField(CtField<?> field) {
+        Objects.requireNonNull(field, "The given field cannot be null!");
+
+        return PRIMITIVE_TYPE_REFERENCES.contains(field.getType());
     }
 
     /**
