@@ -98,7 +98,7 @@ class PrimitiveTypeUtilsTest {
         var actualResult = PrimitiveTypeUtils.isPrimitiveTypeField(field);
 
         // then
-        assertThat(actualResult).isTrue();
+        assertThat(actualResult).isFalse();
     }
 
     @Test
