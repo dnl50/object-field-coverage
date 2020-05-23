@@ -13,12 +13,21 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Utility class for building a {@link AccessibleFieldGraph} for a pair of (<i>accessing type</i>, <i>accessed type</i>).
+ * The <i>accessing</i> type is seen as constant, so a single instance of {@code this} class may be used
+ * to build multiple graphs for <i>accessed</i> types. Each graph built by this util class uses as few as
+ * possible {@link AccessibleFieldGraphNode node}s by reusing a node when it is the representation of the
+ * same {@link AccessibleField}.
+ *
+ * @see AccessibilityAwareFieldFinder
+ */
 @Slf4j
 public class AccessibleFieldGraphBuilder {
 
     /**
      * The {@link AccessibilityAwareFieldFinder}s used to build the individual graph nodes
-     * with.
+     * with. Each graph node represents a unique {@link AccessibleField}.
      */
     private final Set<AccessibilityAwareFieldFinder> fieldFinders;
 

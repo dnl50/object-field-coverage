@@ -1,5 +1,7 @@
 package de.adesso.objectfieldcoverage.core.processor.evaluation.graph;
 
+import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
+import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -7,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Set;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)

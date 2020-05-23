@@ -1,6 +1,6 @@
 # Object Field Coverage
 
-achelor Thesis implementation of a new code quality metric built with [Spoon](https://github.com/INRIA/spoon). 
+Bachelor Thesis implementation of a new code quality metric built with [Spoon](https://github.com/INRIA/spoon). 
 Currently in development 💻
 
 ## Build Requirements
