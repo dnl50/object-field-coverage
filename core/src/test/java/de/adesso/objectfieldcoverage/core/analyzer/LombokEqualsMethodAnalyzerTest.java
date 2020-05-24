@@ -123,8 +123,10 @@ class LombokEqualsMethodAnalyzerTest {
                                                                                       @Mock EqualsAndHashCode.Include includeMock,
                                                                                       @Mock CtField annotatedFieldMock,
                                                                                       @Mock CtField nonAnnotatedFieldMock,
+                                                                                      @Mock CtField fieldDeclaredInSuperClassMock,
                                                                                       @Mock AccessibleField annotatedAccessibleFieldMock,
-                                                                                      @Mock AccessibleField nonAnnotatedAccessibleFieldMock) {
+                                                                                      @Mock AccessibleField nonAnnotatedAccessibleFieldMock,
+                                                                                      @Mock AccessibleField accessibleFieldNotDeclaredInTypeMock) {
         // given
         given(clazzMock.getFields()).willReturn(List.of(annotatedFieldMock, nonAnnotatedFieldMock));
 
@@ -138,10 +140,11 @@ class LombokEqualsMethodAnalyzerTest {
 
         given(annotatedAccessibleFieldMock.getActualField()).willReturn(annotatedFieldMock);
         given(nonAnnotatedAccessibleFieldMock.getActualField()).willReturn(nonAnnotatedFieldMock);
+        given(accessibleFieldNotDeclaredInTypeMock.getActualField()).willReturn(fieldDeclaredInSuperClassMock);
 
         // when
         var actualResult = testSubject.findFieldsComparedInEqualsMethod(clazzMock,
-                Set.of(annotatedAccessibleFieldMock, nonAnnotatedAccessibleFieldMock));
+                Set.of(annotatedAccessibleFieldMock, nonAnnotatedAccessibleFieldMock, accessibleFieldNotDeclaredInTypeMock));
 
         // then
         assertThat(actualResult).containsExactly(annotatedAccessibleFieldMock);
@@ -155,9 +158,11 @@ class LombokEqualsMethodAnalyzerTest {
                                                                   @Mock CtField excludeAnnotatedFieldMock,
                                                                   @Mock CtField nonAnnotatedFieldMock,
                                                                   @Mock CtField excludedThroughNameFieldMock,
+                                                                  @Mock CtField fieldDeclaredInSuperClassMock,
                                                                   @Mock AccessibleField excludeAnnotatedAccessibleFieldMock,
                                                                   @Mock AccessibleField nonAnnotatedAccessibleFieldMock,
-                                                                  @Mock AccessibleField excludedThroughNameAccessibleFieldMock) {
+                                                                  @Mock AccessibleField excludedThroughNameAccessibleFieldMock,
+                                                                  @Mock AccessibleField accessibleFieldNotDeclaredInTypeMock) {
         // given
         var excludedFieldName = "field";
 
@@ -174,12 +179,14 @@ class LombokEqualsMethodAnalyzerTest {
         given(excludeAnnotatedAccessibleFieldMock.getActualField()).willReturn(excludeAnnotatedFieldMock);
         given(nonAnnotatedAccessibleFieldMock.getActualField()).willReturn(nonAnnotatedFieldMock);
         given(excludedThroughNameAccessibleFieldMock.getActualField()).willReturn(excludedThroughNameFieldMock);
+        given(accessibleFieldNotDeclaredInTypeMock.getActualField()).willReturn(fieldDeclaredInSuperClassMock);
 
         given(excludedThroughNameFieldMock.getSimpleName()).willReturn(excludedFieldName);
 
         // when
         var actualResult = testSubject.findFieldsComparedInEqualsMethod(clazzMock,
-                Set.of(excludeAnnotatedAccessibleFieldMock, nonAnnotatedAccessibleFieldMock, excludedThroughNameAccessibleFieldMock));
+                Set.of(excludeAnnotatedAccessibleFieldMock, nonAnnotatedAccessibleFieldMock,
+                        excludedThroughNameAccessibleFieldMock, accessibleFieldNotDeclaredInTypeMock));
 
         // then
         assertThat(actualResult).containsExactly(nonAnnotatedAccessibleFieldMock);

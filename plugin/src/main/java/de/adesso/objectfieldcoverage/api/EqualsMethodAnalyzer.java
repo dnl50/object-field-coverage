@@ -8,14 +8,13 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.TypeFactory;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 /**
  * Abstract base class for equals method analysers to find out which fields in a given
  * class are compared in the equals method. Only takes fields into account which are declared
- * in the class itself or any super-class.
+ * in the class itself or any superclass.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -37,7 +36,8 @@ public abstract class EqualsMethodAnalyzer {
      *
      * @param accessibleFieldsOfType
      *          A set containing the <i>accessible</i> fields which are declared in the {@code clazz} itself
-     *          and all super-types of the {@code clazz}, not {@code null}.
+     *          and all superclasses of the {@code clazz}, not {@code null}. The fields are <i>accessible</i>
+     *          from the given {@code clazz}.
      *
      * @return
      *          An <b>unmodifiable</b> set containing all fields of the given {@code clazz} which are compared
@@ -46,9 +46,6 @@ public abstract class EqualsMethodAnalyzer {
      *          returns {@code false}.
      */
     public Set<AccessibleField<?>> findFieldsComparedInEqualsMethod(CtClass<?> clazz, Set<AccessibleField<?>> accessibleFieldsOfType) {
-        Objects.requireNonNull(clazz, "The given CtClass cannot be null!");
-        Objects.requireNonNull(accessibleFieldsOfType, "The given map cannot be null!");
-
         if(accessibleFieldsOfType.isEmpty()) {
             return Set.of();
         }
@@ -136,8 +133,9 @@ public abstract class EqualsMethodAnalyzer {
      *          not {@code null}. The {@link #overridesEquals(CtClass)} method must return {@code true}.
      *
      * @param accessibleFields
-     *          The fields of the declared in the class itself and in all super-classes which can be accessed
-     *          in the equals method of the given {@code clazzOverridingEquals}, not {@code null}.
+     *          A set containing the <i>accessible</i> fields which are declared in the {@code clazz} itself
+     *          and all superclasses of the {@code clazz}, not {@code null}. The fields are <i>accessible</i>
+     *          from the given {@code clazz}.
      *
      * @return
      *          A set containing all fields which are compared inside the given {@code clazzOverridingEquals}

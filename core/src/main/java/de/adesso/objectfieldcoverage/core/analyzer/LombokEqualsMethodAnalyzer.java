@@ -67,6 +67,9 @@ public class LombokEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
     @Override
     public Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtClass<?> clazzOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
         var fieldsDeclaredInDeclaringType = clazzOverridingEquals.getFields();
+        var accessibleFieldsDeclaredInType = accessibleFields.stream()
+                .filter(accessibleField -> fieldsDeclaredInDeclaringType.contains(accessibleField.getActualField()))
+                .collect(Collectors.toSet());
         var equalsAndHashCodeAnnotation = clazzOverridingEquals.getAnnotation(EqualsAndHashCode.class);
         var onlyIncludeExplicit = equalsAndHashCodeAnnotation != null && equalsAndHashCodeAnnotation.onlyExplicitlyIncluded();
         var excludedNames = equalsAndHashCodeAnnotation != null ? Arrays.asList(equalsAndHashCodeAnnotation.exclude()) : List.of();
@@ -79,7 +82,7 @@ public class LombokEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
                 .filter(field -> field.getAnnotation(EqualsAndHashCode.Include.class) != null)
                 .collect(Collectors.toSet());
 
-            return accessibleFields.stream()
+            return accessibleFieldsDeclaredInType.stream()
                 .filter(accessibleField -> includedFields.contains(accessibleField.getActualField()))
                 .collect(Collectors.toSet());
         }
@@ -91,7 +94,7 @@ public class LombokEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
         log.info("Declaring type '{}' excludes the following fields from its generated equals " +
                 "method: {}", clazzOverridingEquals.getQualifiedName(), excludedFields);
 
-        return accessibleFields.stream()
+        return accessibleFieldsDeclaredInType.stream()
                 .filter(accessibleField -> !excludedFields.contains(accessibleField.getActualField()))
                 .collect(Collectors.toSet());
     }
