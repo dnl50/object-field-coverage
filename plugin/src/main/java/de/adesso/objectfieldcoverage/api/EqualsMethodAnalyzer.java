@@ -6,86 +6,59 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.factory.TypeFactory;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Abstract base class for equals method analysers to find out which fields in a given
- * class are compared in the equals method.
+ * class are compared in the equals method. Only takes fields into account which are declared
+ * in the class itself or any super-class.
  */
 @Slf4j
 @RequiredArgsConstructor
 public abstract class EqualsMethodAnalyzer {
 
     /**
-     * The fully qualified class name of the {@link Object} class.
+     * The simple name of the {@link Object#equals(Object)} method.
      */
-    private static final String OBJECT_FULLY_QUALIFIED_NAME = "java.lang.Object";
+    private static final String EQUALS_METHOD_SIMPLE_NAME = "equals";
 
     /**
-     * The given {@code fieldsAccessibleFromType} must include <b>all</b> accessible fields. This
-     * includes all transitively accessible fields. An entry must be present for the given {@code clazz}
-     * itself and all its super-classes, excluding {@link Object}.
-     * <p>
-     * Example:
-     *
-     * Let's say the given {@link CtClass} is this {@code Person} class with a private
-     * {@code Address} field.
-     * <pre>
-     *     public class Person {
-     *
-     *         private Address address;
-     *
-     *     }
-     * </pre>
-     * The {@code Address} field has a public {@code String} field, which is accessible by
-     * direct field access (disregarding Modules added in Java 9).
-     * <pre>
-     *     public class Address {
-     *
-     *         public String street;
-     *
-     *     }
-     * </pre>
-     * The set for the {@code Person} class therefore contains the {@code Address} field (from
-     * the {@code Person} class itself) and the {@code String} field (from the {@code Address}
-     * class).
+     * Analyzes the equals method of a single {@link CtType} and checks whether an <i>accessible</i>
+     * {@link CtField} declared in the type itself or any super-type is compared in the equals
+     * method.
      *
      * @param clazz
      *          The type to find the {@link CtField fields} in which are compared in the
-     *          types {@link Object#equals(Object)} method
+     *          types {@link Object#equals(Object)} method, not {@code null}.
      *
-     * @param fieldsAccessibleFromType
-     *          A map containing an entry for the given {@code clazz} itself and all super-classes. Each entry
-     *          maps the {@link CtType} to a set of all {@link AccessibleField}s which can be accessed from the
-     *          type. <b>Must</b> include transitively accessible fields as described above.
+     * @param accessibleFieldsOfType
+     *          A set containing the <i>accessible</i> fields which are declared in the {@code clazz} itself
+     *          and all super-types of the {@code clazz}, not {@code null}.
      *
      * @return
-     *          A set containing all fields of the given {@code clazz} which are compared
-     *          in the type's {@link Object#equals(Object)} method.
+     *          An <b>unmodifiable</b> set containing all fields of the given {@code clazz} which are compared
+     *          in the type's {@link Object#equals(Object)} method. An empty set will be returned when the
+     *          given {@code accessibleFieldsOfType} set is empty or the {@link #overridesEquals(CtClass)} method
+     *          returns {@code false}.
      */
-    public Set<CtField<?>> findFieldsComparedInEqualsMethod(CtClass<?> clazz, Map<CtType<?>, Set<AccessibleField<?>>> fieldsAccessibleFromType) {
-        Objects.requireNonNull(clazz, "type cannot be null!");
-        Objects.requireNonNull(fieldsAccessibleFromType, "fieldsAccessibleFromType cannot be null!");
+    public Set<AccessibleField<?>> findFieldsComparedInEqualsMethod(CtClass<?> clazz, Set<AccessibleField<?>> accessibleFieldsOfType) {
+        Objects.requireNonNull(clazz, "The given CtClass cannot be null!");
+        Objects.requireNonNull(accessibleFieldsOfType, "The given map cannot be null!");
 
-        if(!thisOrSuperClassOverridesEquals(clazz)) {
+        if(accessibleFieldsOfType.isEmpty()) {
             return Set.of();
         }
 
-        var clazzOverridingEquals = findClassOverridingEquals(clazz);
-        var superClasses = getSuperClassesExcludingObject(clazzOverridingEquals);
-
-        if(!fieldsAccessibleFromType.keySet().containsAll(superClasses)) {
-            throw new IllegalArgumentException("The given map does not contain all entries for the " +
-                    "class and every super-class!");
+        if(!overridesEquals(clazz)) {
+            log.info("Equals method not overridden by '{}'!", clazz.getQualifiedName());
+            return Set.of();
         }
 
-        if(log.isDebugEnabled() && !clazz.equals(clazzOverridingEquals)) {
-            log.debug("Class '{}' does not override equals itself, but its parent class '{}' does!",
-                    clazz.getQualifiedName(), clazzOverridingEquals.getQualifiedName());
-        }
-
-        return Set.of();
+        return findFieldsComparedInEqualsMethodInternal(clazz, accessibleFieldsOfType);
     }
 
     /**
@@ -94,105 +67,73 @@ public abstract class EqualsMethodAnalyzer {
      *          The {@link CtClass} to check, not {@code null}.
      *
      * @return
-     *          {@code true}, if the given {@code clazz} or any super-class (excluding {@link Object})
-     *          overrides the {@link Object#equals(Object) equals} method defined in {@link Object}. {@code false}
-     *          is returned otherwise.
+     *          {@code true} if the {@link Object#equals(Object) equals} method of the super-class
+     *          is called inside the given {@code clazz}' equals method. {@code false} is returned
+     *          otherwise.
      */
-    private boolean thisOrSuperClassOverridesEquals(CtClass<?> clazz) {
-        CtType<?> currentClazz = clazz;
-
-        while(currentClazz != null && !OBJECT_FULLY_QUALIFIED_NAME.equals(currentClazz.getQualifiedName())) {
-            if(overridesEquals(currentClazz)) {
-                return true;
-            }
-
-            currentClazz = currentClazz.getSuperclass().getDeclaration();
+    public boolean callsSuper(CtClass<?> clazz) {
+        if(!overridesEquals(clazz)) {
+            return false;
         }
 
-        return false;
+        return callsSuperInternal(clazz);
     }
 
     /**
      *
      * @param clazz
-     *          The class to get the super-classes of, not {@code null}.
+     *          The {@link CtClass} to find the overridden {@link Object#equals(Object)} method
+     *          in, not {@code null}.
      *
      * @return
-     *          A list containing the class itself and all super-classes of the given {@code clazz}.
-     *          The first element is the given {@code clazz} itself, the second its parent class,
-     *          the third. Does not include the {@link CtClass} representation of {@link Object}.
+     *          An optional containing the overridden equals method. An empty optional will be returned
+     *          in case the equals method is not overridden in the given {@code clazz}.
      */
-    private List<CtClass<?>> getSuperClassesExcludingObject(CtClass<?> clazz) {
-        CtType<?> currentClazz = clazz;
-        var superClasses = new ArrayList<CtClass<?>>();
+    protected Optional<CtMethod<Boolean>> findOverriddenEqualsMethodInClass(CtClass<?> clazz) {
+        var typeFactory = new TypeFactory();
+        var equalsMethodReturnTypeRef = typeFactory.BOOLEAN_PRIMITIVE;
+        var equalsMethodArgTypeRef = typeFactory.OBJECT;
 
-        while(currentClazz != null && !OBJECT_FULLY_QUALIFIED_NAME.equals(currentClazz.getQualifiedName())) {
-            superClasses.add((CtClass<?>) currentClazz);
+        var equalsMethod = clazz.getMethod(equalsMethodReturnTypeRef, EQUALS_METHOD_SIMPLE_NAME, equalsMethodArgTypeRef);
 
-            currentClazz = currentClazz.getSuperclass().getDeclaration();
+        if(equalsMethod != null && clazz.equals(equalsMethod.getDeclaringType())) {
+            return Optional.of(equalsMethod);
+        } else {
+            return Optional.empty();
         }
-
-        return superClasses;
-    }
-
-    /**
-     *
-     * @param clazz
-     *          The class to check, not {@code null}.
-     *
-     * @return
-     *          The {@link CtClass} which overrides the {@link Object#equals(Object)} method defined
-     *          in {@link Object}. May be the given {@code clazz} or any super-class of the given
-     *          {@code clazz}.
-     *
-     * @throws IllegalStateException
-     *          When neither the given {@code clazz} nor any super-class (excluding {@link Object})
-     *          overrides the {@link Object#equals(Object)} method defined in {@link Object}.
-     */
-    private CtClass<?> findClassOverridingEquals(CtClass<?> clazz) {
-        CtType<?> currentClazz = clazz;
-
-        while(currentClazz != null && !OBJECT_FULLY_QUALIFIED_NAME.equals(currentClazz.getQualifiedName())) {
-            if(overridesEquals(currentClazz)) {
-                return (CtClass<?>) currentClazz;
-            }
-
-            currentClazz = currentClazz.getSuperclass().getDeclaration();
-        }
-
-        throw new IllegalStateException("The clazz nor any super-class overrides Object#equals(Object)!");
     }
 
     /**
      * Abstract method to check if a given {@link CtType} overrides the {@link Object#equals(Object) equals}
      * method defined {@link Object}. Does <b>not</b> check if a super-class overrides that method.
      *
-     * @param type
-     *          The {@link CtType} to check, not {@code null}.
+     * @param clazz
+     *          The {@link CtClass} to check, not {@code null}. Must ba a real sub-class of {@link Object}.
      *
      * @return
-     *          {@code true}, if the given {@code type} overrides the {@link Object#equals(Object) equals}
-     *          method defined in {@link Object}. {@code false} is returned otherwise.
+     *          {@code true}, if the given {@code clazz} overrides the {@link Object#equals(Object) equals}
+     *          method declared in {@link Object}. {@code false} is returned otherwise.
      */
-    protected abstract boolean overridesEquals(CtType<?> type);
+    public abstract boolean overridesEquals(CtClass<?> clazz);
 
     /**
      *
-     * @param equalsMethod
-     *          The equals method to check, not {@code null}.
+     * @param clazz
+     *          The {@link CtClass} to check, not {@code null}.
      *
      * @return
      *          {@code true} if the {@link Object#equals(Object) equals} method of the super-class
-     *          is called inside the given {@code equalsMethod}. {@code false} is returned
-     *          otherwise.
+     *          is called inside the given {@code clazz}' equals method. {@code false} is returned
+     *          otherwise. Implementations might throw an exceptions when the {@link #overridesEquals(CtClass)}
+     *          method returns false.
      */
-    protected abstract boolean callsSuper(CtMethod<Boolean> equalsMethod);
+    protected abstract boolean callsSuperInternal(CtClass<?> clazz);
 
     /**
      *
      * @param clazzOverridingEquals
-     *          The {@link CtClass} which overrides the {@link Object#equals(Object) equals} method
-     *          defined in {@link Object}, not {@code null}.
+     *          The {@link CtClass} which overrides the equals method declared in {@link Object#equals(Object)},
+     *          not {@code null}. The {@link #overridesEquals(CtClass)} method must return {@code true}.
      *
      * @param accessibleFields
      *          The fields of the declared in the class itself and in all super-classes which can be accessed
@@ -202,7 +143,7 @@ public abstract class EqualsMethodAnalyzer {
      *          A set containing all fields which are compared inside the given {@code clazzOverridingEquals}
      *          equals method.
      */
-    protected abstract Set<CtField<?>> findFieldsComparedInEqualsMethodInternal(CtClass<?> clazzOverridingEquals,
-                                                                                Set<AccessibleField<?>> accessibleFields);
+    protected abstract Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtClass<?> clazzOverridingEquals,
+                                                                                        Set<AccessibleField<?>> accessibleFields);
 
 }

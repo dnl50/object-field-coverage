@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.core.analyzer;
 
+import de.adesso.objectfieldcoverage.api.AccessibleField;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,11 +8,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtField;
+
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
 class LombokEqualsMethodAnalyzerTest {
@@ -24,40 +29,40 @@ class LombokEqualsMethodAnalyzerTest {
     }
 
     @Test
-    void overridesEqualsReturnsTrueWhenTypeIsAnnotatedWithData(@Mock CtType<?> typeMock,
+    void overridesEqualsReturnsTrueWhenTypeIsAnnotatedWithData(@Mock CtClass<?> classMock,
                                                                @Mock Data dataMock) {
         // given
-        given(typeMock.getAnnotation(Data.class)).willReturn(dataMock);
+        given(classMock.getAnnotation(Data.class)).willReturn(dataMock);
 
         // when
-        var actualResult = testSubject.overridesEquals(typeMock);
+        var actualResult = testSubject.overridesEquals(classMock);
 
         // then
         assertThat(actualResult).isTrue();
     }
 
     @Test
-    void overridesEqualsReturnsTrueWhenTypeIsAnnotatedWithData(@Mock CtType<?> typeMock,
+    void overridesEqualsReturnsTrueWhenTypeIsAnnotatedWithData(@Mock CtClass<?> classMock,
                                                                @Mock EqualsAndHashCode equalsAndHashCodeMock) {
         // given
-        given(typeMock.getAnnotation(Data.class)).willReturn(null);
-        given(typeMock.getAnnotation(EqualsAndHashCode.class)).willReturn(equalsAndHashCodeMock);
+        given(classMock.getAnnotation(Data.class)).willReturn(null);
+        given(classMock.getAnnotation(EqualsAndHashCode.class)).willReturn(equalsAndHashCodeMock);
 
         // when
-        var actualResult = testSubject.overridesEquals(typeMock);
+        var actualResult = testSubject.overridesEquals(classMock);
 
         // then
         assertThat(actualResult).isTrue();
     }
 
     @Test
-    void overridesEqualsReturnsFalseWhenTypeIsNotAnnotatedWithDataOrEqualsAndHashCode(@Mock CtType<?> typeMock) {
+    void overridesEqualsReturnsFalseWhenTypeIsNotAnnotatedWithDataOrEqualsAndHashCode(@Mock CtClass<?> classMock) {
         // given
-        given(typeMock.getAnnotation(Data.class)).willReturn(null);
-        given(typeMock.getAnnotation(EqualsAndHashCode.class)).willReturn(null);
+        given(classMock.getAnnotation(Data.class)).willReturn(null);
+        given(classMock.getAnnotation(EqualsAndHashCode.class)).willReturn(null);
 
         // when
-        var actualResult = testSubject.overridesEquals(typeMock);
+        var actualResult = testSubject.overridesEquals(classMock);
 
         // then
         assertThat(actualResult).isFalse();
@@ -65,18 +70,16 @@ class LombokEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void callsSuperReturnsTrueWhenCallsSuperFlagSet(@Mock CtMethod<Boolean> equalsMethodMock,
-                                                    @Mock CtType declaringTypeMock,
+    void callsSuperReturnsTrueWhenCallsSuperFlagSet(@Mock CtClass classMock,
                                                     @Mock EqualsAndHashCode equalsAndHashCodeMock) {
         // given
-        given(equalsMethodMock.getDeclaringType()).willReturn(declaringTypeMock);
-
-        given(declaringTypeMock.getAnnotation(EqualsAndHashCode.class)).willReturn(equalsAndHashCodeMock);
+        doReturn(null).when(classMock).getAnnotation(Data.class);
+        doReturn(equalsAndHashCodeMock).when(classMock).getAnnotation(EqualsAndHashCode.class);
 
         given(equalsAndHashCodeMock.callSuper()).willReturn(true);
 
         // when
-        var actualResult = testSubject.callsSuper(equalsMethodMock);
+        var actualResult = testSubject.callsSuper(classMock);
 
         // then
         assertThat(actualResult).isTrue();
@@ -84,18 +87,30 @@ class LombokEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void callsSuperReturnsFalseWhenCallsSuperFlagNotSet(@Mock CtMethod<Boolean> equalsMethodMock,
-                                                        @Mock CtType declaringTypeMock,
+    void callsSuperReturnsFalseWhenCallsSuperFlagNotSet(@Mock CtClass classMock,
                                                         @Mock EqualsAndHashCode equalsAndHashCodeMock) {
         // given
-        given(equalsMethodMock.getDeclaringType()).willReturn(declaringTypeMock);
-
-        given(declaringTypeMock.getAnnotation(EqualsAndHashCode.class)).willReturn(equalsAndHashCodeMock);
+        doReturn(null).when(classMock).getAnnotation(Data.class);
+        doReturn(equalsAndHashCodeMock).when(classMock).getAnnotation(EqualsAndHashCode.class);
 
         given(equalsAndHashCodeMock.callSuper()).willReturn(false);
 
         // when
-        var actualResult = testSubject.callsSuper(equalsMethodMock);
+        var actualResult = testSubject.callsSuper(classMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings("rawtypes")
+    void callsSuperReturnsFalseWhenDeclaringTypeNotAnnotated(@Mock CtClass classMock) {
+        // given
+        doReturn(null).when(classMock).getAnnotation(Data.class);
+        doReturn(null).when(classMock).getAnnotation(EqualsAndHashCode.class);
+
+        // when
+        var actualResult = testSubject.callsSuper(classMock);
 
         // then
         assertThat(actualResult).isFalse();
@@ -103,18 +118,71 @@ class LombokEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void callsSuperReturnsFalseWhenDeclaringTypeNotAnnotated(@Mock CtMethod<Boolean> equalsMethodMock,
-                                                             @Mock CtType declaringTypeMock) {
+    void findFieldsComparedInEqualsMethodReturnsExplicitlyIncludedFieldsWhenSpecified(@Mock CtClass clazzMock,
+                                                                                      @Mock EqualsAndHashCode equalsAndHashCodeMock,
+                                                                                      @Mock EqualsAndHashCode.Include includeMock,
+                                                                                      @Mock CtField annotatedFieldMock,
+                                                                                      @Mock CtField nonAnnotatedFieldMock,
+                                                                                      @Mock AccessibleField annotatedAccessibleFieldMock,
+                                                                                      @Mock AccessibleField nonAnnotatedAccessibleFieldMock) {
         // given
-        given(equalsMethodMock.getDeclaringType()).willReturn(declaringTypeMock);
+        given(clazzMock.getFields()).willReturn(List.of(annotatedFieldMock, nonAnnotatedFieldMock));
 
-        given(declaringTypeMock.getAnnotation(EqualsAndHashCode.class)).willReturn(null);
+        doReturn(equalsAndHashCodeMock).when(clazzMock).getAnnotation(EqualsAndHashCode.class);
+        doReturn(null).when(clazzMock).getAnnotation(Data.class);
+        given(equalsAndHashCodeMock.onlyExplicitlyIncluded()).willReturn(true);
+        given(equalsAndHashCodeMock.exclude()).willReturn(new String[]{});
+
+        given(annotatedFieldMock.getAnnotation(EqualsAndHashCode.Include.class)).willReturn(includeMock);
+        given(nonAnnotatedFieldMock.getAnnotation(EqualsAndHashCode.Include.class)).willReturn(null);
+
+        given(annotatedAccessibleFieldMock.getActualField()).willReturn(annotatedFieldMock);
+        given(nonAnnotatedAccessibleFieldMock.getActualField()).willReturn(nonAnnotatedFieldMock);
 
         // when
-        var actualResult = testSubject.callsSuper(equalsMethodMock);
+        var actualResult = testSubject.findFieldsComparedInEqualsMethod(clazzMock,
+                Set.of(annotatedAccessibleFieldMock, nonAnnotatedAccessibleFieldMock));
 
         // then
-        assertThat(actualResult).isFalse();
+        assertThat(actualResult).containsExactly(annotatedAccessibleFieldMock);
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void findFieldsComparedInEqualsMethodReturnsNonExcludedFields(@Mock CtClass clazzMock,
+                                                                  @Mock EqualsAndHashCode equalsAndHashCodeMock,
+                                                                  @Mock EqualsAndHashCode.Exclude excludeMock,
+                                                                  @Mock CtField excludeAnnotatedFieldMock,
+                                                                  @Mock CtField nonAnnotatedFieldMock,
+                                                                  @Mock CtField excludedThroughNameFieldMock,
+                                                                  @Mock AccessibleField excludeAnnotatedAccessibleFieldMock,
+                                                                  @Mock AccessibleField nonAnnotatedAccessibleFieldMock,
+                                                                  @Mock AccessibleField excludedThroughNameAccessibleFieldMock) {
+        // given
+        var excludedFieldName = "field";
+
+        given(clazzMock.getFields()).willReturn(List.of(excludeAnnotatedFieldMock, nonAnnotatedFieldMock, excludedThroughNameFieldMock));
+
+        doReturn(equalsAndHashCodeMock).when(clazzMock).getAnnotation(EqualsAndHashCode.class);
+        doReturn(null).when(clazzMock).getAnnotation(Data.class);
+        given(equalsAndHashCodeMock.onlyExplicitlyIncluded()).willReturn(false);
+        given(equalsAndHashCodeMock.exclude()).willReturn(new String[]{ excludedFieldName });
+
+        given(excludeAnnotatedFieldMock.getAnnotation(EqualsAndHashCode.Exclude.class)).willReturn(excludeMock);
+        given(nonAnnotatedFieldMock.getAnnotation(EqualsAndHashCode.Exclude.class)).willReturn(null);
+
+        given(excludeAnnotatedAccessibleFieldMock.getActualField()).willReturn(excludeAnnotatedFieldMock);
+        given(nonAnnotatedAccessibleFieldMock.getActualField()).willReturn(nonAnnotatedFieldMock);
+        given(excludedThroughNameAccessibleFieldMock.getActualField()).willReturn(excludedThroughNameFieldMock);
+
+        given(excludedThroughNameFieldMock.getSimpleName()).willReturn(excludedFieldName);
+
+        // when
+        var actualResult = testSubject.findFieldsComparedInEqualsMethod(clazzMock,
+                Set.of(excludeAnnotatedAccessibleFieldMock, nonAnnotatedAccessibleFieldMock, excludedThroughNameAccessibleFieldMock));
+
+        // then
+        assertThat(actualResult).containsExactly(nonAnnotatedAccessibleFieldMock);
     }
 
 }
