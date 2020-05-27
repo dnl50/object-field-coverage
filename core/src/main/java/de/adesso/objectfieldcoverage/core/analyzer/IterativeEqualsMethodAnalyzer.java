@@ -10,7 +10,6 @@ import spoon.reflect.declaration.CtType;
 import java.util.*;
 import java.util.stream.Collectors;
 
-//TODO: Test
 /**
  * Combines multiple {@link EqualsMethodAnalyzer}s to walk up the super-class hierarchy of a given {@link CtClass}
  * to find out which {@link AccessibleField}s are compared in the equals methods.
@@ -28,21 +27,26 @@ public class IterativeEqualsMethodAnalyzer {
      * A list of equals method analyzers which will be to analyze the equals methods
      * while walking up the super-class hierarchy of a given {@link CtClass}.
      */
-    private List<EqualsMethodAnalyzer> equalsMethodAnalyzers;
+    private final List<EqualsMethodAnalyzer> equalsMethodAnalyzers;
 
     /**
+     * Walks up the parent class hierarchy until either the {@link CtClass} representation of {@link Object}
+     * is reached or the parent class is not part of the underlying model. Analysis is stopped abruptly in
+     * case a {@code equals} method in the hierarchy does not call its superclass implementation.
      *
      * @param clazz
      *          The {@link CtClass} to analyze the equals method of, not {@code null}.
      *
      * @param accessibleFields
-     *          A set containing all accessible fields from which the field which are used in the equals
+     *          A set containing all accessible fields from which the fields which are used in the equals
      *          method of the given {@code clazz} and its superclasses should be filtered from, not {@code null}.
+     *          (POV: clazz having a reference to {@code clazz} instance &rarr; {@code clazz}).
      *
      * @param accessibleFieldsInSuperTypes
      *          A map which contains an entry for for the given {@code clazz} every superclass which is part of the
      *          underlying model itself (excluding {@link Object}). The set to which the {@link CtType} is mapped
-     *          must contain all fields which are <i>accessible</i> from the given {@code clazz}.
+     *          must contain all fields which are <i>accessible</i> from the given {@code clazz} (POV: {@code clazz} &rarr;
+     *          superclass).
      *
      * @return
      *          An <b>unmodifiable</b> set containing all accessible fields which are part of the given
@@ -61,7 +65,7 @@ public class IterativeEqualsMethodAnalyzer {
         var superClassesIncludingClass = new LinkedList<>(findSuperClassesExcludingObject(clazz));
         superClassesIncludingClass.addFirst(clazz);
 
-        if(accessibleFieldsInSuperTypes.values().containsAll(superClassesIncludingClass)) {
+        if(!accessibleFieldsInSuperTypes.keySet().containsAll(superClassesIncludingClass)) {
             throw new IllegalArgumentException("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
                     "a required entry for the given clazz or a superclass!");
         }
@@ -76,8 +80,11 @@ public class IterativeEqualsMethodAnalyzer {
                 typeOrSuperTypeOverridesEquals = true;
 
                 var comparedFields = findAccessibleFieldsComparedInEquals(analyzersForOverriddenEquals,
-                        currentClass, accessibleFieldsInSuperTypes.get(currentClass), accessibleFields);
+                        currentClass, accessibleFields, accessibleFieldsInSuperTypes.get(currentClass));
                 accessibleFieldsComparedInEquals.addAll(comparedFields);
+
+                log.info("Equals method in '{}' compares {} fields!", currentClass.getQualifiedName(),
+                        comparedFields.size());
 
                 if(!equalsCallsSuper(currentClass)) {
                     log.info("Class '{}' overrides equals without calling its superclass implementation!",
@@ -91,9 +98,13 @@ public class IterativeEqualsMethodAnalyzer {
         }
 
         if(!typeOrSuperTypeOverridesEquals) {
-            log.info("Equals method not overridden by '{}' or any of its {} superclasses!",
+            log.info("Equals method not overridden by '{}' or any of its {} superclasses (excluding Object)!",
                     clazz.getQualifiedName(), superClassesIncludingClass.size() - 1);
         }
+
+        log.info("Analyses of class '{}' finished! {} out of {} accessible fields are compared " +
+                "in the equals method!", clazz.getQualifiedName(), accessibleFieldsComparedInEquals.size(),
+                accessibleFields.size());
 
         return Set.copyOf(accessibleFieldsComparedInEquals);
     }
@@ -133,7 +144,7 @@ public class IterativeEqualsMethodAnalyzer {
      *          class present in the underlying model.
      */
     private CtClass<?> findSuperClass(CtType<?> type) {
-        return (CtClass<?>) type.getSuperclass().getDeclaration();
+        return type.getSuperclass() != null ? (CtClass<?>) type.getSuperclass().getDeclaration() : null;
     }
 
     /**

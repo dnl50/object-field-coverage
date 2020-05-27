@@ -3,6 +3,7 @@ package de.adesso.objectfieldcoverage.api;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypedElement;
@@ -132,6 +133,25 @@ public class AccessibleField<T> {
      */
     public boolean isAccessibleThroughElement(CtTypedElement<T> typedElement) {
         return accessGrantingElements.contains(typedElement);
+    }
+
+    /**
+     *
+     * @param invocation
+     *          The {@link CtInvocation} which should be checked.
+     *
+     * @return
+     *          {@code true}, if the given {@code invocation}'s return type matches
+     *          the {@link #getActualField() actual field}'s type and the underlying
+     *          {@link spoon.reflect.declaration.CtExecutable} is contained in the {@link #getAccessGrantingElements()
+     *          access granting elements} set. {@code false} is returned otherwise.
+     */
+    public boolean isAccessedThroughInvocation(CtInvocation<T> invocation) {
+        if(invocation == null || !actualField.getType().equals(invocation.getType())) {
+            return false;
+        }
+
+        return accessGrantingElements.contains(invocation.getExecutable().getDeclaration());
     }
 
     /**

@@ -37,7 +37,8 @@ public abstract class EqualsMethodAnalyzer {
      * @param accessibleFieldsOfType
      *          A set containing the <i>accessible</i> fields which are declared in the {@code clazz} itself
      *          and all superclasses of the {@code clazz}, not {@code null}. The fields are <i>accessible</i>
-     *          from the given {@code clazz}.
+     *          from the given {@code clazz}. Useful when the equals method uses getters or other ways
+     *          of accessing fields internally.
      *
      * @return
      *          An <b>unmodifiable</b> set containing all fields of the given {@code clazz} which are compared
@@ -59,6 +60,8 @@ public abstract class EqualsMethodAnalyzer {
     }
 
     /**
+     * This method can only return {@code true} if the {@link #overridesEquals(CtClass)} method
+     * returns {@code true}.
      *
      * @param clazz
      *          The {@link CtClass} to check, not {@code null}.

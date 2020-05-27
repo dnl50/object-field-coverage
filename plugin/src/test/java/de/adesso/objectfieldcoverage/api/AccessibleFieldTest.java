@@ -4,14 +4,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class AccessibleFieldTest {
@@ -121,6 +126,81 @@ class AccessibleFieldTest {
 
         // then
         assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void isAccessedThroughInvocationReturnsFalseWhenInvocationIsNull(@Mock CtField<String> fieldMock) {
+        // given
+        var testSubject = new AccessibleField<>(fieldMock, Set.of());
+
+        // when
+        var actualResult = testSubject.isAccessedThroughInvocation(null);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void isAccessedThroughInvocationReturnsFalseWhenInvocationTypeDoesNotMatch(@Mock CtField fieldMock,
+                                                                               @Mock CtInvocation invocationMock,
+                                                                               @Mock CtTypeReference fieldTypeRef,
+                                                                               @Mock CtTypeReference invocationTypeRef) {
+        // given
+        var testSubject = new AccessibleField<>(fieldMock, Set.of());
+
+        given(fieldMock.getType()).willReturn(fieldTypeRef);
+        given(invocationMock.getType()).willReturn(invocationTypeRef);
+
+        // when
+        var actualResult = testSubject.isAccessedThroughInvocation(invocationMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void isAccessedThroughInvocationReturnsFalseWhenExecutableNotInAccessGrantingSet(@Mock CtField fieldMock,
+                                                                                     @Mock CtInvocation invocationMock,
+                                                                                     @Mock CtTypeReference typeRef,
+                                                                                     @Mock CtExecutableReference execRefMock,
+                                                                                     @Mock CtExecutable executableMock) {
+        // given
+        var testSubject = new AccessibleField<>(fieldMock, Set.of());
+
+        given(fieldMock.getType()).willReturn(typeRef);
+        given(invocationMock.getType()).willReturn(typeRef);
+        given(invocationMock.getExecutable()).willReturn(execRefMock);
+        given(execRefMock.getDeclaration()).willReturn(executableMock);
+
+        // when
+        var actualResult = testSubject.isAccessedThroughInvocation(invocationMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void isAccessedThroughInvocationReturnsTrueWhenExecutableInAccessGrantingSet(@Mock CtField fieldMock,
+                                                                                 @Mock CtInvocation invocationMock,
+                                                                                 @Mock CtTypeReference typeRef,
+                                                                                 @Mock CtExecutableReference execRefMock,
+                                                                                 @Mock CtExecutable executableMock) {
+        // given
+        var testSubject = new AccessibleField<>(fieldMock, Set.of(executableMock));
+
+        given(fieldMock.getType()).willReturn(typeRef);
+        given(invocationMock.getType()).willReturn(typeRef);
+        given(invocationMock.getExecutable()).willReturn(execRefMock);
+        given(execRefMock.getDeclaration()).willReturn(executableMock);
+
+        // when
+        var actualResult = testSubject.isAccessedThroughInvocation(invocationMock);
+
+        // then
+        assertThat(actualResult).isTrue();
     }
 
     @Test
