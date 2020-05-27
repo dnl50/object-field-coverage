@@ -28,8 +28,8 @@ class IterativeEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegrat
     @SuppressWarnings("unchecked")
     void findAccessibleFieldsUsedInEqualsReturnsExpectedFields() {
         // given
-        var model = buildModel("analyzer/DataClass.java", "analyzer/DataClassExtendingDataClass.java",
-                "analyzer/EqualsAndHashCodeClassCallingSuper.java");
+        var model = buildModel("analyzer/lombok/DataClass.java", "analyzer/lombok/DataClassExtendingDataClass.java",
+                "analyzer/lombok/EqualsAndHashCodeClassCallingSuper.java");
         var dataClazz = findClassWithSimpleName(model, "DataClass");
         var extendingClazz = findClassWithSimpleName(model, "DataClassExtendingDataClass");
         var equalsAndHashCodeClazz = findClassWithSimpleName(model, "EqualsAndHashCodeClassCallingSuper");

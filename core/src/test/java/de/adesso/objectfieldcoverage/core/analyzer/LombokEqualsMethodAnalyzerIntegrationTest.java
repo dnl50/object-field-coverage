@@ -23,7 +23,7 @@ class LombokEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegration
     @SuppressWarnings("unchecked")
     void dataClassReturnsAllFields() {
         // given
-        var model = buildModel("analyzer/DataClass.java");
+        var model = buildModel("analyzer/lombok/DataClass.java");
         var clazz = findClassWithSimpleName(model, "DataClass");
         var protectedIntField = (CtField<Integer>) clazz.getField("protectedInt");
         var protectedStringField = (CtField<Integer>) clazz.getField("protectedString");
@@ -44,7 +44,7 @@ class LombokEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegration
     @SuppressWarnings("unchecked")
     void dataClassExtendingDataClassReturnsAllDeclaredInClass() {
         // given
-        var model = buildModel("analyzer/DataClass.java", "analyzer/DataClassExtendingDataClass.java");
+        var model = buildModel("analyzer/lombok/DataClass.java", "analyzer/lombok/DataClassExtendingDataClass.java");
         var clazz = findClassWithSimpleName(model, "DataClass");
         var extendingClazz = findClassWithSimpleName(model, "DataClassExtendingDataClass");
         var protectedIntField = (CtField<Integer>) clazz.getField("protectedInt");

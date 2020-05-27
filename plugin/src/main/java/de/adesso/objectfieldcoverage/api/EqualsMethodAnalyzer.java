@@ -119,7 +119,8 @@ public abstract class EqualsMethodAnalyzer {
     /**
      *
      * @param clazz
-     *          The {@link CtClass} to check, not {@code null}.
+     *          The {@link CtClass} to check, not {@code null}. The {@link #overridesEquals(CtClass)} method
+     *          must return {@code true} for the given {@code clazz}.
      *
      * @return
      *          {@code true} if the {@link Object#equals(Object) equals} method of the super-class
