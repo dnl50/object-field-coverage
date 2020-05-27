@@ -3,11 +3,8 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.code.*;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.declaration.*;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -49,7 +46,7 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
     private static final String EQUALS_METHOD_SIMPLE_NAME = "equals";
 
     /**
-     * The {@link CtInvocation}s and {@link CtFieldRead}s returned by this method are used in
+     * The {@link CtExpression}s returned by this method are used in
      * {@link #findFieldsComparedInEqualsMethodInternal(CtClass, Set)} to filter out {@link AccessibleField}s which
      * are not compared in the {@code equalsMethod}.
      *
@@ -57,10 +54,9 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
      *          The equals method which should be analyzed, not {@code null}.
      *
      * @return
-     *          A pair of {@link CtInvocation}s and {@link CtFieldRead}ss which are compared in the given
-     *          {@code equalsMethod}. Uses a pair to only perform an analysis once for a equals method.
+     *          The {@link CtExpression}s which are compared in the given {@code equalsMethod}.
      */
-    protected abstract Pair<Set<CtInvocation<?>>, Set<CtFieldRead<?>>> findInvocationsAndFieldReadsComparedInEqualsMethod(CtMethod<Boolean> equalsMethod);
+    protected abstract Set<CtExpression<?>> findExpressionsComparedInEqualsMethod(CtMethod<Boolean> equalsMethod);
 
     /**
      *
@@ -143,22 +139,27 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
      */
     @Override
     protected Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtClass<?> clazzOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
-        var invocationsAndFieldAccesses = findInvocationsAndFieldReadsComparedInEqualsMethod(getEqualsMethod(clazzOverridingEquals));
+        var comparedExpressions = findExpressionsComparedInEqualsMethod(getEqualsMethod(clazzOverridingEquals));
 
-        var invocationExecutables = invocationsAndFieldAccesses.getLeft().stream()
+        Set<CtExecutable<?>> comparedExecutables = comparedExpressions.stream()
+                .filter(arg -> arg instanceof CtInvocation)
+                .map(arg -> (CtInvocation<?>) arg)
                 .map(CtInvocation::getExecutable)
                 .map(CtExecutableReference::getDeclaration)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        var directlyAccessedFields = invocationsAndFieldAccesses.getRight().stream()
+
+        Set<CtField<?>> comparedFields = comparedExpressions.stream()
+                .filter(arg -> arg instanceof CtFieldRead)
+                .map(arg -> (CtFieldRead<?>) arg)
                 .map(CtFieldRead::getVariable)
                 .map(CtFieldReference::getFieldDeclaration)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        var typedElementsSet = new HashSet<CtTypedElement<?>>(invocationExecutables.size() + directlyAccessedFields.size());
-        typedElementsSet.addAll(invocationExecutables);
-        typedElementsSet.addAll(directlyAccessedFields);
+        var typedElementsSet = new HashSet<CtTypedElement<?>>(comparedExecutables.size() + comparedFields.size());
+        typedElementsSet.addAll(comparedExecutables);
+        typedElementsSet.addAll(comparedFields);
 
         return accessibleFields.stream()
                 .filter(accessibleField -> {

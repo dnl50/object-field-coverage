@@ -1,8 +1,7 @@
 package de.adesso.objectfieldcoverage.core.analyzer;
 
-import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
@@ -15,7 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * {@link EqualsMethodAnalyzer} implementation for generated/handwritten {@link Object#equals(Object)}
+ * {@link CtMethodEqualsMethodAnalyzer} implementation for generated/handwritten {@link Object#equals(Object)}
  * method implementations which use the {@link java.util.Objects#equals(Object, Object)} helper method internally.
  */
 @Slf4j
@@ -32,32 +31,22 @@ public class ObjectsEqualsMethodAnalyzer extends CtMethodEqualsMethodAnalyzer {
      *          the given {@code equalsMethod}. Only the first argument of each invocation is taken into account.
      */
     @Override
-    protected Pair<Set<CtInvocation<?>>, Set<CtFieldRead<?>>> findInvocationsAndFieldReadsComparedInEqualsMethod(CtMethod<Boolean> equalsMethod) {
+    protected Set<CtExpression<?>> findExpressionsComparedInEqualsMethod(CtMethod<Boolean> equalsMethod) {
         var objectsEqualsInvocations = equalsMethod.getElements(new ObjectsEqualsInvocationFilter());
 
         if(objectsEqualsInvocations.isEmpty()) {
-            return Pair.of(Set.of(), Set.of());
+            return Set.of();
         }
 
-        var objectsEqualsInvocationArgs = objectsEqualsInvocations.stream()
+        Set<CtExpression<?>> objectsEqualsInvocationArgs = objectsEqualsInvocations.stream()
                 .map(CtInvocation::getArguments)
                 .map(argumentLists -> argumentLists.get(0))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         log.info("Equals method of '{}' contains {} Objects#equals(Object, Object) invocations!",
                 equalsMethod.getDeclaringType().getQualifiedName(), objectsEqualsInvocations.size());
 
-        Set<CtInvocation<?>> invocationArgs = objectsEqualsInvocationArgs.stream()
-                .filter(arg -> arg instanceof CtInvocation)
-                .map(arg -> (CtInvocation<?>) arg)
-                .collect(Collectors.toSet());
-
-        Set<CtFieldRead<?>> fieldReadArgs = objectsEqualsInvocationArgs.stream()
-                .filter(arg -> arg instanceof CtFieldRead)
-                .map(arg -> (CtFieldRead<?>) arg)
-                .collect(Collectors.toSet());
-
-        return Pair.of(invocationArgs, fieldReadArgs);
+        return objectsEqualsInvocationArgs;
     }
 
     /**
