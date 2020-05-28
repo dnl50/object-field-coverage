@@ -30,7 +30,7 @@ public abstract class AccessibilityAwareFieldFinder {
      *          {@code true}, if the given {@code field} is accessible from the given {@code accessingType}.
      *          {@code false} is returned otherwise.
      */
-    protected abstract boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field);
+    public abstract boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field);
 
     /**
      * This method is required since it is important to know through which typed element (e.g. the field
@@ -39,14 +39,19 @@ public abstract class AccessibilityAwareFieldFinder {
      * <b>Example</b>: Further down the line in the analysis process it must be known that the
      * {@code getX()} method is an alias for the field {@code x}, so an assertion on the the invocation result of the
      * {@code getX()} method inside a test method is counted as an assertion on field {@code x}.
+     * <p/>
+     * Implementations might throw an unchecked exception when this method is invoked with a {@link CtType}
+     * and {@link CtField} for which the {@link #isFieldAccessible(CtType, CtField)} method returns false.
      *
      * @param accessingType
-     *          The class whose methods can access the given {@code field},
-     *          not {@code null}.
+     *          The class whose methods can access the given {@code field}, not {@code null}. The
+     *          {@link #isFieldAccessible(CtType, CtField)} method <b>must</b> return {@code true} when being invoked
+     *          with the given {@code accessingType} and {@code field}.
      *
      * @param field
-     *          The field which can be accessed by inside the given {@code accessingType},
-     *          not {@code null}.
+     *          The field which can be accessed by inside the given {@code accessingType}, not {@code null}. The
+     *          {@link #isFieldAccessible(CtType, CtField)} method <b>must</b> return {@code true} when being invoked
+     *          with the given {@code accessingType} and {@code field}.
      *
      * @param <T>
      *          The type of the field.
@@ -54,9 +59,9 @@ public abstract class AccessibilityAwareFieldFinder {
      * @return
      *          The typed elements which grant access to the given {@code field}. Must contain at least one
      *          element when {@link #isFieldAccessible(CtType, CtField)} returns {@code true}. Implementations
-     *          might throw unchecked exceptions otherwise.
+     *          might throw unchecked exceptions when {@link #isFieldAccessible(CtType, CtField)} returns {@code false}.
      */
-    protected abstract <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field);
+    public abstract <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field);
 
     /**
      *

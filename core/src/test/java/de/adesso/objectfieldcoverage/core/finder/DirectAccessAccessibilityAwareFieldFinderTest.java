@@ -246,6 +246,19 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void findAccessGrantingElementsReturnsSetContainingFieldItself(@Mock CtType typeMock,
+                                                                   @Mock CtField fieldMock) {
+        // given
+
+        // when
+        var actualAccessGrantingElements = testSubject.findAccessGrantingElements(typeMock, fieldMock);
+
+        // then
+        assertThat(actualAccessGrantingElements).containsExactly(fieldMock);
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void setUpTypeMockToReturnFields(CtType typeMock, Collection<CtField> fields) {
         var fieldReferences = fields.stream()

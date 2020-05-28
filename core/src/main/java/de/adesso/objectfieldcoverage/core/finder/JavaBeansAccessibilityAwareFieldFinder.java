@@ -37,7 +37,7 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      *          declaring type. {@code false} is returned otherwise.
      */
     @Override
-    protected boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
+    public boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
         return this.findJavaBeansGetterMethod(field).isPresent();
     }
 
@@ -63,7 +63,7 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      *          {@code field}'s declaring class.
      */
     @Override
-    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
+    public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
         var getterMethod = this.findJavaBeansGetterMethod(field)
                 .orElseThrow(() -> new IllegalStateException(
                         String.format("No Java Beans Getter method present for field '%s'!", field.getSimpleName())

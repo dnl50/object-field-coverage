@@ -102,9 +102,10 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
      *          The corresponding executables, not {@code null}.
      *
      * @return
-     *          A set containing all executables
+     *          A set containing all executables which are contained in the given {@code executables}
+     *          collection and which are invoked inside the given method.
      */
-    private Set<CtExecutable<?>> filterExecutables(CtMethod<?> testMethod, Collection<CtExecutable<?>> executables) {
+    private Set<CtExecutable<?>> filterInvokedExecutables(CtMethod<?> testMethod, Collection<CtExecutable<?>> executables) {
         return executables.stream()
                 .filter(executable -> {
                     if(!ExecutableUtil.isExecutableInvoked(testMethod, executable)) {

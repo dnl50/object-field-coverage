@@ -53,7 +53,7 @@ public class DirectAccessAccessibilityAwareFieldFinder extends AccessibilityAwar
      *          </ul>
      */
     @Override
-    protected boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
+    public boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
         if(isPublicField(field) || field.getDeclaringType().equals(accessingType) ) {
             return true;
         } else if(isProtectedField(field)) {
@@ -82,7 +82,7 @@ public class DirectAccessAccessibilityAwareFieldFinder extends AccessibilityAwar
      *          A set containing the given {@code field} as its only element.
      */
     @Override
-    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
+    public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
         return Set.of(field);
     }
 

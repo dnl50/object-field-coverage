@@ -260,12 +260,12 @@ class AccessibilityAwareFieldFinderTest {
     private static class DefaultAccessibilityAwareFieldFinder extends AccessibilityAwareFieldFinder {
 
         @Override
-        protected boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
+        public boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
             return true;
         }
 
         @Override
-        protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
+        public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
             return Set.of();
         }
 

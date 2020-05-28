@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.core.analyzer;
+package de.adesso.objectfieldcoverage.core.analyzer.lombok;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;

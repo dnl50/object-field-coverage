@@ -58,7 +58,7 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      *          by the given {@code accessingType}. {@code false} is returned otherwise.
      */
     @Override
-    protected boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
+    public boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
         return this.hasAccessibleGeneratedGetter(accessingType, field);
     }
 
@@ -82,7 +82,7 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      * @see LombokGetterMethodGenerator#generateGetterMethod(CtField, AccessLevel)
      */
     @Override
-    protected <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
+    public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
         var getterAccessLevel = getAccessLevelOfGeneratedGetter(field);
         return Set.of(lombokGetterMethodGenerator.generateGetterMethod(field, getterAccessLevel));
     }

@@ -1,6 +1,7 @@
 package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
+import de.adesso.objectfieldcoverage.core.analyzer.lombok.LombokEqualsMethodAnalyzer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.junit.jupiter.api.BeforeEach;

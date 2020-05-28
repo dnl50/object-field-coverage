@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
+import de.adesso.objectfieldcoverage.core.util.TypeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
@@ -17,11 +18,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class IterativeEqualsMethodAnalyzer {
-
-    /**
-     * The fully qualified name of the {@link Object} class.
-     */
-    private static final String OBJECT_FULLY_QUALIFIED_NAME = "java.lang.Object";
 
     /**
      * A list of equals method analyzers which will be to analyze the equals methods
@@ -62,8 +58,7 @@ public class IterativeEqualsMethodAnalyzer {
             return Set.of();
         }
 
-        var superClassesIncludingClass = new LinkedList<>(findSuperClassesExcludingObject(clazz));
-        superClassesIncludingClass.addFirst(clazz);
+        var superClassesIncludingClass = new LinkedList<>(TypeUtil.findExplicitSuperClassesIncludingClass(clazz));
 
         if(!accessibleFieldsInSuperTypes.keySet().containsAll(superClassesIncludingClass)) {
             throw new IllegalArgumentException("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
@@ -107,44 +102,6 @@ public class IterativeEqualsMethodAnalyzer {
                 accessibleFields.size());
 
         return Set.copyOf(accessibleFieldsComparedInEquals);
-    }
-
-    /**
-     *
-     * @param type
-     *          The type to get the superclasses of, not {@code null}.
-     *
-     * @return
-     *          A <b>modifiable</b> list containing all real superclasses of the given {@code type},
-     *          excluding {@link Object}.
-     */
-    private List<CtClass<?>> findSuperClassesExcludingObject(CtType<?> type) {
-        var currentSuperClass = findSuperClass(type);
-        var superClasses = new ArrayList<CtClass<?>>();
-
-        while(currentSuperClass != null) {
-            if(OBJECT_FULLY_QUALIFIED_NAME.equals(currentSuperClass.getQualifiedName())) {
-                break;
-            }
-
-            superClasses.add(currentSuperClass);
-            currentSuperClass = findSuperClass(currentSuperClass);
-        }
-
-        return superClasses;
-    }
-
-    /**
-     *
-     * @param type
-     *          The type of which the superclass should be retrieved, not {@code null}.
-     *
-     * @return
-     *          The superclass of the given {@code type} or {@code null} if there is no parent
-     *          class present in the underlying model.
-     */
-    private CtClass<?> findSuperClass(CtType<?> type) {
-        return type.getSuperclass() != null ? (CtClass<?>) type.getSuperclass().getDeclaration() : null;
     }
 
     /**

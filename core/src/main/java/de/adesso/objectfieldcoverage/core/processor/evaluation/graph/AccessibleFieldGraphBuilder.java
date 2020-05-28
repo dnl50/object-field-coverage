@@ -4,6 +4,7 @@ import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
+import de.adesso.objectfieldcoverage.core.finder.AggregatingAccessibilityAwareFieldFinder;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
@@ -83,7 +84,7 @@ public class AccessibleFieldGraphBuilder {
                                                   CtType<?> accessingType,
                                                   CtType<?> clazzContainingFieldsToAccess) {
         Objects.requireNonNull(fieldFinders, "The AccessibilityAwareFieldFinder collection cannot be null!");
-        Objects.requireNonNull(accessingType, "The CtType for which the graph should be bulit cannot be null!");
+        Objects.requireNonNull(accessingType, "The CtType for which the graph should be built cannot be null!");
         Objects.requireNonNull(clazzContainingFieldsToAccess, "The CtType to start the built process at cannot be null!");
 
         return new AccessibleFieldGraphBuilder(fieldFinders, accessingType)
@@ -221,19 +222,16 @@ public class AccessibleFieldGraphBuilder {
      *          access, not {@code null}.
      *
      * @return
-     *          A set containing exactly one {@link AccessibleField} element for each accessible
+     *          An <b>unmodifiable</b> set containing exactly one {@link AccessibleField} element for each accessible
      *          {@link CtField}.
      *
      * @see #getExistingOrAddNew(AccessibleField)
      */
     private Set<AccessibleField<?>> findAccessibleFields(CtType<?> typeContainingFieldsToAccess) {
-        var allFoundAccessibleFields = fieldFinders.stream()
-                .map(fieldFinder -> fieldFinder.findAccessibleFields(accessingType, typeContainingFieldsToAccess))
-                .flatMap(Collection::stream)
-                .map(this::getExistingOrAddNew)
-                .collect(Collectors.toSet());
+        var accessibleFields = new AggregatingAccessibilityAwareFieldFinder(fieldFinders)
+                .findAccessibleFields(accessingType, typeContainingFieldsToAccess);
 
-        return AccessibleField.uniteAll(allFoundAccessibleFields);
+        return Set.copyOf(accessibleFields);
     }
 
     /**

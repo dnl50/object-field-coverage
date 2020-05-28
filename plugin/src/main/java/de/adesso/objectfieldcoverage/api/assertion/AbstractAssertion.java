@@ -4,7 +4,6 @@ import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformati
 import org.apache.commons.math3.fraction.Fraction;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtType;
 
 /**
  * The base interface abstraction for an <i>Assertion</i>.
@@ -28,8 +27,7 @@ public interface AbstractAssertion<T> {
      * method containing this assertion is located in a different class.
      *
      * @return
-     *          The {@link CtType} of the original test class from {@code this} assertion originates
-     *          from, not {@code null}.
+     *          The {@link CtMethod} {@code this} assertion originates from, not {@code null}.
      */
     //TODO: make abstract
     default CtMethod<?> getOriginTestMethod() {
