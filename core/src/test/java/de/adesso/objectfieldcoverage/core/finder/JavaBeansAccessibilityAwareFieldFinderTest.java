@@ -6,10 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.*;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -48,6 +45,9 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
+        given(typeMock.isPublic()).willReturn(true);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
@@ -58,6 +58,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldTypeMock.getMethod(fieldReferenceTypeMock, expectedJavaBeansGetterMethodName))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getDeclaringType()).willReturn(typeMock);
         given(getterMethodMock.isPublic()).willReturn(true);
 
         // when
@@ -83,6 +84,9 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
+        given(typeMock.isPublic()).willReturn(true);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
@@ -93,6 +97,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldTypeMock.getMethod(fieldReferenceTypeMock, expectedJavaBeansGetterMethodName))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getDeclaringType()).willReturn(typeMock);
         given(getterMethodMock.isPublic()).willReturn(true);
 
         // when
@@ -109,12 +114,20 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                                                                                                    @Mock CtField fieldMock,
                                                                                                    @Mock CtTypeReference fieldReferenceTypeMock,
                                                                                                    @Mock CtType fieldTypeMock,
-                                                                                                   @Mock CtMethod getterMethodMock) {
+                                                                                                   @Mock CtMethod getterMethodMock,
+                                                                                                   @Mock CtPackage typePackageMock,
+                                                                                                   @Mock CtPackage testPackageMock) {
         // given
         var booleanFieldSimpleName = "activated";
         var expectedJavaBeansGetterMethodName = "isActivated";
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+
+        given(typeMock.isPublic()).willReturn(true);
+        given(typeMock.getPackage()).willReturn(typePackageMock);
+
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+        given(testClazzMock.getPackage()).willReturn(testPackageMock);
 
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
@@ -127,6 +140,9 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                 .willReturn(getterMethodMock);
 
         given(getterMethodMock.isPublic()).willReturn(false);
+
+        given(getterMethodMock.getDeclaringType()).willReturn(typeMock);
+        given(getterMethodMock.isProtected()).willReturn(true);
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
@@ -159,7 +175,6 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldTypeMock.getMethod(fieldReferenceTypeMock, expectedJavaBeansGetterMethodName))
                 .willReturn(getterMethodMock);
 
-        given(getterMethodMock.isPublic()).willReturn(true);
         given(getterMethodMock.isStatic()).willReturn(true);
 
         // when
@@ -215,6 +230,11 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
+        given(typeMock.isPublic()).willReturn(true);
+
+        given(typeMock.isPublic()).willReturn(true);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
@@ -226,6 +246,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                 .willReturn(getterMethodMock);
 
         given(getterMethodMock.isPublic()).willReturn(true);
+        given(getterMethodMock.getDeclaringType()).willReturn(typeMock);
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
@@ -236,12 +257,12 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsStaticReferenceTypeFieldWithStaticGetterPresent(@Mock CtType typeMock,
-                                                                                    @Mock CtClass testClazzMock,
-                                                                                    @Mock CtField fieldMock,
-                                                                                    @Mock CtTypeReference fieldReferenceTypeMock,
-                                                                                    @Mock CtType fieldTypeMock,
-                                                                                    @Mock CtMethod getterMethodMock) {
+    void findAccessibleFieldsReturnsStaticReferenceTypeFieldWithGetterPresent(@Mock CtType typeMock,
+                                                                              @Mock CtClass testClazzMock,
+                                                                              @Mock CtField fieldMock,
+                                                                              @Mock CtTypeReference fieldReferenceTypeMock,
+                                                                              @Mock CtType fieldTypeMock,
+                                                                              @Mock CtMethod getterMethodMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
@@ -250,10 +271,13 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
+        given(typeMock.isPublic()).willReturn(true);
+
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
-        given(fieldMock.isStatic()).willReturn(true);
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.String");
@@ -262,6 +286,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
                 .willReturn(getterMethodMock);
 
         given(getterMethodMock.isPublic()).willReturn(true);
+        given(getterMethodMock.getDeclaringType()).willReturn(typeMock);
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
@@ -324,7 +349,6 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldTypeMock.getMethod(fieldReferenceTypeMock, expectedJavaBeansGetterMethodName))
                 .willReturn(getterMethodMock);
 
-        given(getterMethodMock.isPublic()).willReturn(true);
         given(getterMethodMock.isStatic()).willReturn(true);
 
         // when
@@ -336,17 +360,24 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsEmptyListWhenGetterPresentButNotPublic(@Mock CtType typeMock,
-                                                                           @Mock CtClass testClazzMock,
-                                                                           @Mock CtField fieldMock,
-                                                                           @Mock CtTypeReference fieldReferenceTypeMock,
-                                                                           @Mock CtType fieldTypeMock,
-                                                                           @Mock CtMethod getterMethodMock) {
+    void findAccessibleFieldsReturnsEmptyListWhenGetterPresentButNotPublicAndNotAccessible(@Mock CtType typeMock,
+                                                                                           @Mock CtClass testClazzMock,
+                                                                                           @Mock CtField fieldMock,
+                                                                                           @Mock CtTypeReference fieldReferenceTypeMock,
+                                                                                           @Mock CtType fieldTypeMock,
+                                                                                           @Mock CtMethod getterMethodMock,
+                                                                                           @Mock CtPackage typePackageMock,
+                                                                                           @Mock CtPackage testPackageMock) {
         // given
         var fieldSimpleName = "name";
         var expectedJavaBeansGetterMethodName = "getName";
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+
+        given(typeMock.getPackage()).willReturn(typePackageMock);
+
+        given(testClazzMock.getPackage()).willReturn(testPackageMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
@@ -358,7 +389,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldTypeMock.getMethod(fieldReferenceTypeMock, expectedJavaBeansGetterMethodName))
                 .willReturn(getterMethodMock);
 
-        given(getterMethodMock.isPublic()).willReturn(false);
+        given(getterMethodMock.getDeclaringType()).willReturn(typeMock);
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);

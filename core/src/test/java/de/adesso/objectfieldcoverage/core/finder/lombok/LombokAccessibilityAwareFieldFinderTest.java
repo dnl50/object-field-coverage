@@ -55,7 +55,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Data.class, dataAnnotationMock);
 
         given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, getterAccessLevelMock))
-            .willReturn(true);
+                .willReturn(true);
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
@@ -66,8 +66,7 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenClassAnnotatedWithData(@Mock CtType typeMock,
-                                                                    @Mock CtField fieldMock,
+    void findAccessibleFieldsReturnsFieldWhenClassAnnotatedWithData(@Mock CtField fieldMock,
                                                                     @Mock CtClass fieldDeclaringClassMock,
                                                                     @Mock CtClass testClazzMock,
                                                                     @Mock CtMethod getterMethodMock,
@@ -75,7 +74,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -86,8 +85,16 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PUBLIC))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isPublic()).willReturn(true);
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -95,16 +102,16 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsFieldWhenDeclaringTypeIsAnnotatedWithPublicGetter(@Mock CtType typeMock,
-                                                                               @Mock CtField fieldMock,
-                                                                               @Mock CtClass fieldDeclaringClassMock,
-                                                                               @Mock CtClass testClazzMock,
-                                                                               @Mock CtMethod getterMethodMock,
-                                                                               @Mock Getter getterAnnotationMock) {
+    void findAccessibleFieldsReturnsFieldWhenDeclaringTypeIsAnnotatedWithPublicGetter(@Mock CtType typeMock,
+                                                                                      @Mock CtField fieldMock,
+                                                                                      @Mock CtClass fieldDeclaringClassMock,
+                                                                                      @Mock CtClass testClazzMock,
+                                                                                      @Mock CtMethod getterMethodMock,
+                                                                                      @Mock Getter getterAnnotationMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -116,8 +123,16 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PUBLIC))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isPublic()).willReturn(true);
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -125,8 +140,7 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPublicGetter(@Mock CtType typeMock,
-                                                                              @Mock CtField getterAnnotatedField,
+    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPublicGetter(@Mock CtField getterAnnotatedField,
                                                                               @Mock CtField otherFieldMock,
                                                                               @Mock CtClass fieldDeclaringClassMock,
                                                                               @Mock CtClass testClazzMock,
@@ -135,20 +149,28 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(getterAnnotatedField, getterMethodMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(getterAnnotatedField, otherFieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(getterAnnotatedField, otherFieldMock));
+
+        given(otherFieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
         setUpElementMockToReturnAnnotation(getterAnnotatedField, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PUBLIC);
-
-        given(otherFieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
         given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(getterAnnotatedField, AccessLevel.PUBLIC))
                 .willReturn(false);
         given(methodGeneratorMock.generateGetterMethod(getterAnnotatedField, AccessLevel.PUBLIC))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isPublic()).willReturn(true);
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -156,8 +178,7 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithProtectedGetterAndTestClassIsInSamePackage(@Mock CtType typeMock,
-                                                                                                            @Mock CtField fieldMock,
+    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithProtectedGetterAndTestClassIsInSamePackage(@Mock CtField fieldMock,
                                                                                                             @Mock CtClass fieldDeclaringClassMock,
                                                                                                             @Mock CtClass testClazzMock,
                                                                                                             @Mock CtPackage packageMock,
@@ -166,23 +187,31 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
-        given(fieldDeclaringClassMock.getPackage()).willReturn(packageMock);
-        given(testClazzMock.getPackage()).willReturn(packageMock);
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
 
         given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PROTECTED))
                 .willReturn(false);
         given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PROTECTED))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isProtected()).willReturn(true);
+
+        given(fieldDeclaringClassMock.getPackage()).willReturn(packageMock);
+        given(testClazzMock.getPackage()).willReturn(packageMock);
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -190,38 +219,45 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithProtectedGetterAndTestClazzIsSubClass(@Mock CtType typeMock,
-                                                                                                       @Mock CtField fieldMock,
+    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithProtectedGetterAndTestClazzIsSubClass(@Mock CtField fieldMock,
                                                                                                        @Mock CtClass fieldDeclaringClassMock,
-                                                                                                       @Mock CtTypeReference fieldDeclaringClassReferenceMock,
+                                                                                                       @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                        @Mock CtClass testClazzMock,
-                                                                                                       @Mock CtPackage fieldPackageMock,
-                                                                                                       @Mock CtPackage testClazzPackageMock,
+                                                                                                       @Mock CtPackage packageMock,
+                                                                                                       @Mock CtPackage otherPackageMock,
                                                                                                        @Mock CtMethod getterMethodMock,
                                                                                                        @Mock Getter getterAnnotationMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
-        given(fieldDeclaringClassMock.getPackage()).willReturn(fieldPackageMock);
-        given(testClazzMock.getPackage()).willReturn(testClazzPackageMock);
-
-        given(testClazzMock.getSuperclass()).willReturn(fieldDeclaringClassReferenceMock);
-        given(fieldDeclaringClassReferenceMock.getTypeDeclaration()).willReturn(fieldDeclaringClassMock);
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
 
         given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PROTECTED))
                 .willReturn(false);
         given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PROTECTED))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isProtected()).willReturn(true);
+
+        given(fieldDeclaringClassMock.getPackage()).willReturn(packageMock);
+        given(testClazzMock.getPackage()).willReturn(otherPackageMock);
+
+        given(testClazzMock.getSuperclass()).willReturn(fieldDeclaringClassRefMock);
+        given(fieldDeclaringClassRefMock.getTypeDeclaration()).willReturn(fieldDeclaringClassMock);
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -229,29 +265,41 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithProtectedGetterAndTestClazzIsNoSubClass(@Mock CtType typeMock,
-                                                                                                               @Mock CtField fieldMock,
-                                                                                                               @Mock CtClass fieldDeclaringClassMock,
-                                                                                                               @Mock CtClass testClazzMock,
-                                                                                                               @Mock CtPackage fieldPackageMock,
-                                                                                                               @Mock CtPackage testClazzPackageMock,
-                                                                                                               @Mock CtMethod getterMethodMock,
-                                                                                                               @Mock Getter getterAnnotationMock) {
+    void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithProtectedGetterAndNotInSamePackageOrSubClass(@Mock CtField fieldMock,
+                                                                                                                    @Mock CtClass fieldDeclaringClassMock,
+                                                                                                                    @Mock CtClass testClazzMock,
+                                                                                                                    @Mock CtPackage packageMock,
+                                                                                                                    @Mock CtPackage otherPackageMock,
+                                                                                                                    @Mock CtMethod getterMethodMock,
+                                                                                                                    @Mock Getter getterAnnotationMock) {
         // given
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
-        given(fieldDeclaringClassMock.getPackage()).willReturn(fieldPackageMock);
-        given(testClazzMock.getPackage()).willReturn(testClazzPackageMock);
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
+
+        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PROTECTED))
+                .willReturn(false);
+        given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PROTECTED))
+                .willReturn(getterMethodMock);
+
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isProtected()).willReturn(true);
+
+        given(fieldDeclaringClassMock.getPackage()).willReturn(packageMock);
+        given(testClazzMock.getPackage()).willReturn(otherPackageMock);
 
         given(testClazzMock.getSuperclass()).willReturn(null);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).isEmpty();
@@ -259,8 +307,7 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsInSamePackage(@Mock CtType typeMock,
-                                                                                                          @Mock CtField fieldMock,
+    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsInSamePackage(@Mock CtField fieldMock,
                                                                                                           @Mock CtClass fieldDeclaringClassMock,
                                                                                                           @Mock CtClass testClazzMock,
                                                                                                           @Mock CtPackage packageMock,
@@ -268,25 +315,34 @@ class LombokAccessibilityAwareFieldFinderTest {
                                                                                                           @Mock Getter getterAnnotationMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
-        var getterAccessLevel = AccessLevel.PACKAGE;
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(getterAccessLevel);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PACKAGE);
+
+        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PACKAGE))
+                .willReturn(false);
+        given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PACKAGE))
+                .willReturn(getterMethodMock);
+
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isPublic()).willReturn(false);
+        given(getterMethodMock.isProtected()).willReturn(false);
+        given(getterMethodMock.isPrivate()).willReturn(false);
 
         given(fieldDeclaringClassMock.getPackage()).willReturn(packageMock);
         given(testClazzMock.getPackage()).willReturn(packageMock);
 
-        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, getterAccessLevel))
-                .willReturn(false);
-        given(methodGeneratorMock.generateGetterMethod(fieldMock, getterAccessLevel))
-                .willReturn(getterMethodMock);
-
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -294,37 +350,32 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsInnerClass(@Mock CtType typeMock,
-                                                                                                       @Mock CtField fieldMock,
+    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsInnerClass(@Mock CtField fieldMock,
                                                                                                        @Mock CtClass fieldDeclaringClassMock,
                                                                                                        @Mock CtClass testClazzMock,
-                                                                                                       @Mock CtPackage fieldPackageMock,
-                                                                                                       @Mock CtPackage testClazzPackageMock,
+                                                                                                       @Mock CtPackage packageMock,
                                                                                                        @Mock CtMethod getterMethodMock,
                                                                                                        @Mock Getter getterAnnotationMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
-        var getterAccessLevel = AccessLevel.PACKAGE;
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(getterAccessLevel);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
-        given(fieldDeclaringClassMock.getPackage()).willReturn(fieldPackageMock);
-        given(testClazzMock.getPackage()).willReturn(testClazzPackageMock);
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PACKAGE);
 
-        given(testClazzMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
-
-        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, getterAccessLevel))
+        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PACKAGE))
                 .willReturn(false);
-        given(methodGeneratorMock.generateGetterMethod(fieldMock, getterAccessLevel))
+        given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PACKAGE))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -332,33 +383,41 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsNoInnerClass(@Mock CtType typeMock,
-                                                                                                               @Mock CtField fieldMock,
+    void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsNoInnerClass(@Mock CtField fieldMock,
                                                                                                                @Mock CtClass fieldDeclaringClassMock,
                                                                                                                @Mock CtClass testClazzMock,
-                                                                                                               @Mock CtPackage fieldPackageMock,
-                                                                                                               @Mock CtPackage testClazzPackageMock,
+                                                                                                               @Mock CtPackage packageMock,
+                                                                                                               @Mock CtPackage otherPackageMock,
+                                                                                                               @Mock CtMethod getterMethodMock,
                                                                                                                @Mock Getter getterAnnotationMock) {
         // given
-        var getterAccessLevel = AccessLevel.PACKAGE;
-
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(getterAccessLevel);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
-        given(fieldDeclaringClassMock.getPackage()).willReturn(fieldPackageMock);
-        given(testClazzMock.getPackage()).willReturn(testClazzPackageMock);
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PACKAGE);
 
-        given(testClazzMock.getDeclaringType()).willReturn(null);
-
-        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, getterAccessLevel))
+        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PACKAGE))
                 .willReturn(false);
+        given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PACKAGE))
+                .willReturn(getterMethodMock);
+
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isPublic()).willReturn(false);
+        given(getterMethodMock.isProtected()).willReturn(false);
+        given(getterMethodMock.isPrivate()).willReturn(false);
+
+        given(fieldDeclaringClassMock.getPackage()).willReturn(packageMock);
+        given(testClazzMock.getPackage()).willReturn(otherPackageMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).isEmpty();
@@ -366,61 +425,75 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPrivateGetterAndTestClazzIsInnerClass(@Mock CtType typeMock,
-                                                                                                       @Mock CtField fieldMock,
+    void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPrivateGetterAndTestClazzIsInnerClass(@Mock CtField fieldMock,
                                                                                                        @Mock CtClass fieldDeclaringClassMock,
                                                                                                        @Mock CtClass testClazzMock,
+                                                                                                       @Mock CtPackage packageMock,
+                                                                                                       @Mock CtPackage otherPackageMock,
                                                                                                        @Mock CtMethod getterMethodMock,
                                                                                                        @Mock Getter getterAnnotationMock) {
         // given
-        var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
-        var getterAccessLevel = AccessLevel.PRIVATE;
+        var expectedField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(getterAccessLevel);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
-        given(testClazzMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PRIVATE);
 
-        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, getterAccessLevel))
+        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PRIVATE))
                 .willReturn(false);
-        given(methodGeneratorMock.generateGetterMethod(fieldMock, getterAccessLevel))
+        given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PRIVATE))
                 .willReturn(getterMethodMock);
 
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
-        assertThat(actualFields).containsExactly(expectedAccessibleField);
+        assertThat(actualFields).containsExactly(expectedField);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithPrivateGetterAndTestClazzIsNoInnerClass(@Mock CtType typeMock,
-                                                                                                               @Mock CtField fieldMock,
+    void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithPrivateGetterAndTestClazzIsNoInnerClass(@Mock CtField fieldMock,
                                                                                                                @Mock CtClass fieldDeclaringClassMock,
                                                                                                                @Mock CtClass testClazzMock,
+                                                                                                               @Mock CtPackage packageMock,
+                                                                                                               @Mock CtPackage otherPackageMock,
+                                                                                                               @Mock CtMethod getterMethodMock,
                                                                                                                @Mock Getter getterAnnotationMock) {
         // given
-        var getterAccessLevel = AccessLevel.PRIVATE;
-
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        setUpElementMockToReturnAnnotation(fieldMock, Getter.class, getterAnnotationMock);
-        given(getterAnnotationMock.value()).willReturn(getterAccessLevel);
+        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
-        given(testClazzMock.getDeclaringType()).willReturn(null);
+        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
+        given(getterAnnotationMock.value()).willReturn(AccessLevel.PRIVATE);
 
-        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, getterAccessLevel))
+        given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, AccessLevel.PRIVATE))
                 .willReturn(false);
+        given(methodGeneratorMock.generateGetterMethod(fieldMock, AccessLevel.PRIVATE))
+                .willReturn(getterMethodMock);
+
+        given(getterMethodMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+
+        given(getterMethodMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(getterMethodMock.isPublic()).willReturn(false);
+        given(getterMethodMock.isProtected()).willReturn(false);
+        given(getterMethodMock.isPrivate()).willReturn(false);
+
+        given(fieldDeclaringClassMock.getPackage()).willReturn(packageMock);
+        given(testClazzMock.getPackage()).willReturn(otherPackageMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
 
         // then
         assertThat(actualFields).isEmpty();

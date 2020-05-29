@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.Getter;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.CtTypedElement;
 
 import java.util.Collection;
@@ -16,6 +17,8 @@ import java.util.Set;
 /**
  * {@link AccessibilityAwareFieldFinder} finding fields which are either directly annotated with Lombok's
  * {@link Getter} annotation or their declaring type is annotated with {@link Getter} or {@link Data}.
+ * Eagerly generates getter methods on annotated types, even though the field the getter is generated for
+ * might not accessible.
  *
  * @see LombokGetterMethodGenerator
  */
@@ -88,22 +91,11 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
     }
 
     /**
-     * Returns {@code true} if one of the following conditions is fulfilled for the generated getter:
-     * <ul>
-     *     <li>the getter is declared <i>public</i></li>
-     *     <li>the getter is declared <i>protected</i> and the {@code accessingType} is in the same
-     *     package as or a sub-class of the {@code field}'s declaring type</li>
-     *     <li>the getter is declared <i>package private</i> and the {@code accessingType} is in the same
-     *     package as or an inner class of the {@code field}'s declaring type</li>
-     *     <li>the getter is declared <i>private</i> and the {@code accessingType} is an inner class
-     *     of the {@code field}'s declaring type</li>
-     * </ul>
-     *
-     * See §6.6.1 of the Java Language Specification for more details on why this is implemented
-     * this way.
-     *
+     * This method generates a new getter method on the given {@code field}'s declaring type in case
+     * no conflicting getter method is already present.
+     * <p/>
      * <b>Note:</b> {@link AccessLevel#MODULE} and {@link AccessLevel#PACKAGE} are regarded as
-     * equal.
+     * equal access levels.
      *
      * @param accessingType
      *          The type whose methods could potentially access the given {@code field},
@@ -114,8 +106,9 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
      *
      * @return
      *          {@code true}, if lombok generates a getter which is accessible from the given
-     *          {@code accessingType}' methods. {@code false} is returned otherwise.
+     *          {@code accessingType}. {@code false} is returned otherwise.
      *
+     * @see #isAccessibleAccordingToJls(CtType, CtTypeMember)
      * @see LombokGetterMethodGenerator#isGetterMethodWithDifferentAccessModifierPresent(CtField, AccessLevel)
      */
     private boolean hasAccessibleGeneratedGetter(CtType<?> accessingType, CtField<?> field) {
@@ -129,18 +122,8 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
             return false;
         }
 
-        switch (accessLevel) {
-            case PUBLIC:
-                return true;
-            case PROTECTED:
-                return isInSamePackageAsDeclaringType(field, accessingType) || isRealSubClassOfDeclaringClass(field, accessingType);
-            case PACKAGE: case MODULE:
-                return isInSamePackageAsDeclaringType(field, accessingType) || isInnerClassOfDeclaringType(field, accessingType);
-            case PRIVATE:
-                return isInnerClassOfDeclaringType(field, accessingType);
-            default:
-                return false;
-        }
+        var generatedGetterMethod = lombokGetterMethodGenerator.generateGetterMethod(field, accessLevel);
+        return super.isAccessibleAccordingToJls(accessingType, generatedGetterMethod);
     }
 
     /**

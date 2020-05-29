@@ -42,7 +42,11 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
+        given(typeMock.isPublic()).willReturn(true);
         given(fieldMock.isPublic()).willReturn(true);
+        given(fieldMock.getDeclaringType()).willReturn(typeMock);
+
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
@@ -56,19 +60,20 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
     void findAccessibleFieldsReturnsProtectedFieldWhenTestClassIsInSamePackage(@Mock CtType typeMock,
                                                                                @Mock CtClass testClazzMock,
                                                                                @Mock CtField fieldMock,
-                                                                               @Mock CtType fieldDeclaringTypeMock,
                                                                                @Mock CtPackage packageMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
         setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
 
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(typeMock.isPublic()).willReturn(true);
         given(fieldMock.isProtected()).willReturn(true);
+        given(fieldMock.getDeclaringType()).willReturn(typeMock);
 
-        given(fieldDeclaringTypeMock.getPackage()).willReturn(packageMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
         given(testClazzMock.getPackage()).willReturn(packageMock);
+        given(typeMock.getPackage()).willReturn(packageMock);
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
@@ -79,30 +84,31 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsProtectedFieldWhenTestClassIsRealSubClass(@Mock CtType typeMock,
+    void findAccessibleFieldsReturnsProtectedFieldWhenTestClassIsRealSubClass(@Mock CtType fieldDeclaringTypeMock,
+                                                                              @Mock CtTypeReference fieldDeclaringTypeRefMock,
                                                                               @Mock CtClass testClazzMock,
                                                                               @Mock CtField fieldMock,
-                                                                              @Mock CtType fieldDeclaringTypeMock,
-                                                                              @Mock CtPackage fieldDeclaringTypePackage,
-                                                                              @Mock CtTypeReference fieldDeclaringTypeReference,
-                                                                              @Mock CtPackage testClassPackageMock) {
+                                                                              @Mock CtPackage packageMock,
+                                                                              @Mock CtPackage otherPackageMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringTypeMock, List.of(fieldMock));
 
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldDeclaringTypeMock.isPublic()).willReturn(true);
         given(fieldMock.isProtected()).willReturn(true);
+        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
 
-        given(fieldDeclaringTypeMock.getPackage()).willReturn(fieldDeclaringTypePackage);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
-        given(testClazzMock.getPackage()).willReturn(testClassPackageMock);
-        given(testClazzMock.getSuperclass()).willReturn(fieldDeclaringTypeReference);
+        given(testClazzMock.getPackage()).willReturn(packageMock);
+        given(fieldDeclaringTypeMock.getPackage()).willReturn(otherPackageMock);
 
-        given(fieldDeclaringTypeReference.getTypeDeclaration()).willReturn(fieldDeclaringTypeMock);
+        given(testClazzMock.getSuperclass()).willReturn(fieldDeclaringTypeRefMock);
+        given(fieldDeclaringTypeRefMock.getTypeDeclaration()).willReturn(fieldDeclaringTypeMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -110,24 +116,27 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsEmptyListWhenFieldIsProtectedAndTestClassInDifferentPackage(@Mock CtType typeMock,
+    void findAccessibleFieldsReturnsEmptyListWhenFieldIsProtectedAndTestClassInDifferentPackage(@Mock CtType fieldDeclaringTypeMock,
                                                                                                 @Mock CtClass testClazzMock,
                                                                                                 @Mock CtField fieldMock,
-                                                                                                @Mock CtType fieldDeclaringTypeMock,
-                                                                                                @Mock CtPackage fieldDeclaringTypePackage,
-                                                                                                @Mock CtPackage testClassPackageMock) {
+                                                                                                @Mock CtPackage packageMock,
+                                                                                                @Mock CtPackage otherPackageMock) {
         // given
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringTypeMock, List.of(fieldMock));
 
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldDeclaringTypeMock.isPublic()).willReturn(true);
         given(fieldMock.isProtected()).willReturn(true);
+        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
 
-        given(fieldDeclaringTypeMock.getPackage()).willReturn(fieldDeclaringTypePackage);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
-        given(testClazzMock.getPackage()).willReturn(testClassPackageMock);
+        given(testClazzMock.getPackage()).willReturn(packageMock);
+        given(fieldDeclaringTypeMock.getPackage()).willReturn(otherPackageMock);
+
+        given(testClazzMock.getSuperclass()).willReturn(null);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeMock);
 
         // then
         assertThat(actualFields).isEmpty();
@@ -135,74 +144,49 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsPackagePrivateFieldWhenTestClassIsInSamePackage(@Mock CtType typeMock,
+    void findAccessibleFieldsReturnsPackagePrivateFieldWhenTestClassIsInSamePackage(@Mock CtType fieldDeclaringTypeMock,
                                                                                     @Mock CtClass testClazzMock,
                                                                                     @Mock CtField fieldMock,
-                                                                                    @Mock CtType fieldDeclaringTypeMock,
                                                                                     @Mock CtPackage packageMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringTypeMock, List.of(fieldMock));
 
+        given(fieldDeclaringTypeMock.isPublic()).willReturn(true);
+        given(fieldMock.isPublic()).willReturn(false);
+        given(fieldMock.isProtected()).willReturn(false);
+        given(fieldMock.isPrivate()).willReturn(false);
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
 
-        given(fieldDeclaringTypeMock.getPackage()).willReturn(packageMock);
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
         given(testClazzMock.getPackage()).willReturn(packageMock);
-
-        // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
-
-        // then
-        assertThat(actualFields).containsExactly(expectedAccessibleField);
-    }
-
-    @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsPackagePrivateFieldWhenTestClassIsInnerClass(@Mock CtType typeMock,
-                                                                                 @Mock CtClass testClazzMock,
-                                                                                 @Mock CtField fieldMock,
-                                                                                 @Mock CtType fieldDeclaringTypeMock,
-                                                                                 @Mock CtPackage packageMock,
-                                                                                 @Mock CtPackage testClassPackageMock) {
-        // given
-        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
-
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
-
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
-
         given(fieldDeclaringTypeMock.getPackage()).willReturn(packageMock);
 
-        given(testClazzMock.getPackage()).willReturn(testClassPackageMock);
-        given(testClazzMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
-
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
     }
 
+
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenTestClassInnerClass(@Mock CtType typeMock,
-                                                                 @Mock CtClass testClazzMock,
-                                                                 @Mock CtField fieldMock,
-                                                                 @Mock CtType fieldDeclaringTypeMock) {
+    void findAccessibleFieldsReturnsPackagePrivateFieldWhenTestClassIsInnerClass(@Mock CtType fieldDeclaringTypeMock,
+                                                                                 @Mock CtClass testClazzMock,
+                                                                                 @Mock CtField fieldMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringTypeMock, List.of(fieldMock));
 
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
-        given(fieldMock.isPrivate()).willReturn(true);
-
-        given(testClazzMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -210,18 +194,42 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsEmptyListPrivateFieldWhenTestClassIsNoInnerClass(@Mock CtType typeMock,
-                                                                                     @Mock CtClass testClazzMock,
-                                                                                     @Mock CtField fieldMock,
-                                                                                     @Mock CtType fieldDeclaringTypeMock) {
+    void findAccessibleFieldsReturnsPrivateFieldWhenTestClassInnerClass(@Mock CtType fieldDeclaringTypeMock,
+                                                                        @Mock CtClass testClazzMock,
+                                                                        @Mock CtField fieldMock) {
         // given
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
-        given(fieldMock.isPrivate()).willReturn(true);
+        setUpTypeMockToReturnFields(fieldDeclaringTypeMock, List.of(fieldMock));
+
+        given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeMock);
+
+        // then
+        assertThat(actualFields).containsExactly(expectedAccessibleField);
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void findAccessibleFieldsReturnsEmptyListPrivateFieldWhenTestClassIsNoInnerClass(@Mock CtType fieldDeclaringTypeMock,
+                                                                                     @Mock CtClass testClazzMock,
+                                                                                     @Mock CtField fieldMock) {
+        // given
+        setUpTypeMockToReturnFields(fieldDeclaringTypeMock, List.of(fieldMock));
+
+        given(fieldDeclaringTypeMock.isPublic()).willReturn(true);
+
+        given(fieldMock.isPrivate()).willReturn(true);
+        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+
+        given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
+
+        // when
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeMock);
 
         // then
         assertThat(actualFields).isEmpty();
@@ -229,18 +237,18 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenTestClazzIsDeclaringClassOfField(@Mock CtType typeMock,
-                                                                              @Mock CtClass testClazzMock,
+    void findAccessibleFieldsReturnsFieldWhenTestClazzIsDeclaringClassOfField(@Mock CtType fieldDeclaringTypeMock,
                                                                               @Mock CtField fieldMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeMockToReturnFields(fieldDeclaringTypeMock, List.of(fieldMock));
 
-        given(fieldMock.getDeclaringType()).willReturn(testClazzMock);
+        given(fieldDeclaringTypeMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(fieldDeclaringTypeMock, fieldDeclaringTypeMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);

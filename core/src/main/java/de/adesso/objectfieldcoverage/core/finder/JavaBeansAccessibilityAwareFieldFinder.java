@@ -17,8 +17,6 @@ import java.util.Set;
  * {@link AccessibilityAwareFieldFinder} implementation which finds fields for which a getter method
  * is present on the declaring type that matches the signature of a Java Beans Getter Method. See section
  * 8.3 of the JavaBeans Spec Version 1.01 for more details.
- * <p/>
- * <b>Note:</b> This implementation also applies the same naming convention to <i>static</i> fields.
  */
 @Slf4j
 public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFieldFinder {
@@ -38,7 +36,8 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      */
     @Override
     public boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
-        return this.findJavaBeansGetterMethod(field).isPresent();
+        return this.findAccessibleJavaBeansGetterMethod(field, accessingType)
+                .isPresent();
     }
 
     /**
@@ -64,17 +63,17 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      */
     @Override
     public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
-        var getterMethod = this.findJavaBeansGetterMethod(field)
+        var getterMethod = this.findAccessibleJavaBeansGetterMethod(field, accessingType)
                 .orElseThrow(() -> new IllegalStateException(
-                        String.format("No Java Beans Getter method present for field '%s'!", field.getSimpleName())
+                        String.format("No accessible Java Beans Getter method present for field '%s'!", field.getSimpleName())
                 ));
 
         return Set.of(getterMethod);
     }
 
     /**
-     * Searches for a public, non-static, no-arg method on the declaring class of the given {@code field}. The name
-     * of the method must match the Java Beans getter method pattern as describe in
+     * Searches for an <i>accessible</i>, non-static, no-arg method on the declaring class of the given {@code field}.
+     * The name of the method must match the Java Beans getter method pattern as describe in
      * section 8.3 of the JavaBeans Spec Version 1.01. The return type must match the {@code field}'s type.
      * <p/>
      * <b>Example:</b> If the {@link CtField#getSimpleName() simple name} of the given {@code field} is
@@ -92,21 +91,19 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
      *          is present on the declaring class, or an empty optional otherwise. The getter method can be declared
      *          static when the given {@code field} is static as well.
      */
-    private <T> Optional<CtMethod<T>> findJavaBeansGetterMethod(CtField<T> field) {
+    private <T> Optional<CtMethod<T>> findAccessibleJavaBeansGetterMethod(CtField<T> field, CtType<?> accessingType) {
         var getterPrefix = javaBeansGetterMethodPrefix(field);
         var capitalizedFieldSimpleName = StringUtils.capitalize(field.getSimpleName());
         var javaBeansGetterName = String.format("%s%s", getterPrefix, capitalizedFieldSimpleName);
         var fieldType = field.getType();
-        var getterCanBeStatic = field.isStatic();
 
         var getterMethod = field.getDeclaringType()
                 .getMethod(fieldType, javaBeansGetterName);
 
         var getterMethodExists = Objects.nonNull(getterMethod);
-        var getterMethodIsPublic = getterMethodExists && getterMethod.isPublic();
         var getterMethodIsStatic = getterMethodExists && getterMethod.isStatic();
 
-        if(getterMethodExists && getterMethodIsPublic && (getterCanBeStatic || !getterMethodIsStatic)) {
+        if(getterMethodExists && !getterMethodIsStatic && super.isAccessibleAccordingToJls(accessingType, getterMethod)) {
             return Optional.of(getterMethod);
         }
 

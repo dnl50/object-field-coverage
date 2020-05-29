@@ -2,11 +2,14 @@ package de.adesso.objectfieldcoverage.core.finder;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
-import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
 
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIntegrationTest {
 
@@ -24,28 +27,41 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
         var model = buildModel("finder/getter/User.java");
         var userClass = findClassWithSimpleName(model, "User");
 
-        var expectedFields = List.of(
-                new AccessibleField(userClass.getField("id"), findMethodWithSimpleName(userClass, "getId")),
-                new AccessibleField(userClass.getField("name"), findMethodWithSimpleName(userClass, "getName")),
-                new AccessibleField(userClass.getField("admin"), findMethodWithSimpleName(userClass, "isAdmin")),
-                new AccessibleField(userClass.getField("locked"), findMethodWithSimpleName(userClass, "isLocked")),
-                new AccessibleField(userClass.getField("staticString"), findMethodWithSimpleName(userClass, "getStaticString"))
+        var expectedFields = List.<AccessibleField<?>>of(
+                new AccessibleField<>((CtField<String>) userClass.getField("id"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getId")),
+                new AccessibleField<>((CtField<String>) userClass.getField("name"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getName")),
+                new AccessibleField<>((CtField<Boolean>) userClass.getField("admin"), (CtMethod<Boolean>) findMethodWithSimpleName(userClass, "isAdmin")),
+                new AccessibleField<>((CtField<Boolean>) userClass.getField("locked"), (CtMethod<Boolean>) findMethodWithSimpleName(userClass, "isLocked")),
+                new AccessibleField<>((CtField<String>) userClass.getField("protectedName"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getProtectedName"))
         );
 
         // when
-        var actualFields = testSubject.findAccessibleFields(userClass, userClass);
+        var actualFields = (List<AccessibleField<?>>) testSubject.findAccessibleFields(userClass, userClass);
 
         // then
-        var softly = new SoftAssertions();
+        assertThat(actualFields).containsExactlyElementsOf(expectedFields);
+    }
 
-        softly.assertThat(actualFields).hasSize(5);
-        softly.assertThat(actualFields).contains(expectedFields.get(0));
-        softly.assertThat(actualFields).contains(expectedFields.get(1));
-        softly.assertThat(actualFields).contains(expectedFields.get(2));
-        softly.assertThat(actualFields).contains(expectedFields.get(3));
-        softly.assertThat(actualFields).contains(expectedFields.get(4));
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void findAccessibleFieldsReturnsExpectedFieldsInUserClassOmittingProtected() {
+        // given
+        var model = buildModel("finder/getter/User.java", "finder/getter/OtherClassInSubPackage.java");
+        var userClass = findClassWithSimpleName(model, "User");
+        var classInSubPackage = findClassWithSimpleName(model,"OtherClassInSubPackage");
 
-        softly.assertAll();
+        var expectedFields = List.<AccessibleField<?>>of(
+                new AccessibleField<>((CtField<String>) userClass.getField("id"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getId")),
+                new AccessibleField<>((CtField<String>) userClass.getField("name"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getName")),
+                new AccessibleField<>((CtField<Boolean>) userClass.getField("admin"), (CtMethod<Boolean>) findMethodWithSimpleName(userClass, "isAdmin")),
+                new AccessibleField<>((CtField<Boolean>) userClass.getField("locked"), (CtMethod<Boolean>) findMethodWithSimpleName(userClass, "isLocked"))
+        );
+
+        // when
+        var actualFields = (List<AccessibleField<?>>) testSubject.findAccessibleFields(classInSubPackage, userClass);
+
+        // then
+        assertThat(actualFields).containsExactlyElementsOf(expectedFields);
     }
 
 }

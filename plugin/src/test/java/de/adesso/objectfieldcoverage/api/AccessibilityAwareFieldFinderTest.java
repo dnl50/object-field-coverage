@@ -25,131 +25,6 @@ class AccessibilityAwareFieldFinderTest {
     }
 
     @Test
-    void isPublicFieldReturnsTrueWhenFieldIsDeclaredPublic(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPublic()).willReturn(true);
-
-        // when
-        var actualResult = testSubject.isPublicField(fieldMock);
-
-        // then
-        assertThat(actualResult).isTrue();
-    }
-
-    @Test
-    void isPublicFieldReturnsFalseWhenFieldIsNotDeclaredPublic(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPublic()).willReturn(false);
-
-        // when
-        var actualResult = testSubject.isPublicField(fieldMock);
-
-        // then
-        assertThat(actualResult).isFalse();
-    }
-
-    @Test
-    void isProtectedFieldReturnsTrueWhenFieldIsDeclaredProtected(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isProtected()).willReturn(true);
-
-        // when
-        var actualResult = testSubject.isProtectedField(fieldMock);
-
-        // then
-        assertThat(actualResult).isTrue();
-    }
-
-    @Test
-    void isProtectedFieldReturnsFalseWhenFieldIsNotDeclaredProtected(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isProtected()).willReturn(false);
-
-        // when
-        var actualResult = testSubject.isProtectedField(fieldMock);
-
-        // then
-        assertThat(actualResult).isFalse();
-    }
-
-    @Test
-    void isPackagePrivateFieldReturnsTrueWhenFieldIsDeclaredPackagePrivate(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPublic()).willReturn(false);
-        given(fieldMock.isProtected()).willReturn(false);
-        given(fieldMock.isPrivate()).willReturn(false);
-
-        // when
-        var actualResult = testSubject.isPackagePrivateField(fieldMock);
-
-        // then
-        assertThat(actualResult).isTrue();
-    }
-
-    @Test
-    void isPackagePrivateFieldReturnsFalseWhenFieldIsDeclaredPublic(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPublic()).willReturn(true);
-
-        // when
-        var actualResult = testSubject.isPackagePrivateField(fieldMock);
-
-        // then
-        assertThat(actualResult).isFalse();
-    }
-
-    @Test
-    void isPackagePrivateFieldReturnsFalseWhenFieldIsDeclaredProtected(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPublic()).willReturn(false);
-        given(fieldMock.isProtected()).willReturn(true);
-
-        // when
-        var actualResult = testSubject.isPackagePrivateField(fieldMock);
-
-        // then
-        assertThat(actualResult).isFalse();
-    }
-
-    @Test
-    void isPackagePrivateFieldReturnsFalseWhenFieldIsDeclaredPrivate(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPublic()).willReturn(false);
-        given(fieldMock.isProtected()).willReturn(false);
-        given(fieldMock.isPrivate()).willReturn(true);
-
-        // when
-        var actualResult = testSubject.isPackagePrivateField(fieldMock);
-
-        // then
-        assertThat(actualResult).isFalse();
-    }
-
-    @Test
-    void isPrivateFieldReturnsTrueWhenFieldIsDeclaredPrivate(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPrivate()).willReturn(true);
-
-        // when
-        var actualResult = testSubject.isPrivateField(fieldMock);
-
-        // then
-        assertThat(actualResult).isTrue();
-    }
-
-    @Test
-    void isPrivateFieldReturnsFalseWhenFieldIsNotDeclaredPrivate(@Mock CtField<?> fieldMock) {
-        // given
-        given(fieldMock.isPrivate()).willReturn(false);
-
-        // when
-        var actualResult = testSubject.isPrivateField(fieldMock);
-
-        // then
-        assertThat(actualResult).isFalse();
-    }
-
-    @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
     void isRealSubClassOfDeclaringClassReturnsTrueWhenDeclaringTypeIsSuperClass(@Mock CtField fieldMock,
                                                                                 @Mock CtClass fieldDeclaringClassMock,
@@ -225,16 +100,14 @@ class AccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void isInnerClassOfDeclaringTypeReturnsTrueWhenTestClazzIsInnerClassOfDeclaringType(@Mock CtField fieldMock,
-                                                                                        @Mock CtClass fieldDeclaringClassMock,
-                                                                                        @Mock CtClass testClazzMock) {
+    void isAccessibleAccordingToJlsReturnsTrueWhenAccessingTypeAndMemberHaveSameTopLevelType(@Mock CtField fieldMock,
+                                                                                             @Mock CtClass fieldDeclaringClassMock) {
         // given
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
-
-        given(testClazzMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(fieldDeclaringClassMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
 
         // when
-        var actualResult = testSubject.isInnerClassOfDeclaringType(fieldMock, testClazzMock);
+        var actualResult = testSubject.isAccessibleAccordingToJls(fieldDeclaringClassMock, fieldMock);
 
         // then
         assertThat(actualResult).isTrue();
@@ -242,16 +115,90 @@ class AccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void isInnerClassOfDeclaringTypeReturnsFalseWhenTestClazzIsNoInnerClassOfDeclaringType(@Mock CtField fieldMock,
-                                                                                           @Mock CtClass fieldDeclaringClassMock,
-                                                                                           @Mock CtClass testClazzMock) {
+    void isAccessibleAccordingToJlsReturnsFalseWhenDeclaringTypeNotAccessible(@Mock CtField fieldMock,
+                                                                              @Mock CtClass fieldDeclaringClassMock,
+                                                                              @Mock CtClass fieldDeclaringClassTopLevelTypeMock,
+                                                                              @Mock CtType accessingType,
+                                                                              @Mock CtPackage accessingTypePackageMock,
+                                                                              @Mock CtPackage fieldDeclaringClassPackageMock) {
         // given
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringClassTopLevelTypeMock);
+        given(fieldDeclaringClassMock.isProtected()).willReturn(true);
+        given(fieldDeclaringClassMock.getPackage()).willReturn(fieldDeclaringClassPackageMock);
 
-        given(testClazzMock.getDeclaringType()).willReturn(null);
+        given(accessingType.getTopLevelType()).willReturn(accessingType);
+        given(accessingType.getPackage()).willReturn(accessingTypePackageMock);
 
         // when
-        var actualResult = testSubject.isInnerClassOfDeclaringType(fieldMock, testClazzMock);
+        var actualResult = testSubject.isAccessibleAccordingToJls(accessingType, fieldMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void isAccessibleAccordingToJlsReturnsFalseWhenMemberPrivateAndDifferentTopLevelTypes(@Mock CtField fieldMock,
+                                                                                          @Mock CtClass fieldDeclaringClassMock,
+                                                                                          @Mock CtType accessingType) {
+        // given
+        given(fieldMock.isPrivate()).willReturn(true);
+        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+
+        given(accessingType.getTopLevelType()).willReturn(accessingType);
+
+        // when
+        var actualResult = testSubject.isAccessibleAccordingToJls(accessingType, fieldMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void isAccessibleAccordingToJlsReturnsFalseWhenMemberPackagePrivateAndNotInSamePackage(@Mock CtField fieldMock,
+                                                                                           @Mock CtClass fieldDeclaringClassMock,
+                                                                                           @Mock CtType accessingType,
+                                                                                           @Mock CtPackage accessingTypePackageMock,
+                                                                                           @Mock CtPackage fieldDeclaringClassPackageMock) {
+        // given
+        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(fieldDeclaringClassMock.getPackage()).willReturn(fieldDeclaringClassPackageMock);
+
+        given(accessingType.getTopLevelType()).willReturn(accessingType);
+        given(accessingType.getPackage()).willReturn(accessingTypePackageMock);
+
+        // when
+        var actualResult = testSubject.isAccessibleAccordingToJls(accessingType, fieldMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void isAccessibleAccordingToJlsReturnsFalseWhenMemberProtectedAndNotInSamePackage(@Mock CtField fieldMock,
+                                                                                      @Mock CtClass fieldDeclaringClassMock,
+                                                                                      @Mock CtType accessingType,
+                                                                                      @Mock CtPackage accessingTypePackageMock,
+                                                                                      @Mock CtPackage fieldDeclaringClassPackageMock) {
+        // given
+        given(fieldMock.isProtected()).willReturn(true);
+        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
+        given(fieldDeclaringClassMock.isPublic()).willReturn(true);
+        given(fieldDeclaringClassMock.getPackage()).willReturn(fieldDeclaringClassPackageMock);
+
+        given(accessingType.getTopLevelType()).willReturn(accessingType);
+        given(accessingType.getPackage()).willReturn(accessingTypePackageMock);
+
+        // when
+        var actualResult = testSubject.isAccessibleAccordingToJls(accessingType, fieldMock);
 
         // then
         assertThat(actualResult).isFalse();

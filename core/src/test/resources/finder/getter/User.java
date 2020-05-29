@@ -1,3 +1,5 @@
+package de.adesso.test;
+
 public class User {
 
     // accessible
@@ -18,7 +20,7 @@ public class User {
     // not accessible (no getter)
     private String privateName;
 
-    // not accessible (no public getter)
+    // accessible
     private String protectedName;
 
     // not accessible (wrong return type on public getter)
@@ -26,7 +28,6 @@ public class User {
 
     // not accessible (public getter is static)
     private String nameWithStaticGetter;
-
 
     public String getId() {
         return id;

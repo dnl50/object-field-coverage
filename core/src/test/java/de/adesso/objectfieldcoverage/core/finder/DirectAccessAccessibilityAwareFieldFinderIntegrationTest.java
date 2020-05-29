@@ -5,9 +5,12 @@ import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import spoon.reflect.declaration.CtField;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIntegrationTest {
 
@@ -188,6 +191,40 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
         softly.assertThat(actualAccessibleFields).contains(expectedAccessibleFields.get(1));
 
         softly.assertAll();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void findAccessibleFieldsPlaneDeeplyNestedClassWithPlaneAsAccessingType() {
+        // given
+        var model = buildModel("finder/direct-access/Plane.java");
+        var planeClass = findClassWithSimpleName(model, "Plane");
+        var rodInnerClass = findClassWithSimpleName(model, "Rod");
+
+        var lengthField = (CtField<Integer>) rodInnerClass.getField("length");
+
+        var expectedField = new AccessibleField<>(lengthField, lengthField);
+
+        // when
+        var actualFields = testSubject.findAccessibleFields(planeClass, rodInnerClass);
+
+        // then
+        assertThat(actualFields).containsExactly(expectedField);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void findAccessibleFieldsPlaneDeeplyNestedClassWithCarAsAccessingType() {
+        // given
+        var model = buildModel("finder/direct-access/Plane.java", "finder/direct-access/Car.java");
+        var carClass = findClassWithSimpleName(model, "Car");
+        var rodInnerClass = findClassWithSimpleName(model, "Rod");
+
+        // when
+        var actualFields = testSubject.findAccessibleFields(carClass, rodInnerClass);
+
+        // then
+        assertThat(actualFields).isEmpty();
     }
 
 }
