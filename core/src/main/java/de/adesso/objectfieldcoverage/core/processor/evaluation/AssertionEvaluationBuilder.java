@@ -8,54 +8,70 @@ import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.graph.AccessibleFieldGraphBuilder;
-import de.adesso.objectfieldcoverage.core.util.TypeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility class for building {@link AssertionEvaluationInformation} instances for the evaluation of
- * {@link de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion}s.
+ * {@link de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion}s. Uses result caches internally
+ * to prevent redundant analysis and to speed up performance.
+ *
+ * @implNote This implementation is thread safe if and only if the supplied {@link EqualsMethodAnalyzer}s and
+ * {@link AccessibilityAwareFieldFinder}s are thread safe.
  */
 @Slf4j
 public class AssertionEvaluationBuilder {
 
     /**
-     * A map which contains entries mapping a (asserted type, test class) pair to a set of accessible
-     * fields.
+     * A map which contains entries mapping a (asserted {@link CtTypeReference}, accessing {@link CtType}) pair to a
+     * set of accessible fields.
      */
-    private final HashMap<Pair<CtTypeReference<?>, CtType<?>>, Set<AccessibleField<?>>> accessibleFields = new HashMap<>();
+    private final Map<Pair<CtTypeReference<?>, CtType<?>>, Set<AccessibleField<?>>> assertedAndAccessingTypeToAccessibleFieldMap;
 
     /**
-     * A map which contains entries mapping a (asserted type, test class) pair to the resulting
-     * evaluation instance.
+     * A map which contains entries mapping a (asserted {@link CtTypeReference}, accessing {@link CtType}) pair to the
+     * resulting {@link AssertionEvaluationInformation} instance.
      */
-    private final HashMap<Pair<CtTypeReference<?>, CtType<?>>, AssertionEvaluationInformation> typeInformation = new HashMap<>();
+    private final Map<Pair<CtTypeReference<?>, CtType<?>>, AssertionEvaluationInformation> resultCache;
 
     /**
-     * A map which contains the evaluation information instances for primitive types. Does not need to be cleared when
-     * all other result caches are cleared, since it can only contain up to 16 entries (8 primitive types + their 8
-     * wrapper classes). Initialized lazily.
+     * A list containing the {@link AccessibilityAwareFieldFinder}s to build the {@link AccessibleFieldGraph}s
+     * of all accessible fields with.
      */
-    private final HashMap<CtTypeReference<?>, AssertionEvaluationInformation> primitiveTypeInformation = new HashMap<>(16);
-
     private final List<AccessibilityAwareFieldFinder> fieldFinders;
 
+    /**
+     * A list containing the {@link EqualsMethodAnalyzer}s which are used to build the {@link AccessibleFieldGraph}s
+     * of accessible fields which are compared in the equals method of the asserted type.
+     */
     private final List<EqualsMethodAnalyzer> equalsMethodAnalyzers;
 
     public AssertionEvaluationBuilder(List<AccessibilityAwareFieldFinder> fieldFinders, List<EqualsMethodAnalyzer> equalsMethodAnalyzers) {
+        this.assertedAndAccessingTypeToAccessibleFieldMap = new ConcurrentHashMap<>();
+        this.resultCache = new ConcurrentHashMap<>();
+
         this.fieldFinders = fieldFinders;
         this.equalsMethodAnalyzers = equalsMethodAnalyzers;
     }
 
-    public AssertionEvaluationInformation buildEvaluationInformation(AbstractAssertion<?> assertion) {
+    /**
+     *
+     * @param assertion
+     *          The {@link AbstractAssertion} for which the {@link AssertionEvaluationInformation} should be built,
+     *          not {@code null}.
+     *
+     * @return
+     *          The {@link AssertionEvaluationInformation} for the given {@code assertion}.
+     */
+    public AssertionEvaluationInformation build(AbstractAssertion<?> assertion) {
         Objects.requireNonNull(assertion, "The given abstract assertion cannot be null!");
 
         var assertedTypeRef = assertion.getAssertedExpression()
@@ -63,49 +79,34 @@ public class AssertionEvaluationBuilder {
 
         if(assertedTypeRef.isPrimitive()) {
             var primitiveType = PrimitiveTypeUtils.getPrimitiveTypeReference(assertedTypeRef.getSimpleName());
-            primitiveTypeInformation.putIfAbsent(primitiveType, new AssertionEvaluationInformation(primitiveType));
-            return primitiveTypeInformation.get(primitiveType);
+            return new AssertionEvaluationInformation(primitiveType);
         }
 
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * The type in which the {@link AbstractAssertion#getAssertedExpression() asserted expression} is located in
-     * us used as the accessing type of the asserted type.
-     *
-     * @param assertion
-     *
-     * @return
-     */
-    private AccessibleFieldGraph buildGraph(AbstractAssertion<?> assertion) {
-        var assertedTypeRef = assertion.getAssertedExpression()
-                .getType();
-        var assertedType = assertedTypeRef.getDeclaration();
-
-        if(assertedType == null) {
-            log.info("Type declaration for '{}' not present! Returning empty graph!",
-                    assertedTypeRef.getQualifiedName());
-            return AccessibleFieldGraph.EMPTY_GRAPH;
-        }
-
+        var assertedType = assertedTypeRef.getTypeDeclaration();
         var accessingType = assertion.getAssertedExpression()
                 .getParent(CtType.class);
 
-        return AccessibleFieldGraphBuilder.buildGraph(fieldFinders, accessingType, assertedType);
-    }
-
-    private AccessibleFieldGraph buildEqualsGraph(AccessibleFieldGraph baseGraph, AbstractAssertion<?> assertion) {
-        var assertedTypeRef = assertion.getAssertedExpression()
-                .getType();
-        var assertedType = (CtClass<?>) assertedTypeRef.getDeclaration();
-
-        var superClassesIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(assertedType);
-
-//        new IterativeEqualsMethodAnalyzer(equalsMethodAnalyzers)
-//                .findAccessibleFieldsUsedInEquals();
-
+        var accessibleFieldGraph = AccessibleFieldGraphBuilder.buildGraph(fieldFinders, accessingType, assertedType);
+//        buildEqualsGraph(accessibleFieldGraph, assertion);
         return null;
     }
+
+
+//    private AccessibleFieldGraph buildEqualsGraph(AccessibleFieldGraph baseGraph, AbstractAssertion<?> assertion) {
+//        var superClassesIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(assertedType);
+//        var accessingType = assertion.getAssertedExpression()
+//                .getParent(CtType.class);
+//
+//        var aggregatingFieldFinder = new AggregatingAccessibilityAwareFieldFinder(fieldFinders);
+//
+//        Map<CtType<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes = superClassesIncludingClass.stream()
+//                .collect(Collectors.toMap(Function.identity(), type -> Set.copyOf(aggregatingFieldFinder.findAccessibleFields(type, type))));
+//        var accessibleFields = Set.copyOf(aggregatingFieldFinder.findAccessibleFields(accessingType, assertedType));
+//
+//        var accessibleFieldsUsedInEquals = new IterativeEqualsMethodAnalyzer(equalsMethodAnalyzers)
+//                .findAccessibleFieldsUsedInEquals(assertedType, accessibleFields, accessibleFieldsInSuperTypes);
+//
+//        return null;
+//    }
 
 }

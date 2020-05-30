@@ -30,18 +30,18 @@ public class IterativeEqualsMethodAnalyzer {
      * is reached or the parent class is not part of the underlying model. Analysis is stopped abruptly in
      * case a {@code equals} method in the hierarchy does not call its superclass implementation.
      *
-     * @param clazz
+     * @param classToAnalyze
      *          The {@link CtClass} to analyze the equals method of, not {@code null}.
      *
      * @param accessibleFields
      *          A set containing all accessible fields from which the fields which are used in the equals
-     *          method of the given {@code clazz} and its superclasses should be filtered from, not {@code null}.
-     *          (POV: clazz having a reference to {@code clazz} instance &rarr; {@code clazz}).
+     *          method of the given {@code classToAnalyze} and its superclasses should be filtered from, not {@code null}.
+     *          (POV: class having a reference to {@code classToAnalyze} instance &rarr; {@code classToAnalyze}).
      *
      * @param accessibleFieldsInSuperTypes
-     *          A map which contains an entry for for the given {@code clazz} every superclass which is part of the
+     *          A map which contains an entry for for the given {@code classToAnalyze} every superclass which is part of the
      *          underlying model itself (excluding {@link Object}). The set to which the {@link CtType} is mapped
-     *          must contain all fields which are <i>accessible</i> from the given {@code clazz} (POV: {@code clazz} &rarr;
+     *          must contain all fields which are <i>accessible</i> from the given {@code classToAnalyze} (POV: {@code classToAnalyze} &rarr;
      *          superclass).
      *
      * @return
@@ -51,18 +51,18 @@ public class IterativeEqualsMethodAnalyzer {
      * @throws IllegalArgumentException
      *          If the {@code accessibleFieldsInSuperTypes} map does not contain the required entries.
      */
-    public Set<AccessibleField<?>> findAccessibleFieldsUsedInEquals(CtClass<?> clazz,
+    public Set<AccessibleField<?>> findAccessibleFieldsUsedInEquals(CtClass<?> classToAnalyze,
                                                                     Set<AccessibleField<?>> accessibleFields,
                                                                     Map<CtType<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes) {
         if(accessibleFields.isEmpty()) {
             return Set.of();
         }
 
-        var superClassesIncludingClass = new LinkedList<>(TypeUtil.findExplicitSuperClassesIncludingClass(clazz));
+        var superClassesIncludingClass = new LinkedList<>(TypeUtil.findExplicitSuperClassesIncludingClass(classToAnalyze));
 
         if(!accessibleFieldsInSuperTypes.keySet().containsAll(superClassesIncludingClass)) {
             throw new IllegalArgumentException("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
-                    "a required entry for the given clazz or a superclass!");
+                    "a required entry for the given class or a superclass!");
         }
 
         var accessibleFieldsComparedInEquals = new HashSet<AccessibleField<?>>();
@@ -94,11 +94,11 @@ public class IterativeEqualsMethodAnalyzer {
 
         if(!typeOrSuperTypeOverridesEquals) {
             log.info("Equals method not overridden by '{}' or any of its {} superclasses (excluding Object)!",
-                    clazz.getQualifiedName(), superClassesIncludingClass.size() - 1);
+                    classToAnalyze.getQualifiedName(), superClassesIncludingClass.size() - 1);
         }
 
         log.info("Analyses of class '{}' finished! {} out of {} accessible fields are compared " +
-                "in the equals method!", clazz.getQualifiedName(), accessibleFieldsComparedInEquals.size(),
+                "in the equals method!", classToAnalyze.getQualifiedName(), accessibleFieldsComparedInEquals.size(),
                 accessibleFields.size());
 
         return Set.copyOf(accessibleFieldsComparedInEquals);

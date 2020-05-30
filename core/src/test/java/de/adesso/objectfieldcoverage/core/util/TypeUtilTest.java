@@ -32,7 +32,7 @@ class TypeUtilTest {
                                                 @Mock CtClass objectClassMock) {
         // given
         given(typeMock.getSuperclass()).willReturn(objectClassRefMock);
-        given(objectClassRefMock.getDeclaration()).willReturn(objectClassMock);
+        given(objectClassRefMock.getTypeDeclaration()).willReturn(objectClassMock);
 
         given(objectClassMock.getQualifiedName()).willReturn("java.lang.Object");
 
@@ -50,7 +50,7 @@ class TypeUtilTest {
                                               @Mock CtClass enumClassMock) {
         // given
         given(typeMock.getSuperclass()).willReturn(enumClassRefMock);
-        given(enumClassRefMock.getDeclaration()).willReturn(enumClassMock);
+        given(enumClassRefMock.getTypeDeclaration()).willReturn(enumClassMock);
 
         given(enumClassMock.getQualifiedName()).willReturn("java.lang.Enum");
 
@@ -70,7 +70,7 @@ class TypeUtilTest {
                                           @Mock CtClass superSuperClassMock) {
         // given
         given(typeMock.getSuperclass()).willReturn(superClassRefMock);
-        given(superClassRefMock.getDeclaration()).willReturn(superClassMock);
+        given(superClassRefMock.getTypeDeclaration()).willReturn(superClassMock);
 
         given(superClassMock.getSuperclass()).willReturn(superSuperClassRefMock);
         given(superSuperClassRefMock.getDeclaration()).willReturn(superSuperClassMock);
@@ -103,10 +103,10 @@ class TypeUtilTest {
                                                                    @Mock CtClass superSuperClassMock) {
         // given
         given(classMock.getSuperclass()).willReturn(superClassRefMock);
-        given(superClassRefMock.getDeclaration()).willReturn(superClassMock);
+        given(superClassRefMock.getTypeDeclaration()).willReturn(superClassMock);
 
         given(superClassMock.getSuperclass()).willReturn(superSuperClassRefMock);
-        given(superSuperClassRefMock.getDeclaration()).willReturn(superSuperClassMock);
+        given(superSuperClassRefMock.getTypeDeclaration()).willReturn(superSuperClassMock);
 
         // when
         var actualResult = TypeUtil.findExplicitSuperClassesIncludingClass(classMock);

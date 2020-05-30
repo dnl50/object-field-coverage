@@ -93,7 +93,7 @@ public class TypeUtil {
      *          class present in the underlying model.
      */
     private static CtClass<?> findSuperClass(CtType<?> type) {
-        return type.getSuperclass() != null ? (CtClass<?>) type.getSuperclass().getDeclaration() : null;
+        return type.getSuperclass() != null ? (CtClass<?>) type.getSuperclass().getTypeDeclaration() : null;
     }
 
 }

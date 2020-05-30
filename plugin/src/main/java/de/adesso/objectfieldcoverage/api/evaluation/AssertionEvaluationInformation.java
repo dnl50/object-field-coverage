@@ -1,17 +1,13 @@
 package de.adesso.objectfieldcoverage.api.evaluation;
 
-import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
-import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.Path;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import spoon.reflect.reference.CtTypeReference;
 
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * A data class for which contains information about the asserted type of an {@link de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion}.
@@ -78,24 +74,6 @@ public class AssertionEvaluationInformation {
      */
     public boolean allAccessibleFieldsUsedInEquals() {
         return pathsOfFieldsNotUsedInEquals.isEmpty();
-    }
-
-    /**
-     * Takes the {@link AccessibleField} from the last {@link de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode node}
-     * in each {@link #getPathsOfFieldsNotUsedInEquals() path}.
-     *
-     * @return
-     *          A set containing the last node of each path which leads to a field which is
-     *          not compared in an equals method of the declaring type. Empty in case the
-     *          {@link #allAccessibleFieldsUsedInEquals()} method returns {@code true}.
-     */
-    public Set<AccessibleField<?>> getAccessibleFieldsNotAsserted() {
-        return pathsOfFieldsNotUsedInEquals.stream()
-                .map(Path::getLast)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(AccessibleFieldGraphNode::getAccessibleField)
-                .collect(Collectors.toSet());
     }
 
 }

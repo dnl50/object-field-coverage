@@ -9,9 +9,11 @@ import de.adesso.objectfieldcoverage.core.finder.JavaBeansAccessibilityAwareFiel
 import de.adesso.objectfieldcoverage.core.processor.evaluation.graph.AccessibleFieldGraphBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import spoon.reflect.declaration.CtType;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -151,6 +153,57 @@ class AccessibleFieldGraphBuilderIntegrationTest extends AbstractSpoonIntegratio
         personHomeAddressNode.addChildren(Set.of(addressHouseNumberNode, addressStreetNode, addressPostalCodeNode, addressCityNode));
         personFavouriteCityNode.addChildren(Set.of(cityNameNode));
         addressCityNode.addChildren(Set.of(cityNameNode));
+
+        var expectedGraph = new AccessibleFieldGraph(Set.of(personNameNode, personSiblingNode, personHomeAddressNode,
+                personFavouriteCityNode));
+
+        // when
+        var actualGraph = AccessibleFieldGraphBuilder.buildGraph(List.of(fieldFinder), personClass, personClass);
+
+        // then
+        assertThat(actualGraph).isEqualTo(expectedGraph);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void buildGraphForPersonWithFilter() {
+        // given
+        var model = buildModel("graph/Person.java", "graph/Address.java", "graph/City.java");
+        var personClass = findClassWithSimpleName(model, "Person");
+        var cityClass = findClassWithSimpleName(model, "City");
+
+        // exclude fields from Address
+        BiPredicate<AccessibleField<?>, CtType> givenFilter = (accessibleField, originType) ->
+                originType.equals(personClass) || originType.equals(cityClass);
+
+        var personNameField = personClass.getField("name");
+        var personNameGetter = personClass.getMethodsByName("getName").get(0);
+        var personSiblingField = personClass.getField("sibling");
+        var personSiblingGetter = personClass.getMethodsByName("getSibling").get(0);
+        var personHomeAddressField = personClass.getField("homeAddress");
+        var personHomeAddressGetter = personClass.getMethodsByName("getHomeAddress").get(0);
+        var personFavouriteCityField = personClass.getField("favouriteCity");
+        var personFavouriteCityGetter = personClass.getMethodsByName("getFavouriteCity").get(0);
+
+        var personNameAccessibleField = new AccessibleField(personNameField, personNameGetter);
+        var personSiblingAccessibleField = new AccessibleField(personSiblingField, personSiblingGetter);
+        var personHomeAddressAccessibleField = new AccessibleField(personHomeAddressField, personHomeAddressGetter);
+        var personFavouriteCityAccessibleField = new AccessibleField(personFavouriteCityField, personFavouriteCityGetter);
+
+        var cityNameField = cityClass.getField("name");
+        var cityNameGetter = cityClass.getMethodsByName("getName").get(0);
+
+        var cityNameAccessibleField = new AccessibleField(cityNameField, cityNameGetter);
+
+        var personNameNode = AccessibleFieldGraphNode.of(personNameAccessibleField);
+        var personSiblingNode = AccessibleFieldGraphNode.of(personSiblingAccessibleField);
+        var personHomeAddressNode = AccessibleFieldGraphNode.of(personHomeAddressAccessibleField);
+        var personFavouriteCityNode = AccessibleFieldGraphNode.of(personFavouriteCityAccessibleField);
+
+        var cityNameNode = AccessibleFieldGraphNode.of(cityNameAccessibleField);
+
+        personSiblingNode.addChildren(Set.of(personNameNode, personSiblingNode, personHomeAddressNode, personFavouriteCityNode));
+        personFavouriteCityNode.addChildren(Set.of(cityNameNode));
 
         var expectedGraph = new AccessibleFieldGraph(Set.of(personNameNode, personSiblingNode, personHomeAddressNode,
                 personFavouriteCityNode));

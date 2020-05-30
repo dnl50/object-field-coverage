@@ -11,6 +11,7 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -38,15 +39,6 @@ public class AccessibleFieldGraphBuilder {
     private final CtType<?> accessingType;
 
     /**
-     * A map which maps a {@link CtField} to its corresponding {@link AccessibleField} instance.
-     * Used to prevent duplicate {@link AccessibleField} instances to be created for the same {@link CtField},
-     * which might occur when different subclasses with a common field, which is declared in a superclass,
-     * are used as a type of a field {@link AccessibilityAwareFieldFinder#findAccessibleFields(CtType, CtType)
-     * which can be accessed} through a method/direct-field-access chain.
-     */
-    private final Map<CtField<?>, AccessibleField<?>> fieldToAccessibleFieldMap;
-
-    /**
      * A map which maps a {@link CtType} to a set of {@link AccessibleFieldGraphNode child nodes} which
      * have been discovered to be accessible from the {@link #accessingType}. Contains cached results
      * to increase performance. Once a {@link CtType} is added to this map the corresponding
@@ -63,7 +55,43 @@ public class AccessibleFieldGraphBuilder {
     private final Map<CtTypeReference<?>, Set<AccessibleFieldGraphNode>> typeRefToNodesMap;
 
     /**
-     * Static entrypoint method for building a {@link AccessibleFieldGraph}.
+     * Static entrypoint method for building an {@link AccessibleFieldGraph}.
+     *
+     * @param fieldFinders
+     *          The {@link AccessibilityAwareFieldFinder}s which are used to find accessible fields
+     *          in the given {@code clazzContainingFieldsToAccess} and all transitively reachable fields,
+     *          not {@code null}.
+     *
+     * @param accessingType
+     *          The {@link CtType} which wants to access {@link CtField}s inside the {@code clazzContainingFieldsToAccess}
+     *          and all transitively reachable fields, not {@code null}.
+     *
+     * @param clazzContainingFieldsToAccess
+     *          The {@link CtType} to start the graph building process at, not {@code null}.
+     *
+     * @param fieldFilter
+     *          A function mapping a ({@link AccessibleField}, origin {@link CtType}) pair to a boolean value indicating
+     *          whether the {@link AccessibleField} should be included in the graph, not {@code null}. Useful when a graph
+     *          should be built which conforms to an additional precondition.
+     *
+     * @return
+     *          The resulting {@link AccessibleFieldGraph}.
+     */
+    public static AccessibleFieldGraph buildGraph(Collection<? extends AccessibilityAwareFieldFinder> fieldFinders,
+                                                  CtType<?> accessingType,
+                                                  CtType<?> clazzContainingFieldsToAccess,
+                                                  BiPredicate<AccessibleField<?>, CtType<?>> fieldFilter) {
+        Objects.requireNonNull(fieldFinders, "The AccessibilityAwareFieldFinder collection cannot be null!");
+        Objects.requireNonNull(accessingType, "The CtType for which the graph should be built cannot be null!");
+        Objects.requireNonNull(clazzContainingFieldsToAccess, "The CtType to start the built process at cannot be null!");
+        Objects.requireNonNull(fieldFilter, "The filter function cannot be null!");
+
+        return new AccessibleFieldGraphBuilder(fieldFinders, accessingType)
+                .buildGraphInternal(clazzContainingFieldsToAccess, fieldFilter);
+    }
+
+    /**
+     * Static entrypoint method for building an {@link AccessibleFieldGraph} in which <b>every</b> field is included.
      *
      * @param fieldFinders
      *          The {@link AccessibilityAwareFieldFinder}s which are used to find accessible fields
@@ -79,16 +107,13 @@ public class AccessibleFieldGraphBuilder {
      *
      * @return
      *          The resulting {@link AccessibleFieldGraph}.
+     *
+     * @see #buildGraph(Collection, CtType, CtType, BiPredicate)
      */
     public static AccessibleFieldGraph buildGraph(Collection<? extends AccessibilityAwareFieldFinder> fieldFinders,
                                                   CtType<?> accessingType,
                                                   CtType<?> clazzContainingFieldsToAccess) {
-        Objects.requireNonNull(fieldFinders, "The AccessibilityAwareFieldFinder collection cannot be null!");
-        Objects.requireNonNull(accessingType, "The CtType for which the graph should be built cannot be null!");
-        Objects.requireNonNull(clazzContainingFieldsToAccess, "The CtType to start the built process at cannot be null!");
-
-        return new AccessibleFieldGraphBuilder(fieldFinders, accessingType)
-                .buildGraphInternal(clazzContainingFieldsToAccess);
+        return buildGraph(fieldFinders, accessingType, clazzContainingFieldsToAccess, (field, originType) -> true);
     }
 
     /**
@@ -107,7 +132,6 @@ public class AccessibleFieldGraphBuilder {
         this.fieldFinders = Set.copyOf(fieldFinders);
         this.accessingType = accessingType;
 
-        this.fieldToAccessibleFieldMap = new HashMap<>();
         this.typeToChildNodesMap = new HashMap<>();
         this.typeRefToNodesMap = new HashMap<>();
     }
@@ -118,10 +142,15 @@ public class AccessibleFieldGraphBuilder {
      *          The {@link CtType} which will be the first type to analyze for accessible fields,
      *          not {@code null}.
      *
+     * @param fieldFilter
+     *          A function mapping a ({@link AccessibleField}, origin {@link CtType}) pair to a boolean value indicating
+     *          whether the {@link AccessibleField} should be included in the graph, not {@code null}. Useful when a graph
+     *          should be built which conforms to an additional precondition.
+     *
      * @return
      *          The resulting {@link AccessibleFieldGraph}.
      */
-    private AccessibleFieldGraph buildGraphInternal(CtType<?> startingPoint) {
+    private AccessibleFieldGraph buildGraphInternal(CtType<?> startingPoint, BiPredicate<AccessibleField<?>, CtType<?>> fieldFilter) {
         log.info("Starting graph build process (starting type: '{}', accessing type: '{}')!",
                 startingPoint.getQualifiedName(), accessingType.getQualifiedName());
 
@@ -139,7 +168,7 @@ public class AccessibleFieldGraphBuilder {
             log.info("Looking for new fields in '{}' (accessing type: '{}')...",
                     currentlyProcessedType.getQualifiedName(), accessingType.getQualifiedName());
 
-            var accessibleFieldsInProcessedType = this.findAccessibleFields(currentlyProcessedType);
+            var accessibleFieldsInProcessedType = this.findAccessibleFields(currentlyProcessedType, fieldFilter);
 
             log.info("Found {} accessible fields in '{}'!",
                     currentlyProcessedType.getQualifiedName(), accessibleFieldsInProcessedType.size());
@@ -214,44 +243,28 @@ public class AccessibleFieldGraphBuilder {
     /**
      * Combines the result of every {@link AccessibilityAwareFieldFinder} into a single result
      * using the {@link AccessibleField#uniteAll(Collection)} method.
-     * <p/>
-     * All <i>new</i> fields are added to the {@link #fieldToAccessibleFieldMap}.
      *
      * @param typeContainingFieldsToAccess
      *          The {@link CtType} which contains fields which the {@link #accessingType} wants to
      *          access, not {@code null}.
      *
-     * @return
-     *          An <b>unmodifiable</b> set containing exactly one {@link AccessibleField} element for each accessible
-     *          {@link CtField}.
-     *
-     * @see #getExistingOrAddNew(AccessibleField)
-     */
-    private Set<AccessibleField<?>> findAccessibleFields(CtType<?> typeContainingFieldsToAccess) {
-        var accessibleFields = new AggregatingAccessibilityAwareFieldFinder(fieldFinders)
-                .findAccessibleFields(accessingType, typeContainingFieldsToAccess);
-
-        return Set.copyOf(accessibleFields);
-    }
-
-    /**
-     * Adds the given {@link AccessibleField} instance to the {@link #fieldToAccessibleFieldMap}
-     * in case the {@link CtField} which the {@link AccessibleField} refers to is not already
-     * associated with a {@link AccessibleField} instance.
-     *
-     * @param accessibleField
-     *          The {@link AccessibleField} instance to add to the {@link #fieldToAccessibleFieldMap}
-     *          map, not {@code null}.
+     * @param fieldFilter
+     *          A function mapping a ({@link AccessibleField}, origin {@link CtType}) pair to a boolean value indicating
+     *          whether the {@link AccessibleField} should be included in the graph, not {@code null}. Useful when a graph
+     *          should be built which conforms to an additional precondition.
      *
      * @return
-     *          The given {@code accessibleField} in case the no entry with the same {@link CtField}
-     *          key is present. The existing {@link AccessibleField} instance which
-     *          refers to the same {@link CtField} is returned otherwise.
+     *          An <b>unmodifiable</b> set containing the {@link AccessibleField} instances which are accessible
+     *          in the given {@code typeContainingFieldsToAccess} and which are not filtered out by the given
+     *          {@code fieldFilter}.
      */
-    private AccessibleField<?> getExistingOrAddNew(AccessibleField<?> accessibleField) {
-        var actualField = accessibleField.getActualField();
-
-        return fieldToAccessibleFieldMap.computeIfAbsent(actualField, k -> accessibleField);
+    private Set<AccessibleField<?>> findAccessibleFields(CtType<?> typeContainingFieldsToAccess,
+                                                         BiPredicate<AccessibleField<?>, CtType<?>> fieldFilter) {
+        return new AggregatingAccessibilityAwareFieldFinder(fieldFinders)
+                .findAccessibleFields(accessingType, typeContainingFieldsToAccess).stream()
+                .filter(accessibleField -> fieldFilter.test(accessibleField, typeContainingFieldsToAccess))
+                .collect(Collectors.toSet());
     }
+
 
 }
