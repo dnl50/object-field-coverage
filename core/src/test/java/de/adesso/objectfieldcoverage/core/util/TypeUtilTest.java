@@ -73,7 +73,7 @@ class TypeUtilTest {
         given(superClassRefMock.getTypeDeclaration()).willReturn(superClassMock);
 
         given(superClassMock.getSuperclass()).willReturn(superSuperClassRefMock);
-        given(superSuperClassRefMock.getDeclaration()).willReturn(superSuperClassMock);
+        given(superSuperClassRefMock.getTypeDeclaration()).willReturn(superSuperClassMock);
 
         // when
         var actualResult = TypeUtil.findExplicitSuperClasses(typeMock);

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Set;
 
@@ -19,9 +20,10 @@ class AccessibleFieldGraphTest {
     void getAllNodesReturnsExpectedNodes(@Mock AccessibleFieldGraphNode firstRootNodeMock,
                                          @Mock AccessibleFieldGraphNode secondRootNodeMock,
                                          @Mock AccessibleFieldGraphNode childNodeMock,
-                                         @Mock AccessibleFieldGraphNode grandChildMock) {
+                                         @Mock AccessibleFieldGraphNode grandChildMock,
+                                         @Mock CtTypeReference<?> typeRefMock) {
         // given
-        var testSubject = new AccessibleFieldGraph(firstRootNodeMock, secondRootNodeMock);
+        var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock, firstRootNodeMock, secondRootNodeMock);
 
         given(firstRootNodeMock.getChildren()).willReturn(Set.of(firstRootNodeMock, childNodeMock));
         given(secondRootNodeMock.getChildren()).willReturn(Set.of(childNodeMock));

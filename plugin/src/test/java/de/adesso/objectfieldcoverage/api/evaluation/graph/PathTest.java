@@ -117,4 +117,104 @@ class PathTest {
         assertThat(actualResult).isEqualTo(expectedResult);
     }
 
+    @Test
+    void containsLoopReturnsTrueWhenSameNodeAsNextElement(@Mock AccessibleFieldGraphNode nodeMock) {
+        // given
+        given(nodeMock.getChildren()).willReturn(Set.of(nodeMock));
+
+        var testSubject = new Path(List.of(nodeMock, nodeMock));
+
+        // when
+        var actualResult = testSubject.containsLoop();
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void containsLoopReturnsTrueWhenSameNodeAppearsLater(@Mock AccessibleFieldGraphNode nodeMock,
+                                                         @Mock AccessibleFieldGraphNode otherNodeMock) {
+        // given
+        given(otherNodeMock.getChildren()).willReturn(Set.of(nodeMock));
+        given(nodeMock.getChildren()).willReturn(Set.of(otherNodeMock));
+
+        var testSubject = new Path(List.of(nodeMock, otherNodeMock, nodeMock));
+
+        // when
+        var actualResult = testSubject.containsLoop();
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void containsLoopReturnsFalseWhenPathIsEmpty() {
+        // given
+        var testSubject = new Path();
+
+        // when
+        var actualResult = testSubject.containsLoop();
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void containsLoopReturnsFalseWhenDoesNotContainLoop(@Mock AccessibleFieldGraphNode nodeMock,
+                                                        @Mock AccessibleFieldGraphNode otherNodeMock) {
+        // given
+        given(nodeMock.getChildren()).willReturn(Set.of(otherNodeMock));
+
+        var testSubject = new Path(List.of(nodeMock, otherNodeMock));
+
+        // when
+        var actualResult = testSubject.containsLoop();
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void appendAppendsChildNodeWhenPathIsEmpty(@Mock AccessibleFieldGraphNode nodeToAppendMock) {
+        // given
+        var testSubject = new Path();
+        var expectedPath = new Path(nodeToAppendMock);
+
+        // when
+        var actualPath = testSubject.append(nodeToAppendMock);
+
+        // then
+        assertThat(actualPath).isEqualTo(expectedPath);
+    }
+
+    @Test
+    void appendAppendsChildNodeWhenLastNodeIsParentNode(@Mock AccessibleFieldGraphNode lastNodeMock,
+                                                        @Mock AccessibleFieldGraphNode nodeToAppendMock) {
+        // given
+        given(lastNodeMock.getChildren()).willReturn(Set.of(nodeToAppendMock));
+
+        var testSubject = new Path(lastNodeMock);
+        var expectedPath = new Path(lastNodeMock, nodeToAppendMock);
+
+        // when
+        var actualPath = testSubject.append(nodeToAppendMock);
+
+        // then
+        assertThat(actualPath).isEqualTo(expectedPath);
+    }
+
+    @Test
+    void appendThrowsExceptionWhenNewNodeIsNotAChildNodeOfLastNode(@Mock AccessibleFieldGraphNode lastNodeMock,
+                                                                   @Mock AccessibleFieldGraphNode nodeToAppendMock) {
+        // given
+        given(lastNodeMock.getChildren()).willReturn(Set.of());
+
+        var testSubject = new Path(lastNodeMock);
+
+        // when / then
+        assertThatThrownBy(() -> testSubject.append(nodeToAppendMock))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The given node is not a child node of the current last node!");
+    }
+
 }

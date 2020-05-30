@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 /**
  * Utility class for building a {@link AccessibleFieldGraph} for a pair of (<i>accessing type</i>, <i>accessed type</i>).
  * The <i>accessing</i> type is seen as constant, so a single instance of {@code this} class may be used
- * to build multiple graphs for <i>accessed</i> types. Each graph built by this util class uses as few as
+ * to build multiple graphs for multiple <i>accessed</i> types. Each graph built by this util class uses as few as
  * possible {@link AccessibleFieldGraphNode node}s by reusing a node when it is the representation of the
  * same {@link AccessibleField}.
  *
@@ -34,7 +34,7 @@ public class AccessibleFieldGraphBuilder {
     private final Set<AccessibilityAwareFieldFinder> fieldFinders;
 
     /**
-     * The type to build the {@link AccessibleFieldGraph} for.
+     * The accessing type to build the {@link AccessibleFieldGraph} for.
      */
     private final CtType<?> accessingType;
 
@@ -55,17 +55,6 @@ public class AccessibleFieldGraphBuilder {
     private final Map<CtTypeReference<?>, Set<AccessibleFieldGraphNode>> typeRefToNodesMap;
 
     /**
-     * Static entrypoint method for building an {@link AccessibleFieldGraph}.
-     *
-     * @param fieldFinders
-     *          The {@link AccessibilityAwareFieldFinder}s which are used to find accessible fields
-     *          in the given {@code clazzContainingFieldsToAccess} and all transitively reachable fields,
-     *          not {@code null}.
-     *
-     * @param accessingType
-     *          The {@link CtType} which wants to access {@link CtField}s inside the {@code clazzContainingFieldsToAccess}
-     *          and all transitively reachable fields, not {@code null}.
-     *
      * @param clazzContainingFieldsToAccess
      *          The {@link CtType} to start the graph building process at, not {@code null}.
      *
@@ -77,30 +66,16 @@ public class AccessibleFieldGraphBuilder {
      * @return
      *          The resulting {@link AccessibleFieldGraph}.
      */
-    public static AccessibleFieldGraph buildGraph(Collection<? extends AccessibilityAwareFieldFinder> fieldFinders,
-                                                  CtType<?> accessingType,
-                                                  CtType<?> clazzContainingFieldsToAccess,
-                                                  BiPredicate<AccessibleField<?>, CtType<?>> fieldFilter) {
-        Objects.requireNonNull(fieldFinders, "The AccessibilityAwareFieldFinder collection cannot be null!");
-        Objects.requireNonNull(accessingType, "The CtType for which the graph should be built cannot be null!");
+    public AccessibleFieldGraph buildGraph(CtType<?> clazzContainingFieldsToAccess,
+                                           BiPredicate<AccessibleField<?>, CtType<?>> fieldFilter) {
         Objects.requireNonNull(clazzContainingFieldsToAccess, "The CtType to start the built process at cannot be null!");
         Objects.requireNonNull(fieldFilter, "The filter function cannot be null!");
 
-        return new AccessibleFieldGraphBuilder(fieldFinders, accessingType)
-                .buildGraphInternal(clazzContainingFieldsToAccess, fieldFilter);
+        return buildGraphInternal(clazzContainingFieldsToAccess, fieldFilter);
     }
 
     /**
      * Static entrypoint method for building an {@link AccessibleFieldGraph} in which <b>every</b> field is included.
-     *
-     * @param fieldFinders
-     *          The {@link AccessibilityAwareFieldFinder}s which are used to find accessible fields
-     *          in the given {@code clazzContainingFieldsToAccess} and all transitively reachable fields,
-     *          not {@code null}.
-     *
-     * @param accessingType
-     *          The {@link CtType} which wants to access {@link CtField}s inside the {@code clazzContainingFieldsToAccess}
-     *          and all transitively reachable fields, not {@code null}.
      *
      * @param clazzContainingFieldsToAccess
      *          The {@link CtType} to start the graph building process at, not {@code null}.
@@ -108,17 +83,13 @@ public class AccessibleFieldGraphBuilder {
      * @return
      *          The resulting {@link AccessibleFieldGraph}.
      *
-     * @see #buildGraph(Collection, CtType, CtType, BiPredicate)
+     * @see #buildGraph(CtType, BiPredicate)
      */
-    public static AccessibleFieldGraph buildGraph(Collection<? extends AccessibilityAwareFieldFinder> fieldFinders,
-                                                  CtType<?> accessingType,
-                                                  CtType<?> clazzContainingFieldsToAccess) {
-        return buildGraph(fieldFinders, accessingType, clazzContainingFieldsToAccess, (field, originType) -> true);
+    public AccessibleFieldGraph buildGraph(CtType<?> clazzContainingFieldsToAccess) {
+        return buildGraph(clazzContainingFieldsToAccess, (field, originType) -> true);
     }
 
     /**
-     * <b>Note:</b> Declared private since the entry point for this class is the static
-     * {@link #buildGraph(Collection, CtType, CtType)} method.
      *
      * @param fieldFinders
      *          The {@link AccessibilityAwareFieldFinder}s which are used to build the individual graph nodes with,
@@ -127,8 +98,11 @@ public class AccessibleFieldGraphBuilder {
      * @param accessingType
      *          The type to build the graph for, not {@code null}.
      */
-    private AccessibleFieldGraphBuilder(Collection<? extends AccessibilityAwareFieldFinder> fieldFinders,
-                                        CtType<?> accessingType) {
+    public AccessibleFieldGraphBuilder(Collection<? extends AccessibilityAwareFieldFinder> fieldFinders,
+                                       CtType<?> accessingType) {
+        Objects.requireNonNull(fieldFinders, "The AccessibilityAwareFieldFinder collection cannot be null!");
+        Objects.requireNonNull(accessingType, "The CtType for which the graph should be built cannot be null!");
+
         this.fieldFinders = Set.copyOf(fieldFinders);
         this.accessingType = accessingType;
 
@@ -203,10 +177,10 @@ public class AccessibleFieldGraphBuilder {
         });
 
         log.info("Finished graph build process (starting type: '{}', accessing type: '{}')! The resulting tree has" +
-                "{} root nodes and {} nodes in total!", startingPoint.getQualifiedName(), accessingType.getQualifiedName(),
+                        "{} root nodes and {} nodes in total!", startingPoint.getQualifiedName(), accessingType.getQualifiedName(),
                 rootNodes.size(), typeRefToNodesMap.values().stream().mapToInt(Set::size).sum());
 
-        return new AccessibleFieldGraph(rootNodes);
+        return new AccessibleFieldGraph(rootNodes, startingPoint.getReference(), accessingType.getReference());
     }
 
     /**

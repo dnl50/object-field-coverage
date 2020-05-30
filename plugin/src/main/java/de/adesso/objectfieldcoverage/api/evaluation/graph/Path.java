@@ -4,10 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * The representation path through a {@link AccessibleFieldGraph}. A path is a finitely long sequence of
@@ -30,8 +27,7 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
     private final List<AccessibleFieldGraphNode> nodes;
 
     /**
-     * Initializes the internal list with a <b>unmodifiable</b> copy of the given
-     * {@code nodes} list.
+     * Initializes the internal list with a modifiable copy of the given {@code nodes} list.
      *
      * @param nodes
      *          The nodes the path consists of. Must be a valid path as specified on the
@@ -42,7 +38,7 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
             throw new IllegalArgumentException("The given nodes list is not a valid path!");
         }
 
-        this.nodes = (nodes == null) ? List.of() : List.copyOf(nodes);
+        this.nodes = (nodes == null) ? new ArrayList<>() : new ArrayList<>(nodes);
     }
 
     /**
@@ -65,6 +61,16 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
     }
 
     /**
+     * Copy constructor.
+     *
+     * @param path
+     *          The path to copy.
+     */
+    public Path(Path path) {
+        this(path == null ? List.of() : path.nodes);
+    }
+
+    /**
      * The length of a path is the number of nodes in it.
      *
      * @return
@@ -82,6 +88,38 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
      */
     public Optional<AccessibleFieldGraphNode> getLast() {
         return nodes.isEmpty() ? Optional.empty() : Optional.of(nodes.get(nodes.size() - 1));
+    }
+
+    /**
+     *
+     * @return
+     *          {@code true}, if at least one node in {@code this} path appears more than once. {@code false}
+     *          is returned otherwise.
+     */
+    public boolean containsLoop() {
+        return Set.copyOf(nodes).size() < nodes.size();
+    }
+
+    /**
+     *
+     * @param node
+     *          The node which should be appended to {@code this} path.
+     *
+     * @return
+     *          {@code this} path.
+     */
+    public Path append(AccessibleFieldGraphNode node) {
+        if(node != null) {
+            var lastNode = nodes.isEmpty() ? null : nodes.get(nodes.size() - 1);
+
+            if (lastNode != null && !isChildNodeOf(lastNode, node)) {
+                throw new IllegalArgumentException("The given node is not a child node of the current last node!");
+            }
+
+            nodes.add(node);
+        }
+
+        return this;
     }
 
     /**
@@ -110,7 +148,7 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
             var currentlyInspectedNode = nodes.get(i);
             var parentNode = nodes.get(i - 1);
 
-            if(currentlyInspectedNode == null || parentNode == null || !parentNode.getChildren().contains(currentlyInspectedNode)) {
+            if(!isChildNodeOf(parentNode, currentlyInspectedNode)) {
                 return false;
             }
         }
@@ -118,12 +156,29 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
         return true;
     }
 
+    /**
+     *
+     * @param parentNode
+     *          The parent node.
+     *
+     * @param childNode
+     *          The child node.
+     *
+     * @return
+     *          {@code true}, if both nodes are not {@code null} and the given {@code parent}'s
+     *          {@link AccessibleFieldGraphNode#getChildren() child nodes} contains the given {@code childNode}.
+     *          {@code false} is returned otherwise.
+     */
+    private boolean isChildNodeOf(AccessibleFieldGraphNode parentNode, AccessibleFieldGraphNode childNode) {
+        return parentNode != null && childNode != null && parentNode.getChildren().contains(childNode);
+    }
+
     @Override
     public String toString() {
         var stringBuilder = new StringBuilder();
         stringBuilder.append("Path(length=")
-            .append(getLength())
-            .append(", simpleNamesOfFieldsOnPath=[");
+                .append(getLength())
+                .append(", simpleNamesOfFieldsOnPath=[");
 
         if(!nodes.isEmpty()) {
             var firstNodeSimpleName = nodes.get(0)

@@ -46,7 +46,7 @@ class IterativeEqualsMethodAnalyzerTest {
         assertThatThrownBy(() -> testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
-                        "a required entry for the given clazz or a superclass!");
+                        "a required entry for the given class or a superclass!");
     }
 
     @Test
@@ -60,13 +60,13 @@ class IterativeEqualsMethodAnalyzerTest {
         var givenMap = Map.<CtType<?>, Set<AccessibleField<?>>>of(superClazzMock, Set.of(accessibleFieldMock));
 
         given(clazzMock.getSuperclass()).willReturn(superClassTypeRef);
-        given(superClassTypeRef.getDeclaration()).willReturn(superClazzMock);
+        given(superClassTypeRef.getTypeDeclaration()).willReturn(superClazzMock);
 
         // when / then
         assertThatThrownBy(() -> testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
-                        "a required entry for the given clazz or a superclass!");
+                        "a required entry for the given class or a superclass!");
     }
 
     @Test
@@ -161,7 +161,7 @@ class IterativeEqualsMethodAnalyzerTest {
         );
 
         given(clazzMock.getSuperclass()).willReturn(superClassTypeRef);
-        given(superClassTypeRef.getDeclaration()).willReturn(superClazzMock);
+        given(superClassTypeRef.getTypeDeclaration()).willReturn(superClazzMock);
 
         doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(clazzMock);
         doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(superClazzMock);

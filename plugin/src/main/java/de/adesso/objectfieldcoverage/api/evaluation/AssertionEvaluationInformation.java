@@ -20,7 +20,7 @@ public class AssertionEvaluationInformation {
     /**
      * A reference to the type which the assertion asserts. Uses a type reference since
      * the asserted type might not be part of the spoon model (e.g. the asserted type
-     * is a {@link String}).
+     * is a {@link String} or primitive {@code boolean} value).
      */
     private final CtTypeReference<?> assertedTypeReference;
 
@@ -41,30 +41,11 @@ public class AssertionEvaluationInformation {
     /**
      * A set containing {@link Path paths} in the {@link #getAccessibleFieldsGraph() accessible fields
      * graph} which indicate that a field is accessible, but not asserted in the equals method of
-     * the types which lead to that node. Each path contained in this set leads to a leaf
-     * {@link de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode node} of the
-     * {@link #getAccessibleFieldsGraph() accessible fields graph}. This set is not allowed to contain
-     * any empty paths.
+     * the types which lead to that node. All paths in this set end at the first node which is not
+     * compared in the equals method, since paths may be infinitely long otherwise in case the graph contains
+     * a circle.
      */
     private final Set<Path> pathsOfFieldsNotUsedInEquals;
-
-    /**
-     * Initializes the {@link #getAccessibleFieldsGraph() accessible field graph} and
-     * the {@link #getAccessibleFieldsUsedInEqualsGraph() accessible field used in equals graph} with an
-     * {@link AccessibleFieldGraph#EMPTY_GRAPH empty} graph and the {@link #getPathsOfFieldsNotUsedInEquals() path}
-     * set with an <b>unmodifiable</b> and empty set.
-     *
-     * @param assertedTypeReference
-     *          The {@link CtTypeReference} the newly constructed instance belongs to, not
-     *          {@code null}.
-     */
-    public AssertionEvaluationInformation(CtTypeReference<?> assertedTypeReference) {
-        this.assertedTypeReference = assertedTypeReference;
-
-        this.accessibleFieldsGraph = AccessibleFieldGraph.EMPTY_GRAPH;
-        this.accessibleFieldsUsedInEqualsGraph = AccessibleFieldGraph.EMPTY_GRAPH;
-        this.pathsOfFieldsNotUsedInEquals = Set.of();
-    }
 
     /**
      *

@@ -40,10 +40,12 @@ class AccessibleFieldGraphBuilderIntegrationTest extends AbstractSpoonIntegratio
 
         var cityNameNode = AccessibleFieldGraphNode.of(cityNameAccessibleField);
 
-        var expectedGraph = new AccessibleFieldGraph(Set.of(cityNameNode));
+        var expectedGraph = new AccessibleFieldGraph(Set.of(cityNameNode), cityClass.getReference(), cityClass.getReference());
+
+        var testSubject = new AccessibleFieldGraphBuilder(List.of(fieldFinder), cityClass);
 
         // when
-        var actualGraph = AccessibleFieldGraphBuilder.buildGraph(List.of(fieldFinder), cityClass, cityClass);
+        var actualGraph = testSubject.buildGraph(cityClass);
 
         // then
         assertThat(actualGraph).isEqualTo(expectedGraph);
@@ -86,10 +88,12 @@ class AccessibleFieldGraphBuilderIntegrationTest extends AbstractSpoonIntegratio
         addressCityNode.addChildren(Set.of(cityNameNode));
 
         var expectedGraph = new AccessibleFieldGraph(Set.of(addressHouseNumberNode,
-                addressStreetNode, addressPostalCodeNode, addressCityNode));
+                addressStreetNode, addressPostalCodeNode, addressCityNode), addressClass.getReference(), addressClass.getReference());
+
+        var testSubject = new AccessibleFieldGraphBuilder(List.of(fieldFinder), addressClass);
 
         // when
-        var actualGraph = AccessibleFieldGraphBuilder.buildGraph(List.of(fieldFinder), addressClass, addressClass);
+        var actualGraph = testSubject.buildGraph(addressClass);
 
         // then
         assertThat(actualGraph).isEqualTo(expectedGraph);
@@ -155,10 +159,12 @@ class AccessibleFieldGraphBuilderIntegrationTest extends AbstractSpoonIntegratio
         addressCityNode.addChildren(Set.of(cityNameNode));
 
         var expectedGraph = new AccessibleFieldGraph(Set.of(personNameNode, personSiblingNode, personHomeAddressNode,
-                personFavouriteCityNode));
+                personFavouriteCityNode), personClass.getReference(), personClass.getReference());
+
+        var testSubject = new AccessibleFieldGraphBuilder(List.of(fieldFinder), personClass);
 
         // when
-        var actualGraph = AccessibleFieldGraphBuilder.buildGraph(List.of(fieldFinder), personClass, personClass);
+        var actualGraph = testSubject.buildGraph(personClass);
 
         // then
         assertThat(actualGraph).isEqualTo(expectedGraph);
@@ -206,10 +212,12 @@ class AccessibleFieldGraphBuilderIntegrationTest extends AbstractSpoonIntegratio
         personFavouriteCityNode.addChildren(Set.of(cityNameNode));
 
         var expectedGraph = new AccessibleFieldGraph(Set.of(personNameNode, personSiblingNode, personHomeAddressNode,
-                personFavouriteCityNode));
+                personFavouriteCityNode), personClass.getReference(), personClass.getReference());
+
+        var testSubject = new AccessibleFieldGraphBuilder(List.of(fieldFinder), personClass);
 
         // when
-        var actualGraph = AccessibleFieldGraphBuilder.buildGraph(List.of(fieldFinder), personClass, personClass);
+        var actualGraph = testSubject.buildGraph(personClass);
 
         // then
         assertThat(actualGraph).isEqualTo(expectedGraph);

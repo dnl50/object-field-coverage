@@ -3,6 +3,7 @@ package de.adesso.objectfieldcoverage.api.evaluation.graph;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.*;
 
@@ -40,22 +41,36 @@ import java.util.*;
 public class AccessibleFieldGraph implements Iterable<AccessibleFieldGraphNode> {
 
     /**
-     * An empty graph with no {@link #getRootNodes() root nodes} and therefore no
-     * nodes at all.
-     */
-    public static final AccessibleFieldGraph EMPTY_GRAPH = new AccessibleFieldGraph(Set.of());
-
-    /**
      * These are the nodes from which the graph was built.
      */
     private final Set<AccessibleFieldGraphNode> rootNodes;
 
     /**
+     * The {@link CtTypeReference} of the type which {@code this} graph belongs to.
+     */
+    private final CtTypeReference<?> describedTypeRef;
+
+    /**
+     * The {@link CtTypeReference} of the type which accesses the {@link #getDescribedTypeRef()}'s fields.
+     */
+    private final CtTypeReference<?> accessingTypeRef;
+
+    /**
      *
      * @param rootNodes
      *          The root nodes of the newly constructed graph, not {@code null}.
+     *
+     * @param describedTypeRef
+     *          The {@link CtTypeReference} of the type which the graph belongs to, not {@code null}.
+     *
+     * @param accessingTypeRef
+     *          The {@link CtTypeReference} of the type which accesses the {@code describedType}'s fields,
+     *          not {@code null}.
      */
-    public AccessibleFieldGraph(Collection<AccessibleFieldGraphNode> rootNodes) {
+    public AccessibleFieldGraph(Collection<AccessibleFieldGraphNode> rootNodes, CtTypeReference<?> describedTypeRef,
+                                CtTypeReference<?> accessingTypeRef) {
+        this.describedTypeRef = Objects.requireNonNull(describedTypeRef, "The CtTypeReference of the described type cannot be null!");
+        this.accessingTypeRef = Objects.requireNonNull(accessingTypeRef, "The CtTypeReference of the accessing type cannot be null!");
         this.rootNodes = Set.copyOf(rootNodes);
     }
 
@@ -64,10 +79,33 @@ public class AccessibleFieldGraph implements Iterable<AccessibleFieldGraphNode> 
      * @param rootNodes
      *          The root nodes of the newly constructed graph, not {@code null}.
      *
-     * @see #AccessibleFieldGraph(Collection)
+     * @param describedTypeRef
+     *          The {@link CtTypeReference} of the type which the graph belongs to.
+     *
+     * @param accessingTypeRef
+     *          The {@link CtTypeReference} of the type which accesses the {@code describedType}'s fields,
+     *          not {@code null}.
+     *
+     * @see #AccessibleFieldGraph(Collection, CtTypeReference, CtTypeReference)
      */
-    public AccessibleFieldGraph(AccessibleFieldGraphNode... rootNodes) {
-        this(Arrays.asList(rootNodes));
+    public AccessibleFieldGraph(CtTypeReference<?> describedTypeRef, CtTypeReference<?> accessingTypeRef, AccessibleFieldGraphNode... rootNodes) {
+        this(rootNodes != null ? Arrays.asList(rootNodes) : List.of(), describedTypeRef, accessingTypeRef);
+    }
+
+    /**
+     *
+     * @param describedType
+     *          The {@link CtTypeReference} of the type which the empty graph belongs to.
+     *
+     * @param accessingTypeRef
+     *          The {@link CtTypeReference} of the type which accesses the {@code describedType}'s fields,
+     *          not {@code null}.
+     *
+     * @return
+     *          A {@link AccessibleFieldGraph} without any nodes.
+     */
+    public static AccessibleFieldGraph empty(CtTypeReference<?> describedType, CtTypeReference<?> accessingTypeRef) {
+        return new AccessibleFieldGraph(describedType, accessingTypeRef);
     }
 
     /**
