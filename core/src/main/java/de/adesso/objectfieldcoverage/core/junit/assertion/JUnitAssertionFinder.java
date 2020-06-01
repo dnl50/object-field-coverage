@@ -3,6 +3,7 @@ package de.adesso.objectfieldcoverage.core.junit.assertion;
 import de.adesso.objectfieldcoverage.api.AssertionFinder;
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
+import de.adesso.objectfieldcoverage.api.assertion.reference.ObjectEqualsAssertion;
 import de.adesso.objectfieldcoverage.core.junit.assertion.filter.JUnitAssertEqualsInvocationFilter;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
@@ -33,7 +34,7 @@ public class JUnitAssertionFinder implements AssertionFinder {
             return PrimitiveTypeUtils.buildBooleanTypeAssertion(assertedExpression);
         }
 
-        throw new IllegalStateException();
+        return new ObjectEqualsAssertion<>(assertedExpression);
     }
 
 }

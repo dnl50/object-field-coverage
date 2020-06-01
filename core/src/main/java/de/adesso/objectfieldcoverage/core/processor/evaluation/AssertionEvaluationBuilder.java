@@ -84,6 +84,8 @@ public class AssertionEvaluationBuilder {
      *
      * @return
      *          The {@link AssertionEvaluationInformation} for the given {@code assertion}.
+     *
+     * @see #build(CtTypeReference, CtType)
      */
     public AssertionEvaluationInformation build(AbstractAssertion<?> assertion) {
         Objects.requireNonNull(assertion, "The given abstract assertion cannot be null!");
@@ -92,6 +94,23 @@ public class AssertionEvaluationBuilder {
                 .getType();
         var accessingType = assertion.getAssertedExpression()
                 .getParent(CtType.class);
+
+        return build(assertedTypeRef, accessingType);
+    }
+
+    /**
+     *
+     * @param assertedTypeRef
+     *          The {@link CtTypeReference} of the type which is asserted, not {@code null}.
+     *
+     * @param accessingType
+     *          The {@link CtType} which accesses fields in the given {@code assertedTypeRef}'s type, not
+     *          {@code null}.
+     *
+     * @return
+     *          The {@link AssertionEvaluationInformation} instance for the given types.
+     */
+    public AssertionEvaluationInformation build(CtTypeReference<?> assertedTypeRef, CtType<?> accessingType) {
         var cacheKey = Pair.of(assertedTypeRef, accessingType);
 
         if(resultCache.containsKey(cacheKey)) {

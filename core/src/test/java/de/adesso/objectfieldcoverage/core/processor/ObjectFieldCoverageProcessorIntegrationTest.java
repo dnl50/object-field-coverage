@@ -14,7 +14,8 @@ class ObjectFieldCoverageProcessorIntegrationTest {
     void process() throws Exception {
         var launcher = new Launcher();
         launcher.addInputResource(asSpoonResource("/processor/Melon.java"));
-        launcher.addInputResource(asSpoonResource("/processor/MelonTest.java"));
+        launcher.addInputResource(asSpoonResource("/processor/MelonService.java"));
+        launcher.addInputResource(asSpoonResource("/processor/MelonServiceTest.java"));
         launcher.getEnvironment().setComplianceLevel(11);
         launcher.getEnvironment().setAutoImports(true);
         launcher.run();
