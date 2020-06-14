@@ -3,30 +3,33 @@ package de.adesso.objectfieldcoverage.api.assertion.primitive.bool;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveType;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeAssertion;
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
+import de.adesso.objectfieldcoverage.api.evaluation.graph.Path;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.math3.fraction.Fraction;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.declaration.CtMethod;
 
-@RequiredArgsConstructor
+import java.util.Set;
+
 @EqualsAndHashCode(callSuper = false)
 public class BooleanTypeAssertion extends PrimitiveTypeAssertion<Boolean> {
 
-    private final CtExpression<Boolean> assertedBooleanExpression;
+    public BooleanTypeAssertion(CtExpression<Boolean> assertedExpression) {
+        super(assertedExpression);
+    }
 
     @Override
     public PrimitiveType getAssertedPrimitiveType() {
-        return () -> "boolean";
+        return null;
     }
 
     @Override
-    public CtExpression<Boolean> getAssertedExpression() {
-        return assertedBooleanExpression;
+    public CtMethod<?> getOriginTestMethod() {
+        return null;
     }
 
     @Override
-    public Fraction calculateMetricValue(AssertionEvaluationInformation evaluationInformation) {
-        return Fraction.ONE;
+    public Set<Path> getCoveredPaths(AssertionEvaluationInformation evaluationInformation) {
+        return null;
     }
 
 }

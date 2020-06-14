@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.api.evaluation.graph;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -8,7 +9,7 @@ import spoon.reflect.reference.CtTypeReference;
 import java.util.*;
 
 /**
- * Graph representation of the fields which can be accessed from a given {@link spoon.reflect.declaration.CtClass}.
+ * Immutable graph representation of the fields which can be accessed from a given {@link spoon.reflect.declaration.CtClass}.
  * The graph can contain cycles (and is therefore not a tree) when a field can be reached by method/field-access
  * chaining which has the same type as the starting field.
  * <p/>
@@ -54,6 +55,13 @@ public class AccessibleFieldGraph implements Iterable<AccessibleFieldGraphNode> 
      * The {@link CtTypeReference} of the type which accesses the {@link #getDescribedTypeRef()}'s fields.
      */
     private final CtTypeReference<?> accessingTypeRef;
+
+    /**
+     * Lazily initialized field containing the result of the {@link #getTransitiveReachabilityPaths()}
+     * method.
+     */
+    @Getter(AccessLevel.NONE)
+    private Set<Path> transitiveReachabilityPaths;
 
     /**
      *
@@ -139,6 +147,50 @@ public class AccessibleFieldGraph implements Iterable<AccessibleFieldGraphNode> 
     @Override
     public Iterator<AccessibleFieldGraphNode> iterator() {
         return getAllNodes().iterator();
+    }
+
+    /**
+     * Returns a set of paths which end with a leaf node or a node which creates a cycle as described by
+     * the <i>transitive reachability set</i> (<i>transitive Erreichbarkeitsmenge</i>).
+     *
+     * @return An <b>unmodifiable</b> set containing the {@link Path}s in the <i>transitive reachability set</i>
+     * (<i>transitive Erreichbarkeitsmenge</i>), not {@code null}.
+     */
+    public Set<Path> getTransitiveReachabilityPaths() {
+        if(transitiveReachabilityPaths != null) {
+            return transitiveReachabilityPaths;
+        }
+
+        var fullyExploredPaths = new HashSet<Path>();
+        var basePaths = new LinkedList<Path>();
+        rootNodes.stream()
+                .map(Path::new)
+                .forEach(basePaths::add);
+
+        while(!basePaths.isEmpty()) {
+            var currentBasePath = basePaths.removeFirst();
+
+            var currentPathExtensionNodes = currentBasePath.getLast()
+                    .get()
+                    .getChildren();
+
+            if(currentPathExtensionNodes.isEmpty()) {
+                fullyExploredPaths.add(currentBasePath);
+            } else {
+                currentPathExtensionNodes.stream()
+                        .map(extension -> new Path(currentBasePath).append(extension))
+                        .forEach(extendedPath -> {
+                            if(extendedPath.containsLoop()) {
+                                fullyExploredPaths.add(extendedPath);
+                            } else {
+                                basePaths.addLast(extendedPath);
+                            }
+                        });
+            }
+        }
+
+        this.transitiveReachabilityPaths = Set.copyOf(fullyExploredPaths);
+        return transitiveReachabilityPaths;
     }
 
 }

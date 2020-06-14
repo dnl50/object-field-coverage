@@ -172,42 +172,11 @@ public class AssertionEvaluationBuilder {
             return Set.of();
         }
 
-        // Path in accessibleFieldGraph -> node of last path element in usedInEqualsGraph
-        var pathsContainedInEqualsGraph = new LinkedList<Pair<Path, AccessibleFieldGraphNode>>();
-        var pathsOfFieldsNotComparedInEquals = new HashSet<Path>();
+        var pathsCoveredByEquals = usedInEqualsGraph.getTransitiveReachabilityPaths();
+        var allPaths = new HashSet<>(accessibleFieldGraph.getTransitiveReachabilityPaths());
 
-        accessibleFieldGraph.getRootNodes().forEach(rootNode -> {
-            var equivalentNodeInEqualsGraph = findNodeWithAccessibleField(usedInEqualsGraph.getRootNodes(),
-                    rootNode.getAccessibleField());
-
-            if(equivalentNodeInEqualsGraph.isPresent()) {
-                pathsContainedInEqualsGraph.add(Pair.of(new Path(rootNode), equivalentNodeInEqualsGraph.get()));
-            } else {
-                pathsOfFieldsNotComparedInEquals.add(new Path(rootNode));
-            }
-        });
-
-        while(!pathsContainedInEqualsGraph.isEmpty()) {
-            var currentPathNodePair = pathsContainedInEqualsGraph.removeFirst();
-            var currentPath = currentPathNodePair.getLeft();
-            var lastNodeInPath = currentPath.getLast().get();
-            var equalsGraphLastNodeRepresentation = currentPathNodePair.getRight();
-
-            for(var childNode : lastNodeInPath.getChildren()) {
-                var extendedPath = new Path(currentPath).append(childNode);
-                var childNodeEqualsGraphRepresentation = findNodeWithAccessibleField(equalsGraphLastNodeRepresentation.getChildren(),
-                        childNode.getAccessibleField());
-
-                if(childNodeEqualsGraphRepresentation.isEmpty()) {
-                    pathsOfFieldsNotComparedInEquals.add(extendedPath);
-                } else if(!extendedPath.containsLoop()) {
-                    // prevent infinite loops
-                    pathsContainedInEqualsGraph.addFirst(Pair.of(extendedPath, childNodeEqualsGraphRepresentation.get()));
-                }
-            }
-        }
-
-        return pathsOfFieldsNotComparedInEquals;
+        allPaths.removeAll(pathsCoveredByEquals);
+        return allPaths;
     }
 
     /**

@@ -134,6 +134,35 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
     }
 
     /**
+     * The paths are equal, when this method returns {@code true} for both {@code a.startsWith(b)} and
+     * {@code b.startsWith(a)}.
+     *
+     * @param other
+     *          The {@link Path} which might be a prefix of {@code this} path, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@link Path} is a prefix of {@code this} path. {@code false} is returned
+     *          otherwise.
+     */
+    public boolean startsWith(Path other) {
+        Objects.requireNonNull(other, "Path cannot be null!");
+
+        if(this == other) {
+            return true;
+        } else if(this.getLength() < other.getLength()) {
+            return false;
+        }
+
+        for(var otherPathIndex = 0; otherPathIndex < other.nodes.size(); otherPathIndex++) {
+            if(!other.nodes.get(otherPathIndex).equals(nodes.get(otherPathIndex))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      *
      * @return
      *          {@code true}, when the given list of {@link AccessibleFieldGraphNode nodes} are a valid

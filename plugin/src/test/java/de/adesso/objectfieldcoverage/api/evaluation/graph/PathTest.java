@@ -217,4 +217,79 @@ class PathTest {
                 .hasMessage("The given node is not a child node of the current last node!");
     }
 
+    @Test
+    void startsWithReturnsTrueWhenSamePathObject(@Mock AccessibleFieldGraphNode firstNodeMock,
+                                                 @Mock AccessibleFieldGraphNode secondNodeMock) {
+        // given
+        given(firstNodeMock.getChildren()).willReturn(Set.of(secondNodeMock));
+
+        var testSubject = new Path(firstNodeMock, secondNodeMock);
+
+        // when
+        var actualResult = testSubject.startsWith(testSubject);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void startsWithReturnsTrueWhenOtherPathIsSubPath(@Mock AccessibleFieldGraphNode firstNodeMock,
+                                                     @Mock AccessibleFieldGraphNode secondNodeMock) {
+        // given
+        given(firstNodeMock.getChildren()).willReturn(Set.of(secondNodeMock));
+
+        var testSubject = new Path(firstNodeMock, secondNodeMock);
+        var otherPath = new Path(firstNodeMock);
+
+        // when
+        var actualResult = testSubject.startsWith(otherPath);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void startsWithReturnsTrueWhenSamePath(@Mock AccessibleFieldGraphNode firstNodeMock,
+                                           @Mock AccessibleFieldGraphNode secondNodeMock) {
+        // given
+        given(firstNodeMock.getChildren()).willReturn(Set.of(secondNodeMock));
+
+        var testSubject = new Path(firstNodeMock, secondNodeMock);
+        var otherPath = new Path(firstNodeMock, secondNodeMock);
+
+        // when
+        var actualResult = testSubject.startsWith(otherPath);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void startsWithReturnsFalseWhenPathDoesNotStartWithOtherPath(@Mock AccessibleFieldGraphNode nodeMock,
+                                                                 @Mock AccessibleFieldGraphNode otherNodeMock) {
+        // given
+        var testSubject = new Path(nodeMock);
+        var otherPath = new Path(otherNodeMock);
+
+        // when
+        var actualResult = testSubject.startsWith(otherPath);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void startsWithReturnsFalseWhenOtherPathIsLonger(@Mock Path otherPathMock) {
+        // given
+        var testSubject = new Path();
+
+        given(otherPathMock.getLength()).willReturn(1);
+
+        // when
+        var actualResult = testSubject.startsWith(otherPathMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
 }
