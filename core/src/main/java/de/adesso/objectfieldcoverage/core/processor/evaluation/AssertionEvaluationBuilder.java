@@ -1,13 +1,11 @@
 package de.adesso.objectfieldcoverage.core.processor.evaluation;
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
-import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
-import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.Path;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.graph.AccessibleFieldGraphBuilder;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.graph.ComparedInEqualsMethodBiPredicate;
@@ -76,7 +74,6 @@ public class AssertionEvaluationBuilder {
     }
 
     /**
-     *
      *
      * @param assertion
      *          The {@link AbstractAssertion} for which the {@link AssertionEvaluationInformation} should be built,
@@ -152,8 +149,8 @@ public class AssertionEvaluationBuilder {
 
     /**
      * Since {@code usedInEqualsGraph} ({@code B}) <b>must</b> be a subgraph of {@code accessibleFieldGraph} ({@code A}),
-     * a node {@code a} in {@code A} is equal to a node {@code b} in {@code B}, if the contained {@link AccessibleField}s
-     * are equal and the parent nodes are equal.
+     * the paths returned by {@link AccessibleFieldGraph#getTransitiveReachabilityPaths()} of {@code B} must also be
+     * a subset of the paths returned by {@code A}.
      *
      * @param accessibleFieldGraph
      *          The {@link AccessibleFieldGraph} containing all accessible fields, not {@code null}.
@@ -165,7 +162,9 @@ public class AssertionEvaluationBuilder {
      *
      * @return
      *          A set containing all paths which are present in the given {@code accessibleFieldGraph}, but not in
-     *          the given {@code usedInEqualsGraph}. A path is terminated as soon as it contains a loop.
+     *          the given {@code usedInEqualsGraph}.
+     *
+     * @see AccessibleFieldGraph#getTransitiveReachabilityPaths()
      */
     private Set<Path> findPathsOfFieldsNotComparedInEquals(AccessibleFieldGraph accessibleFieldGraph, AccessibleFieldGraph usedInEqualsGraph) {
         if(accessibleFieldGraph.equals(usedInEqualsGraph)) {
@@ -180,24 +179,8 @@ public class AssertionEvaluationBuilder {
     }
 
     /**
-     *
-     * @param nodes
-     *          The nodes to find a node with the given {@code accessibleField} in, not {@code null}.
-     *
-     * @param accessibleField
-     *          The accessible field to find the corresponding node for, not {@code null}.
-     *
-     * @return
-     *          An optional containing a node whose {@link AccessibleFieldGraphNode#getAccessibleField() accessible field}
-     *          is equal to the given {@code accessibleField}. An empty optional is returned otherwise.
-     */
-    private Optional<AccessibleFieldGraphNode> findNodeWithAccessibleField(Set<AccessibleFieldGraphNode> nodes, AccessibleField<?> accessibleField) {
-        return nodes.stream()
-                .filter(node -> node.getAccessibleField().equals(accessibleField))
-                .findFirst();
-    }
-
-    /**
+     * Puts the given {@link AssertionEvaluationInformation} result in the {@link #resultCache} Map overriding
+     * any previous value.
      *
      * @param result
      *          The {@link AssertionEvaluationInformation} which was built by the {@link #buildAndCacheResult(CtTypeReference, CtType)}

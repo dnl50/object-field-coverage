@@ -14,12 +14,7 @@ import java.util.Set;
 public class BooleanTypeAssertion extends PrimitiveTypeAssertion<Boolean> {
 
     public BooleanTypeAssertion(CtExpression<Boolean> assertedExpression) {
-        super(assertedExpression);
-    }
-
-    @Override
-    public PrimitiveType getAssertedPrimitiveType() {
-        return null;
+        super(assertedExpression, PrimitiveType.BOOLEAN);
     }
 
     @Override

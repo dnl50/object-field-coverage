@@ -55,41 +55,6 @@ public class AccessibleFieldGraphBuilder {
     private final Map<CtTypeReference<?>, Set<AccessibleFieldGraphNode>> typeRefToNodesMap;
 
     /**
-     * @param clazzContainingFieldsToAccess
-     *          The {@link CtType} to start the graph building process at, not {@code null}.
-     *
-     * @param fieldFilter
-     *          A function mapping a ({@link AccessibleField}, origin {@link CtType}) pair to a boolean value indicating
-     *          whether the {@link AccessibleField} should be included in the graph, not {@code null}. Useful when a graph
-     *          should be built which conforms to an additional precondition.
-     *
-     * @return
-     *          The resulting {@link AccessibleFieldGraph}.
-     */
-    public AccessibleFieldGraph buildGraph(CtType<?> clazzContainingFieldsToAccess,
-                                           BiPredicate<AccessibleField<?>, CtType<?>> fieldFilter) {
-        Objects.requireNonNull(clazzContainingFieldsToAccess, "The CtType to start the built process at cannot be null!");
-        Objects.requireNonNull(fieldFilter, "The filter function cannot be null!");
-
-        return buildGraphInternal(clazzContainingFieldsToAccess, fieldFilter);
-    }
-
-    /**
-     * Static entrypoint method for building an {@link AccessibleFieldGraph} in which <b>every</b> field is included.
-     *
-     * @param clazzContainingFieldsToAccess
-     *          The {@link CtType} to start the graph building process at, not {@code null}.
-     *
-     * @return
-     *          The resulting {@link AccessibleFieldGraph}.
-     *
-     * @see #buildGraph(CtType, BiPredicate)
-     */
-    public AccessibleFieldGraph buildGraph(CtType<?> clazzContainingFieldsToAccess) {
-        return buildGraph(clazzContainingFieldsToAccess, (field, originType) -> true);
-    }
-
-    /**
      *
      * @param fieldFinders
      *          The {@link AccessibilityAwareFieldFinder}s which are used to build the individual graph nodes with,
@@ -108,6 +73,41 @@ public class AccessibleFieldGraphBuilder {
 
         this.typeToChildNodesMap = new HashMap<>();
         this.typeRefToNodesMap = new HashMap<>();
+    }
+
+    /**
+     * @param typeContainingFieldsToAccess
+     *          The {@link CtType} to start the graph building process at, not {@code null}.
+     *
+     * @param fieldFilter
+     *          A function mapping a ({@link AccessibleField}, origin {@link CtType}) pair to a boolean value indicating
+     *          whether the {@link AccessibleField} should be included in the graph, not {@code null}. Useful when a graph
+     *          should be built which conforms to an additional precondition.
+     *
+     * @return
+     *          The resulting {@link AccessibleFieldGraph}.
+     */
+    public AccessibleFieldGraph buildGraph(CtType<?> typeContainingFieldsToAccess,
+                                           BiPredicate<AccessibleField<?>, CtType<?>> fieldFilter) {
+        Objects.requireNonNull(typeContainingFieldsToAccess, "The CtType to start the built process at cannot be null!");
+        Objects.requireNonNull(fieldFilter, "The filter predicate cannot be null!");
+
+        return buildGraphInternal(typeContainingFieldsToAccess, fieldFilter);
+    }
+
+    /**
+     * Static entrypoint method for building an {@link AccessibleFieldGraph} in which <b>every</b> field is included.
+     *
+     * @param typeContainingFieldsToAccess
+     *          The {@link CtType} to start the graph building process at, not {@code null}.
+     *
+     * @return
+     *          The resulting {@link AccessibleFieldGraph}.
+     *
+     * @see #buildGraph(CtType, BiPredicate)
+     */
+    public AccessibleFieldGraph buildGraph(CtType<?> typeContainingFieldsToAccess) {
+        return buildGraph(typeContainingFieldsToAccess, (field, originType) -> true);
     }
 
     /**

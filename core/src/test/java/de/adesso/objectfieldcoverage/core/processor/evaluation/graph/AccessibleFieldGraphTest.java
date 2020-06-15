@@ -40,6 +40,121 @@ class AccessibleFieldGraphTest {
     }
 
     @Test
+    void getTransitiveReachabilityPathsReturnsNoPathsWhenNoRootNodes(@Mock CtTypeReference<?> typeRefMock) {
+        // given
+        var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock);
+
+        // when
+        var actualPaths = testSubject.getTransitiveReachabilityPaths();
+
+        // then
+        assertThat(actualPaths).isEmpty();
+    }
+
+    @Test
+    void getTransitiveReachabilityPathsReturnsPathsForRootNodesWhenNoChildNodes(@Mock AccessibleFieldGraphNode rootNodeMock,
+                                                                                @Mock AccessibleFieldGraphNode otherRootNodeMock,
+                                                                                @Mock CtTypeReference<?> typeRefMock) {
+        // given
+        var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock, rootNodeMock, otherRootNodeMock);
+
+        given(rootNodeMock.getChildren()).willReturn(Set.of());
+        given(otherRootNodeMock.getChildren()).willReturn(Set.of());
+
+        var expectedPaths = Set.of(
+                new Path(rootNodeMock),
+                new Path(otherRootNodeMock)
+        );
+
+        // when
+        var actualPaths = testSubject.getTransitiveReachabilityPaths();
+
+        // then
+        assertThat(actualPaths).containsExactlyInAnyOrderElementsOf(expectedPaths);
+    }
+
+    @Test
+    void getTransitiveReachabilityPathsReturnsPathsEndingWithSingleCycle(@Mock AccessibleFieldGraphNode rootNodeMock,
+                                                                         @Mock CtTypeReference<?> typeRefMock) {
+        // given
+        var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock, rootNodeMock);
+
+        given(rootNodeMock.getChildren()).willReturn(Set.of(rootNodeMock));
+
+        var expectedPath = new Path(rootNodeMock, rootNodeMock);
+
+        // when
+        var actualPaths = testSubject.getTransitiveReachabilityPaths();
+
+        // then
+        assertThat(actualPaths).containsExactly(expectedPath);
+    }
+
+    @Test
+    void getTransitiveReachabilityPathsReturnsPathsEndingWithSingleCycleOverMultipleNodes(@Mock AccessibleFieldGraphNode rootNodeMock,
+                                                                                          @Mock AccessibleFieldGraphNode otherRootNodeMock,
+                                                                                          @Mock AccessibleFieldGraphNode childNode,
+                                                                                          @Mock CtTypeReference<?> typeRefMock) {
+        // given
+        var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock, rootNodeMock);
+
+        given(rootNodeMock.getChildren()).willReturn(Set.of(childNode));
+        given(childNode.getChildren()).willReturn(Set.of(otherRootNodeMock));
+        given(otherRootNodeMock.getChildren()).willReturn(Set.of(childNode));
+
+        var expectedPath = new Path(rootNodeMock, childNode, otherRootNodeMock, childNode);
+
+        // when
+        var actualPaths = testSubject.getTransitiveReachabilityPaths();
+
+        // then
+        assertThat(actualPaths).containsExactly(expectedPath);
+    }
+
+    @Test
+    void getTransitiveReachabilityPathsReturnsPathForEachChildNode(@Mock AccessibleFieldGraphNode rootNodeMock,
+                                                                   @Mock AccessibleFieldGraphNode childNode,
+                                                                   @Mock AccessibleFieldGraphNode otherChildNode,
+                                                                   @Mock CtTypeReference<?> typeRefMock) {
+        // given
+        var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock, rootNodeMock);
+
+        given(rootNodeMock.getChildren()).willReturn(Set.of(childNode, otherChildNode));
+        given(childNode.getChildren()).willReturn(Set.of());
+        given(otherChildNode.getChildren()).willReturn(Set.of());
+
+        var expectedPaths = Set.of(
+                new Path(rootNodeMock, childNode),
+                new Path(rootNodeMock, otherChildNode)
+        );
+
+        // when
+        var actualPaths = testSubject.getTransitiveReachabilityPaths();
+
+        // then
+        assertThat(actualPaths).containsExactlyInAnyOrderElementsOf(expectedPaths);
+    }
+
+    @Test
+    void getTransitiveReachabilityPathsReturnsPathsEndingWithLeafs(@Mock AccessibleFieldGraphNode rootNodeMock,
+                                                                   @Mock AccessibleFieldGraphNode leafMock,
+                                                                   @Mock CtTypeReference<?> typeRefMock) {
+        // given
+        var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock, rootNodeMock);
+
+        given(rootNodeMock.getChildren()).willReturn(Set.of(leafMock));
+        given(leafMock.getChildren()).willReturn(Set.of());
+
+        var expectedPath = new Path(rootNodeMock, leafMock);
+
+        // when
+        var actualPaths = testSubject.getTransitiveReachabilityPaths();
+
+        // then
+        assertThat(actualPaths).containsExactly(expectedPath);
+    }
+
+    @Test
     void getTransitiveReachabilityPathsReturnsExpectedPaths(@Mock AccessibleFieldGraphNode firstRootNodeMock,
                                                             @Mock AccessibleFieldGraphNode secondRootNodeMock,
                                                             @Mock AccessibleFieldGraphNode childNodeMock,

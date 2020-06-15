@@ -8,6 +8,7 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -29,8 +30,14 @@ public class PrimitiveTypeUtils {
      */
     private static final Set<CtTypeReference<?>> PRIMITIVE_TYPE_REFERENCES;
 
+    /**
+     * A map containing a (wrapper type, primitive type) entry for every primitive type.
+     */
+    private static final Map<CtTypeReference<?>, CtTypeReference<?>> PRIMTIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP;
+
     /*
-     * static initializer block for the PRIMITIVE_TYPE_REFERENCES set.
+     * static initializer block for the PRIMITIVE_TYPE_REFERENCES set, PRIMITIVE_TYPE_TO_WRAPPER_MAP map
+     * and PRIMTIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP map.
      */
     static {
         PRIMITIVE_TYPE_REFERENCES = Set.of(
@@ -42,6 +49,17 @@ public class PrimitiveTypeUtils {
                 TYPE_FACTORY.LONG_PRIMITIVE, TYPE_FACTORY.LONG,
                 TYPE_FACTORY.FLOAT_PRIMITIVE, TYPE_FACTORY.FLOAT,
                 TYPE_FACTORY.DOUBLE_PRIMITIVE, TYPE_FACTORY.DOUBLE
+        );
+
+        PRIMTIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP = Map.of(
+                TYPE_FACTORY.BOOLEAN, TYPE_FACTORY.BOOLEAN_PRIMITIVE,
+                TYPE_FACTORY.CHARACTER, TYPE_FACTORY.CHARACTER_PRIMITIVE,
+                TYPE_FACTORY.BYTE, TYPE_FACTORY.BYTE_PRIMITIVE,
+                TYPE_FACTORY.SHORT, TYPE_FACTORY.SHORT_PRIMITIVE,
+                TYPE_FACTORY.INTEGER, TYPE_FACTORY.INTEGER_PRIMITIVE,
+                TYPE_FACTORY.LONG, TYPE_FACTORY.LONG_PRIMITIVE,
+                TYPE_FACTORY.FLOAT, TYPE_FACTORY.FLOAT_PRIMITIVE,
+                TYPE_FACTORY.DOUBLE, TYPE_FACTORY.DOUBLE_PRIMITIVE
         );
     }
 
@@ -105,6 +123,42 @@ public class PrimitiveTypeUtils {
         }
 
         return new BooleanTypeAssertion((CtExpression<Boolean>) expression);
+    }
+
+    /**
+     *
+     * @param typeReference
+     *          The {@link CtTypeReference} to check.
+     *
+     * @return
+     *          {@code true}, if the given type is either a primitive or a wrapper type of a primitive type,
+     *          {@code false} is returned otherwise.
+     */
+    public static boolean isPrimitiveOrWrapperType(CtTypeReference<?> typeReference) {
+        return PRIMITIVE_TYPE_REFERENCES.contains(typeReference);
+    }
+
+    /**
+     *
+     * @param typeReference
+     *          The {@link CtTypeReference} to get the {@link CtTypeReference} of the corresponding primitive type for.
+     *
+     * @return
+     *          The {@link CtTypeReference} of the primitive type the given {@code type} represents.
+     *
+     * @throws IllegalArgumentException In case the {@link #isPrimitiveOrWrapperType(CtTypeReference)} method returns
+     * {@code false} for the given {@code type}.
+     */
+    public static CtTypeReference<?> getPrimitiveTypeReference(CtTypeReference<?> typeReference) {
+        if(!isPrimitiveOrWrapperType(typeReference)) {
+            throw new IllegalArgumentException("The given type is not a primitive or wrapper type!");
+        }
+
+        if(typeReference.isPrimitive()) {
+            return typeReference;
+        } else {
+            return PRIMTIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP.get(typeReference);
+        }
     }
 
     /**

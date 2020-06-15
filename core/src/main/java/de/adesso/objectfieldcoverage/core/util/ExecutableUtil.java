@@ -214,12 +214,11 @@ public class ExecutableUtil {
         Objects.requireNonNull(underlyingModel, "underlyingModel cannot be null!");
 
         var methodIdentifier = testTargetAnnotation.value();
-        var exceptionExpected = testTargetAnnotation.exceptionExpected();
 
         var targetExecutable = TargetExecutableFinder.findTargetExecutable(methodIdentifier, underlyingModel)
                 .orElseThrow(() -> new TargetMethodNotFoundException(methodIdentifier));
 
-        if(!exceptionExpected && isVoidExecutable(targetExecutable)) {
+        if(isVoidExecutable(targetExecutable)) {
             var exceptionMessage = String.format("The target executable '%s' is a void method, but the exceptionExpected flag is set to false!",
                     methodIdentifier);
 

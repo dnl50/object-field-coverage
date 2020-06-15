@@ -28,6 +28,12 @@ import java.util.stream.Collectors;
 public class ComparedInEqualsMethodBiPredicate implements BiPredicate<AccessibleField<?>, CtType<?>> {
 
     /**
+     * A regex matching the {@code java} package and any sub package. It is assumed that the package name which
+     * this regex matches is a valid package name.
+     */
+    private static final String JAVA_PACKAGE_REGEX = "^java(\\..*)?$";
+
+    /**
      * The {@link EqualsMethodAnalyzer}s which are used to filter out {@link AccessibleField}s which
      * are not compared in the equals method.
     */
@@ -48,12 +54,13 @@ public class ComparedInEqualsMethodBiPredicate implements BiPredicate<Accessible
      * @param originType
      *          The {@link CtType} which was fed as the second argument into the
      *          {@link AccessibilityAwareFieldFinder#findAccessibleFields(CtType, CtType)} method which lead
-     *          to the given {@code accessibleField} to be returned, not {@code null}.
+     *          to the given {@code accessibleField} to be returned, not {@code null}. The given {@code accessibleField}
+     *          must therefore be a member of this type.
      *
      * @return
-     *          {@code true}, if the given {@code accessibleField}'s {@link AccessibleField#getActualField() underlying}
-     *          {@link spoon.reflect.declaration.CtField} is compared in the {@link Object#equals(Object)} method of
-     *          the given {@code originType}. {@code false} is returned otherwise.
+     *          {@code true}, if the given {@code originType} is declared in the {@code java} package or the given
+     *          {@code accessibleField}'s {@link AccessibleField#getActualField() underlying field} is compared in the
+     *          {@link Object#equals(Object)} method of the given {@code originType}. {@code false} is returned otherwise.
      */
     @Override
     public boolean test(AccessibleField<?> accessibleField, CtType<?> originType) {
@@ -64,6 +71,11 @@ public class ComparedInEqualsMethodBiPredicate implements BiPredicate<Accessible
         }
 
         var originClass = (CtClass<?>) originType;
+
+        if(isInJavaPackage(originClass)) {
+            return true;
+        }
+
         var superClassesIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(originClass);
         var aggregatingFieldFinder = new AggregatingAccessibilityAwareFieldFinder(fieldFinders);
         Map<CtType<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes = superClassesIncludingClass.stream()
@@ -73,6 +85,21 @@ public class ComparedInEqualsMethodBiPredicate implements BiPredicate<Accessible
                     .findAccessibleFieldsUsedInEquals(originClass, Set.of(accessibleField), accessibleFieldsInSuperTypes);
 
         return !accessibleFields.isEmpty();
+    }
+
+    /**
+     *
+     * @param type
+     *          The {@link CtType} to check the package of, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the package the given {@code type} is declared in the {@code java} package or any
+     *          sub package. {@code false} is returned otherwise.
+     */
+    private boolean isInJavaPackage(CtType<?> type) {
+        return type.getPackage()
+                .getQualifiedName()
+                .matches(JAVA_PACKAGE_REGEX);
     }
 
 }

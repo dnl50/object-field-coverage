@@ -93,6 +93,10 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         log.info("Finished processing of test method '{}'!", testMethod.getSimpleName());
     }
 
+    private void processTargetMethodInvocation() {
+
+    }
+
     /**
      *
      * @param testMethod

@@ -263,4 +263,199 @@ class PrimitiveTypeUtilsTest {
                 .hasMessage("'%s' is not a primitive type!", givenPrimitiveTypeName);
     }
 
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForBoolean() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.BOOLEAN_PRIMITIVE;
+        var expectedTypeRef = typeFactory.BOOLEAN_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForBooleanWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.BOOLEAN;
+        var expectedTypeRef = typeFactory.BOOLEAN_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForByte() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.BYTE_PRIMITIVE;
+        var expectedTypeRef = typeFactory.BYTE_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForByteWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.BYTE;
+        var expectedTypeRef = typeFactory.BYTE_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForChar() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.CHARACTER_PRIMITIVE;
+        var expectedTypeRef = typeFactory.CHARACTER_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForCharWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.CHARACTER;
+        var expectedTypeRef = typeFactory.CHARACTER_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForShort() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.SHORT_PRIMITIVE;
+        var expectedTypeRef = typeFactory.SHORT_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForShortWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.SHORT;
+        var expectedTypeRef = typeFactory.SHORT_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForInt() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.INTEGER_PRIMITIVE;
+        var expectedTypeRef = typeFactory.INTEGER_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForIntWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.INTEGER;
+        var expectedTypeRef = typeFactory.INTEGER_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForLong() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.LONG_PRIMITIVE;
+        var expectedTypeRef = typeFactory.LONG_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForLongWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.LONG;
+        var expectedTypeRef = typeFactory.LONG_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForFloat() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.FLOAT_PRIMITIVE;
+        var expectedTypeRef = typeFactory.FLOAT_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForFloatWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.FLOAT;
+        var expectedTypeRef = typeFactory.FLOAT_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForDouble() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.DOUBLE_PRIMITIVE;
+        var expectedTypeRef = typeFactory.DOUBLE_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReturnsExpectedTypeRefForDoubleWrapper() {
+        // given
+        var typeFactory = new TypeFactory();
+        var givenTypeRef = typeFactory.DOUBLE;
+        var expectedTypeRef = typeFactory.DOUBLE_PRIMITIVE;
+
+        // when / then
+        assertGetPrimitiveType(givenTypeRef, expectedTypeRef);
+    }
+
+    @Test
+    void getPrimitiveTypeReferenceThrowsExceptionWhenGivenTypeIsNotAPrimitiveType() {
+        // given
+        var givenTypeRef = new TypeFactory().createReference(String.class);
+
+        // when / then
+        assertThatThrownBy(() -> PrimitiveTypeUtils.getPrimitiveTypeReference(givenTypeRef))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The given type is not a primitive or wrapper type!");
+    }
+
+    private void assertGetPrimitiveType(CtTypeReference<?> givenTypeRef, CtTypeReference<?> expectedResult) {
+        // when
+        var actualTypeRef = PrimitiveTypeUtils.getPrimitiveTypeReference(givenTypeRef);
+
+        // then
+        assertThat(actualTypeRef).isEqualTo(expectedResult);
+    }
+
 }
