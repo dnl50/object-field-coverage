@@ -26,13 +26,19 @@ public abstract class PseudoFieldProcessor {
      */
     private final PseudoFieldGenerator pseudoFieldGenerator;
 
-    public Set<CtField<?>> createPseudoFields(CtTypeReference<?> typeRef) {
+    /**
+     *
+     * @param typeRef
+     * @return
+     */
+    public Set<CtField<?>> findOrCreatePseudoFields(CtTypeReference<?> typeRef) {
         if(!containsPseudoFields(typeRef)) {
             throw new IllegalArgumentException(String.format("The given type '%s' does not contain any pseudo fields!",
                     typeRef.getQualifiedName()));
         }
 
-
+        var pseudoClass = findOrCreatePseudoClass(typeRef);
+        fieldNamesAndTypes()
     }
 
     /**
@@ -54,7 +60,7 @@ public abstract class PseudoFieldProcessor {
      * @return
      *          A set containing the (simple name, type reference) pairs for the fields
      */
-    protected abstract Set<Pair<String, CtTypeReference<?>>> fieldNameAndTypes(CtTypeReference<?> typeRef);
+    protected abstract Set<Pair<String, CtTypeReference<?>>> fieldNamesAndTypes(CtTypeReference<?> typeRef);
 
     /**
      *
@@ -69,19 +75,26 @@ public abstract class PseudoFieldProcessor {
     /**
      *
      * @param typeRef
-     *          The {@link CtTypeReference} to get the pseudo class for, not {@code null}.
+     *          The {@link CtTypeReference} of the type the pseudo fields should be generated for, not {@code null}.
      *
-     * @param packageQualifiedName
-     *          The qualified name of the package the pseudo class should be declared in, not null. An empty
-     *          String indicates the default package.
+     * @return
+     *          The qualified name of the package the pseudo class is part of.
+     */
+    protected abstract String getPackageQualifiedName(CtTypeReference<?> typeRef);
+
+    /**
+     *
+     * @param typeRef
+     *          The {@link CtTypeReference} to get the pseudo class for, not {@code null}.
      *
      * @return
      *          An existing class with the same qualified name in case it exists or a newly
      *          {@link PseudoClassGenerator#generatePseudoClass(Factory, String, String) generated} {@link CtClass}
      *          when no such class is present.
      */
-    protected CtClass<?> findOrCreatePseudoClass(CtTypeReference<?> typeRef, String packageQualifiedName) {
+    protected CtClass<?> findOrCreatePseudoClass(CtTypeReference<?> typeRef) {
         var pseudoClassPrefix = getPseudoClassPrefix(typeRef);
+        var packageQualifiedName = getPackageQualifiedName(typeRef);
         var pseudoClassQualifiedName = String.format("%s.%s%s", packageQualifiedName, pseudoClassPrefix,
                 PseudoClassGenerator.PSEUDO_CLASS_SUFFIX);
         var classesWithQualifiedName = typeRef.getFactory().getModel().
@@ -94,19 +107,53 @@ public abstract class PseudoFieldProcessor {
         }
     }
 
-    protected <T> CtField<T> createField(CtClass<?> pseudoClass, String simpleName, CtTypeReference<T> fieldTypeRef) {
+    /**
+     *
+     * @param pseudoClass
+     *          The {@link CtClass} the pseudo field should be generated on, not {@code null}.
+     *
+     * @param fieldName
+     *          The simple name of the field to generate, not blank.
+     *
+     * @param fieldTypeRef
+     *          The type of the field, not {@code null}.
+     *
+     * @param <T>
+     *          The type of the field.
+     *
+     * @return
+     *          A field with the same {@code fieldName} and type in case it is already present on the given
+     *          {@code pseudoClass} or a generated
+     *
+     * @throws IllegalStateException
+     *          When a field with the same {@code fieldName} exists but the type of the field differs from the
+     *          given {@code fieldTypeRef}.
+     */
+    @SuppressWarnings("unchecked")
+    protected <T> CtField<T> createField(CtClass<?> pseudoClass, String fieldName, CtTypeReference<T> fieldTypeRef) {
         var pseudoFieldOptional = pseudoClass.getAllFields().stream()
-                .filter(field -> simpleName.equals(field.getSimpleName()))
+                .filter(field -> fieldName.equals(field.getSimpleName()))
                 .findFirst();
 
         if(pseudoFieldOptional.isPresent()) {
             var existingPseudoField = pseudoFieldOptional.get();
 
             if(!fieldTypeRef.equals(existingPseudoField.getType())) {
-                log.warn("");
+                var exceptionMessage = String.format("Pseudo field '%s' exists but has different type " +
+                        "(expected: '%s', actual: '%s')!", fieldName, existingPseudoField.getType().getQualifiedName(),
+                        fieldTypeRef.getQualifiedName());
+
+                log.error(exceptionMessage);
+
+                throw new IllegalStateException(exceptionMessage);
             }
 
-            log.info("Pseudo field");
+            log.debug("Pseudo field '{}' already exists!", fieldName);
+
+            return (CtField<T>) pseudoFieldOptional.get();
+        } else {
+            log.debug("Pseudo field '{}' does not exist and needs to be generated!", fieldName);
+            return pseudoFieldGenerator.generatePseudoField(pseudoClass, fieldTypeRef, fieldName);
         }
     }
 
@@ -120,7 +167,7 @@ public abstract class PseudoFieldProcessor {
          */
         private final String qualifiedName;
 
-        public QualifiedNameClassTypeFilter(String qualifiedName) {
+        QualifiedNameClassTypeFilter(String qualifiedName) {
             super(CtClass.class);
 
             this.qualifiedName = qualifiedName;

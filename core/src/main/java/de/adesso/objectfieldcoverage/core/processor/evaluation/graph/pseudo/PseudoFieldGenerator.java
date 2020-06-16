@@ -21,9 +21,12 @@ public interface PseudoFieldGenerator {
      * @param fieldName
      *          The simple name of the field, not {@code blank}.
      *
+     * @param <T>
+     *          The type of the field to generate.
+     *
      * @return
      *          The generated {@link CtField}.
      */
-    CtField<?> generatePseudoField(CtClass<?> pseudoClass, CtTypeReference<?> fieldTypeRef, String fieldName);
+    <T> CtField<T> generatePseudoField(CtClass<?> pseudoClass, CtTypeReference<T> fieldTypeRef, String fieldName);
 
 }

@@ -24,7 +24,7 @@ public class PrimitiveTypePseudoFieldProcessor implements PseudoFieldProcessor {
     }
 
     @Override
-    public Set<CtField<?>> createPseudoFields(CtTypeReference<?> typeRef) {
+    public Set<CtField<?>> findOrCreatePseudoFields(CtTypeReference<?> typeRef) {
 
     }
 
