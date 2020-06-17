@@ -2,13 +2,17 @@ package de.adesso.objectfieldcoverage.core.finder.lombok;
 
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
+import de.adesso.objectfieldcoverage.core.finder.lombok.generator.LombokGetterMethodGenerator;
+import de.adesso.objectfieldcoverage.core.finder.lombok.generator.LombokGetterMethodGeneratorImpl;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -174,6 +178,19 @@ public class LombokAccessibilityAwareFieldFinder extends AccessibilityAwareField
         }
 
         return AccessLevel.PUBLIC;
+    }
+
+    /**
+     *
+     * @param accessingTypeTypeRefPair
+     *          A pair containing the accessing type and the field declaring type, not {@code null}.
+     *
+     * @return
+     *          {@code true}, since a type can make a field accessible through several options.
+     */
+    @Override
+    public boolean callNext(Pair<CtType<?>, CtTypeReference<?>> accessingTypeTypeRefPair) {
+        return true;
     }
 
 }

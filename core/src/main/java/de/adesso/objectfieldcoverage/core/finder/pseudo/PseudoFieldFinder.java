@@ -1,20 +1,30 @@
-package de.adesso.objectfieldcoverage.core.processor.evaluation.graph.pseudo;
+package de.adesso.objectfieldcoverage.core.finder.pseudo;
 
+import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import spoon.javadoc.internal.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
-import spoon.reflect.factory.Factory;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.factory.ClassFactory;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-//TODO: JavaDoc
+/**
+ * Abstract {@link AccessibilityAwareFieldFinder} implementation for finding pseudo fields in a given
+ * type reference.
+ */
 @Slf4j
 @RequiredArgsConstructor
-public abstract class PseudoFieldProcessor {
+public abstract class PseudoFieldFinder extends AccessibilityAwareFieldFinder {
 
     /**
      * Interface abstraction for generating pseudo {@link CtClass}es.
@@ -25,21 +35,6 @@ public abstract class PseudoFieldProcessor {
      * Interface abstraction for generating pseudo {@link CtField}s.
      */
     private final PseudoFieldGenerator pseudoFieldGenerator;
-
-    /**
-     *
-     * @param typeRef
-     * @return
-     */
-    public Set<CtField<?>> findOrCreatePseudoFields(CtTypeReference<?> typeRef) {
-        if(!containsPseudoFields(typeRef)) {
-            throw new IllegalArgumentException(String.format("The given type '%s' does not contain any pseudo fields!",
-                    typeRef.getQualifiedName()));
-        }
-
-        var pseudoClass = findOrCreatePseudoClass(typeRef);
-        fieldNamesAndTypes()
-    }
 
     /**
      *
@@ -58,7 +53,8 @@ public abstract class PseudoFieldProcessor {
      *          not {@code null}.
      *
      * @return
-     *          A set containing the (simple name, type reference) pairs for the fields
+     *          A set containing the (simple name, type reference) pairs of the pseudo fields which are
+     *          generated. The type reference <b>must</b> be a type reference of a primitive type!
      */
     protected abstract Set<Pair<String, CtTypeReference<?>>> fieldNamesAndTypes(CtTypeReference<?> typeRef);
 
@@ -82,6 +78,108 @@ public abstract class PseudoFieldProcessor {
      */
     protected abstract String getPackageQualifiedName(CtTypeReference<?> typeRef);
 
+    @Override
+    protected Set<CtField<?>> findFieldsInType(CtTypeReference<?> typeRef) {
+        if(containsPseudoFields(typeRef)) {
+            return findOrCreatePseudoFields(typeRef);
+        }
+
+        return Set.of();
+    }
+
+    /**
+     *
+     * @param accessingType
+     *          The type whose methods could potentially access the given {@code field},
+     *          not {@code null}.
+     *
+     * @param field
+     *          The field to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the field is accessible according to the normal Java access rules. {@code false}
+     *          is returned otherwise.
+     */
+    @Override
+    public boolean isFieldAccessible(CtType<?> accessingType, CtField<?> field) {
+        return isAccessibleAccordingToJls(accessingType, field);
+    }
+
+    /**
+     *
+     * @param field
+     *          The {@link CtField field} to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, since implementations of this abstract class only return pseudo fields.
+     */
+    @Override
+    protected boolean isPseudoField(CtField<?> field) {
+        return true;
+    }
+
+    /**
+     *
+     * @param accessingType
+     *          The type whose methods can access the given {@code field}, not {@code null}. The
+     *          {@link #isFieldAccessible(CtType, CtField)} method <b>must</b> return {@code true} when being invoked
+     *          with the given {@code accessingType} and {@code field}.
+     *
+     * @param field
+     *          The field which can be accessed by inside the given {@code accessingType}, not {@code null}. The
+     *          {@link #isFieldAccessible(CtType, CtField)} method <b>must</b> return {@code true} when being invoked
+     *          with the given {@code accessingType} and {@code field}.
+     *
+     * @param <T>
+     *          The type of the field.
+     *
+     * @return
+     *          An empty set since pseudo fields aren't actually present on the accessed type.
+     */
+    @Override
+    public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
+        return Set.of();
+    }
+
+    /**
+     *
+     * @param accessingTypeTypeRefPair
+     *          A pair containing the accessing type and the field declaring type, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given type reference does not contain any pseudo fields. {@code false}
+     *          is returned otherwise.
+     */
+    @Override
+    public boolean callNext(Pair<CtType<?>, CtTypeReference<?>> accessingTypeTypeRefPair) {
+        return !containsPseudoFields(accessingTypeTypeRefPair.getRight());
+    }
+
+    /**
+     *
+     * @param typeRef
+     *          The type reference of the type to create pseudo fields for, not {@code null}.
+     *
+     * @return
+     *          A set containing the generated {@code public} pseudo fields. The fields are declared in a separate
+     *          {@code public} pseudo class.
+     *
+     * @throws IllegalStateException
+     *          When the {@link #containsPseudoFields(CtTypeReference)} method returns {@code false} for the given
+     *          {@code typeRef}.
+     */
+    private Set<CtField<?>> findOrCreatePseudoFields(CtTypeReference<?> typeRef) {
+        if(!containsPseudoFields(typeRef)) {
+            throw new IllegalStateException(String.format("The given type '%s' does not contain any pseudo fields!",
+                    typeRef.getQualifiedName()));
+        }
+
+        var pseudoClass = findOrCreatePseudoClass(typeRef);
+        return fieldNamesAndTypes(typeRef).stream()
+                .map(nameAndTypePair -> this.findOrCreateField(pseudoClass, nameAndTypePair.getLeft(), nameAndTypePair.getRight()))
+                .collect(Collectors.toSet());
+    }
+
     /**
      *
      * @param typeRef
@@ -89,10 +187,10 @@ public abstract class PseudoFieldProcessor {
      *
      * @return
      *          An existing class with the same qualified name in case it exists or a newly
-     *          {@link PseudoClassGenerator#generatePseudoClass(Factory, String, String) generated} {@link CtClass}
+     *          {@link PseudoClassGenerator#generatePseudoClass(ClassFactory, String, String)}  generated} {@link CtClass}
      *          when no such class is present.
      */
-    protected CtClass<?> findOrCreatePseudoClass(CtTypeReference<?> typeRef) {
+    private CtClass<?> findOrCreatePseudoClass(CtTypeReference<?> typeRef) {
         var pseudoClassPrefix = getPseudoClassPrefix(typeRef);
         var packageQualifiedName = getPackageQualifiedName(typeRef);
         var pseudoClassQualifiedName = String.format("%s.%s%s", packageQualifiedName, pseudoClassPrefix,
@@ -101,7 +199,7 @@ public abstract class PseudoFieldProcessor {
                 getElements(new QualifiedNameClassTypeFilter(pseudoClassQualifiedName));
 
         if(classesWithQualifiedName.isEmpty()) {
-            return pseudoClassGenerator.generatePseudoClass(typeRef.getFactory(), pseudoClassPrefix, packageQualifiedName);
+            return pseudoClassGenerator.generatePseudoClass(typeRef.getFactory().Class(), pseudoClassPrefix, packageQualifiedName);
         } else {
             return classesWithQualifiedName.get(0);
         }
@@ -130,7 +228,7 @@ public abstract class PseudoFieldProcessor {
      *          given {@code fieldTypeRef}.
      */
     @SuppressWarnings("unchecked")
-    protected <T> CtField<T> createField(CtClass<?> pseudoClass, String fieldName, CtTypeReference<T> fieldTypeRef) {
+    private <T> CtField<T> findOrCreateField(CtClass<?> pseudoClass, String fieldName, CtTypeReference<T> fieldTypeRef) {
         var pseudoFieldOptional = pseudoClass.getAllFields().stream()
                 .filter(field -> fieldName.equals(field.getSimpleName()))
                 .findFirst();
@@ -153,7 +251,8 @@ public abstract class PseudoFieldProcessor {
             return (CtField<T>) pseudoFieldOptional.get();
         } else {
             log.debug("Pseudo field '{}' does not exist and needs to be generated!", fieldName);
-            return pseudoFieldGenerator.generatePseudoField(pseudoClass, fieldTypeRef, fieldName);
+            var fieldFactory = pseudoClass.getFactory().Field();
+            return pseudoFieldGenerator.generatePseudoField(fieldFactory, pseudoClass, fieldTypeRef, fieldName);
         }
     }
 

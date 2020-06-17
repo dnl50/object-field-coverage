@@ -10,19 +10,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtPackage;
-import spoon.reflect.declaration.CtType;
-import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.reference.CtPackageReference;
+import spoon.reflect.reference.CtTypeReference;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class ComparedInEqualsMethodBiPredicateTest {
@@ -42,16 +37,17 @@ class ComparedInEqualsMethodBiPredicateTest {
 
     @Test
     void testReturnsTrueWhenGivenTypeIsDeclaredInJavaPackage(@Mock AccessibleField<Character[]> accessibleFieldMock,
-                                                             @Mock CtPackage packageMock,
-                                                             @Mock CtClass<String> classMock) {
+                                                             @Mock CtPackageReference packageRefMock,
+                                                             @Mock CtTypeReference<String> classRefMock) {
         // given
         var packageQualifiedName = "java";
 
-        given(classMock.getPackage()).willReturn(packageMock);
-        given(packageMock.getQualifiedName()).willReturn(packageQualifiedName);
+        given(classRefMock.isClass()).willReturn(true);
+        given(classRefMock.getPackage()).willReturn(packageRefMock);
+        given(packageRefMock.getQualifiedName()).willReturn(packageQualifiedName);
 
         // when
-        var actualResult = testSubject.test(accessibleFieldMock, classMock);
+        var actualResult = testSubject.test(accessibleFieldMock, classRefMock);
 
         // then
         assertThat(actualResult).isTrue();
@@ -59,16 +55,17 @@ class ComparedInEqualsMethodBiPredicateTest {
 
     @Test
     void testReturnsTrueWhenGivenTypeIsDeclaredInJavaSubPackage(@Mock AccessibleField<Character[]> accessibleFieldMock,
-                                                                @Mock CtPackage packageMock,
-                                                                @Mock CtClass<String> classMock) {
+                                                                @Mock CtPackageReference packageRefMock,
+                                                                @Mock CtTypeReference<String> classRefMock) {
         // given
         var packageQualifiedName = "java.lang";
 
-        given(classMock.getPackage()).willReturn(packageMock);
-        given(packageMock.getQualifiedName()).willReturn(packageQualifiedName);
+        given(classRefMock.isClass()).willReturn(true);
+        given(classRefMock.getPackage()).willReturn(packageRefMock);
+        given(packageRefMock.getQualifiedName()).willReturn(packageQualifiedName);
 
         // when
-        var actualResult = testSubject.test(accessibleFieldMock, classMock);
+        var actualResult = testSubject.test(accessibleFieldMock, classRefMock);
 
         // then
         assertThat(actualResult).isTrue();
@@ -76,19 +73,21 @@ class ComparedInEqualsMethodBiPredicateTest {
 
     @Test
     void testReturnsTrueWhenGivenFieldIsComparedInEqualsMethod(@Mock CtField<Character[]> fieldMock,
-                                                               @Mock CtPackage packageMock,
+                                                               @Mock CtPackageReference packageRefMock,
+                                                               @Mock CtTypeReference<String> classRefMock,
                                                                @Mock CtClass<String> classMock) {
         // given
         var packageQualifiedName = "java2";
         var accessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
-        given(classMock.getPackage()).willReturn(packageMock);
-        given(packageMock.getQualifiedName()).willReturn(packageQualifiedName);
+        given(classRefMock.isClass()).willReturn(true);
+        given(classRefMock.getPackage()).willReturn(packageRefMock);
+        given(packageRefMock.getQualifiedName()).willReturn(packageQualifiedName);
 
-        setUpTypeMockToReturnFields(classMock, Set.of(fieldMock));
+        given(classRefMock.getTypeDeclaration()).willReturn(classMock);
+        given(classMock.getReference()).willReturn(classRefMock);
 
-        given(fieldFinderMock.isFieldAccessible(classMock, fieldMock)).willReturn(true);
-        given(fieldFinderMock.findAccessGrantingElements(classMock, fieldMock)).willReturn(Set.of(fieldMock));
+        given(fieldFinderMock.findAccessibleFields(classMock, classRefMock)).willReturn(List.of(accessibleField));
 
         given(equalsMethodAnalyzerMock.overridesEquals(classMock)).willReturn(true);
         given(equalsMethodAnalyzerMock.callsSuper(classMock)).willReturn(false);
@@ -96,7 +95,7 @@ class ComparedInEqualsMethodBiPredicateTest {
                 .willReturn(Set.of(accessibleField));
 
         // when
-        var actualResult = testSubject.test(accessibleField, classMock);
+        var actualResult = testSubject.test(accessibleField, classRefMock);
 
         // then
         assertThat(actualResult).isTrue();
@@ -104,19 +103,21 @@ class ComparedInEqualsMethodBiPredicateTest {
 
     @Test
     void testReturnsFalseWhenGivenFieldIsNotComparedInEqualsMethod(@Mock CtField<Character[]> fieldMock,
-                                                                   @Mock CtPackage packageMock,
+                                                                   @Mock CtPackageReference packageRefMock,
+                                                                   @Mock CtTypeReference<String> classRefMock,
                                                                    @Mock CtClass<String> classMock) {
         // given
         var packageQualifiedName = "java2";
         var accessibleField = new AccessibleField<>(fieldMock, fieldMock);
 
-        given(classMock.getPackage()).willReturn(packageMock);
-        given(packageMock.getQualifiedName()).willReturn(packageQualifiedName);
+        given(classRefMock.getTypeDeclaration()).willReturn(classMock);
 
-        setUpTypeMockToReturnFields(classMock, Set.of(fieldMock));
+        given(classRefMock.isClass()).willReturn(true);
+        given(classRefMock.getPackage()).willReturn(packageRefMock);
+        given(packageRefMock.getQualifiedName()).willReturn(packageQualifiedName);
+        given(classMock.getReference()).willReturn(classRefMock);
 
-        given(fieldFinderMock.isFieldAccessible(classMock, fieldMock)).willReturn(true);
-        given(fieldFinderMock.findAccessGrantingElements(classMock, fieldMock)).willReturn(Set.of(fieldMock));
+        given(fieldFinderMock.findAccessibleFields(classMock, classRefMock)).willReturn(List.of(accessibleField));
 
         given(equalsMethodAnalyzerMock.overridesEquals(classMock)).willReturn(true);
         given(equalsMethodAnalyzerMock.callsSuper(classMock)).willReturn(false);
@@ -124,7 +125,7 @@ class ComparedInEqualsMethodBiPredicateTest {
                 .willReturn(Set.of());
 
         // when
-        var actualResult = testSubject.test(accessibleField, classMock);
+        var actualResult = testSubject.test(accessibleField, classRefMock);
 
         // then
         assertThat(actualResult).isFalse();
@@ -132,27 +133,14 @@ class ComparedInEqualsMethodBiPredicateTest {
 
     @Test
     void testReturnsFalseWhenGivenTypeIsNotAClass(@Mock AccessibleField<Character[]> accessibleFieldMock,
-                                                  @Mock CtType<String> typeMock) {
+                                                  @Mock CtTypeReference<String> typeRefMock) {
         // given
 
         // when
-        var actualResult = testSubject.test(accessibleFieldMock, typeMock);
+        var actualResult = testSubject.test(accessibleFieldMock, typeRefMock);
 
         // then
         assertThat(actualResult).isFalse();
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private void setUpTypeMockToReturnFields(CtType typeMock, Collection<CtField> fields) {
-        var fieldReferences = fields.stream()
-                .map(field -> {
-                    var fieldReferenceMock = (CtFieldReference<?>) mock(CtFieldReference.class);
-                    given(fieldReferenceMock.getFieldDeclaration()).willReturn(field);
-                    return fieldReferenceMock;
-                })
-                .collect(Collectors.toList());
-
-        doReturn(fieldReferences).when(typeMock).getAllFields();
     }
 
 }

@@ -219,7 +219,7 @@ public class ExecutableUtil {
                 .orElseThrow(() -> new TargetMethodNotFoundException(methodIdentifier));
 
         if(isVoidExecutable(targetExecutable)) {
-            var exceptionMessage = String.format("The target executable '%s' is a void method, but the exceptionExpected flag is set to false!",
+            var exceptionMessage = String.format("The target executable '%s' is a void method!",
                     methodIdentifier);
 
             log.error(exceptionMessage);

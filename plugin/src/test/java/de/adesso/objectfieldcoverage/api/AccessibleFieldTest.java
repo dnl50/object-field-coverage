@@ -25,10 +25,10 @@ class AccessibleFieldTest {
     @SuppressWarnings({"rawtypes", "unchecked"})
     void uniteReturnsExpectedInstance(@Mock CtField fieldMock, @Mock CtMethod firstMethodMock, @Mock CtMethod secondMethodMock) {
         // given
-        var testSubject = new AccessibleField<>(fieldMock, firstMethodMock);
-        var other = new AccessibleField<>(fieldMock, secondMethodMock);
+        var testSubject = new AccessibleField<>(fieldMock, firstMethodMock, true);
+        var other = new AccessibleField<>(fieldMock, secondMethodMock, true);
 
-        var expectedAccessibleField = new AccessibleField<>(fieldMock, Set.of(firstMethodMock, secondMethodMock));
+        var expectedAccessibleField = new AccessibleField<>(fieldMock, Set.of(firstMethodMock, secondMethodMock), true);
 
         // when
         var actualAccessibleField = testSubject.unite(other);
@@ -48,6 +48,19 @@ class AccessibleFieldTest {
         assertThatThrownBy(() -> testSubject.unite(other))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("The actual fields are not equal!");
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void uniteThrowsExceptionWhenPseudoFlagsNotEqual(@Mock CtField fieldMock, @Mock CtField otherFieldMock) {
+        // given
+        var testSubject = new AccessibleField<>(fieldMock, Set.of(), true);
+        var other = new AccessibleField<>(otherFieldMock, Set.of(), false);
+
+        // when / then
+        assertThatThrownBy(() -> testSubject.unite(other))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The pseudo flag of the other AccessibleField instance is the same!");
     }
 
     @Test
@@ -215,8 +228,8 @@ class AccessibleFieldTest {
         var thirdGivenAccessibleField = new AccessibleField<>(secondFieldMock, secondFieldMock);
         var fourthGivenAccessibleField = new AccessibleField<>(secondFieldMock, secondFieldAccessGrantingElementMock);
 
-        var firstExpectedAccessibleField = new AccessibleField<>(firstFieldMock, Set.of(firstFieldMock, firstFieldAccessGrantingElementMock));
-        var secondExpectedAccessibleField = new AccessibleField<>(secondFieldMock, Set.of(secondFieldMock, secondFieldAccessGrantingElementMock));
+        var firstExpectedAccessibleField = new AccessibleField<>(firstFieldMock, Set.of(firstFieldMock, firstFieldAccessGrantingElementMock), false);
+        var secondExpectedAccessibleField = new AccessibleField<>(secondFieldMock, Set.of(secondFieldMock, secondFieldAccessGrantingElementMock), false);
 
         // when
         var actualResult = AccessibleField.uniteAll(Set.<AccessibleField<?>>of(firstGivenAccessibleField, secondGivenAccessibleField,
@@ -224,6 +237,19 @@ class AccessibleFieldTest {
 
         // then
         assertThat(actualResult).containsExactlyInAnyOrder(firstExpectedAccessibleField, secondExpectedAccessibleField);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void uniteAllThrowsExceptionWhenPseudoFlagNotConsistent(@Mock CtField fieldMock) {
+        // given
+        var accessibleField = new AccessibleField<>(fieldMock, fieldMock);
+        var otherAccessibleField = new AccessibleField<>(fieldMock, fieldMock, true);
+
+        // when / then
+        assertThatThrownBy(() -> AccessibleField.uniteAll(Set.<AccessibleField<?>>of(accessibleField, otherAccessibleField)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The pseudo flag of the other AccessibleField instance is the same!");
     }
 
 }

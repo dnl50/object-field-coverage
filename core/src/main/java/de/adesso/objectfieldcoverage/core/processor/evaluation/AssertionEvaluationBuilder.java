@@ -122,12 +122,10 @@ public class AssertionEvaluationBuilder {
             var emptyGraph = AccessibleFieldGraph.empty(primitiveType, accessingType.getReference());
             result = new AssertionEvaluationInformation(assertedTypeRef, emptyGraph, emptyGraph, Set.of());
         } else {
-            var assertedType = assertedTypeRef.getTypeDeclaration();
-
             var graphBuilder = graphBuilderSupplier.apply(fieldFinders, accessingType);
 
-            var accessibleFieldGraph = graphBuilder.buildGraph(assertedType);
-            var accessibleFieldsUsedInEqualsGraph = graphBuilder.buildGraph(assertedType,
+            var accessibleFieldGraph = graphBuilder.buildGraph(assertedTypeRef);
+            var accessibleFieldsUsedInEqualsGraph = graphBuilder.buildGraph(assertedTypeRef,
                     new ComparedInEqualsMethodBiPredicate(equalsMethodAnalyzers, fieldFinders));
             var pathsOfFieldsNotComparedInEquals = findPathsOfFieldsNotComparedInEquals(accessibleFieldGraph,
                     accessibleFieldsUsedInEqualsGraph);

@@ -4,12 +4,13 @@ import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.core.analyzer.IterativeEqualsMethodAnalyzer;
-import de.adesso.objectfieldcoverage.core.finder.AggregatingAccessibilityAwareFieldFinder;
+import de.adesso.objectfieldcoverage.core.finder.AccessibilityAwareFieldFinderChain;
 import de.adesso.objectfieldcoverage.core.util.TypeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class ComparedInEqualsMethodBiPredicate implements BiPredicate<AccessibleField<?>, CtType<?>> {
+public class ComparedInEqualsMethodBiPredicate implements BiPredicate<AccessibleField<?>, CtTypeReference<?>> {
 
     /**
      * A regex matching the {@code java} package and any sub package. It is assumed that the package name which
@@ -51,53 +52,51 @@ public class ComparedInEqualsMethodBiPredicate implements BiPredicate<Accessible
      * @param accessibleField
      *          The {@link AccessibleField} instance to test, not {@code null}.
      *
-     * @param originType
-     *          The {@link CtType} which was fed as the second argument into the
-     *          {@link AccessibilityAwareFieldFinder#findAccessibleFields(CtType, CtType)} method which lead
+     * @param originTypeRef
+     *          The {@link CtTypeReference} which was fed as the second argument into the
+     *          {@link AccessibilityAwareFieldFinder#findAccessibleFields(CtType, CtTypeReference)} method which lead
      *          to the given {@code accessibleField} to be returned, not {@code null}. The given {@code accessibleField}
      *          must therefore be a member of this type.
      *
      * @return
-     *          {@code true}, if the given {@code originType} is declared in the {@code java} package or the given
+     *          {@code true}, if the given {@code originTypeRef} is declared in the {@code java} package or the given
      *          {@code accessibleField}'s {@link AccessibleField#getActualField() underlying field} is compared in the
-     *          {@link Object#equals(Object)} method of the given {@code originType}. {@code false} is returned otherwise.
+     *          {@link Object#equals(Object)} method of the given {@code originTypeRef}. {@code false} is returned otherwise.
      */
     @Override
-    public boolean test(AccessibleField<?> accessibleField, CtType<?> originType) {
-        if(!(originType instanceof CtClass)) {
+    public boolean test(AccessibleField<?> accessibleField, CtTypeReference<?> originTypeRef) {
+        if(!(originTypeRef.isClass())) {
             log.warn("CtType '{}', from which the accessible field '{}' originates from, is not CtClass!",
-                    originType.getQualifiedName(), accessibleField);
+                    originTypeRef.getQualifiedName(), accessibleField);
             return false;
         }
 
-        var originClass = (CtClass<?>) originType;
-
-        if(isInJavaPackage(originClass)) {
+        if(isInJavaPackage(originTypeRef)) {
             return true;
         }
 
-        var superClassesIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(originClass);
-        var aggregatingFieldFinder = new AggregatingAccessibilityAwareFieldFinder(fieldFinders);
-        Map<CtType<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes = superClassesIncludingClass.stream()
-                .collect(Collectors.toMap(Function.identity(), t -> Set.copyOf(aggregatingFieldFinder.findAccessibleFields(t, t))));
+        var superClassesIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(originTypeRef);
+        var aggregatingFieldFinderChain = new AccessibilityAwareFieldFinderChain(fieldFinders);
+        Map<CtTypeReference<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes = superClassesIncludingClass.stream()
+                .collect(Collectors.toMap(Function.identity(), c -> Set.copyOf(aggregatingFieldFinderChain.findAccessibleFields(c.getTypeDeclaration(), c))));
 
         var accessibleFields = new IterativeEqualsMethodAnalyzer(equalsMethodAnalyzers)
-                    .findAccessibleFieldsUsedInEquals(originClass, Set.of(accessibleField), accessibleFieldsInSuperTypes);
+                    .findAccessibleFieldsUsedInEquals(originTypeRef, Set.of(accessibleField), accessibleFieldsInSuperTypes);
 
         return !accessibleFields.isEmpty();
     }
 
     /**
      *
-     * @param type
-     *          The {@link CtType} to check the package of, not {@code null}.
+     * @param typeRef
+     *          The {@link CtTypeReference} to check the package of, not {@code null}.
      *
      * @return
-     *          {@code true}, if the package the given {@code type} is declared in the {@code java} package or any
+     *          {@code true}, if the package the given {@code typeRef} is declared in the {@code java} package or any
      *          sub package. {@code false} is returned otherwise.
      */
-    private boolean isInJavaPackage(CtType<?> type) {
-        return type.getPackage()
+    private boolean isInJavaPackage(CtTypeReference<?> typeRef) {
+        return typeRef.getPackage()
                 .getQualifiedName()
                 .matches(JAVA_PACKAGE_REGEX);
     }

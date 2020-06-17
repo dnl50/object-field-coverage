@@ -60,7 +60,9 @@ public class AccessibleFieldGraph implements Iterable<AccessibleFieldGraphNode> 
      * Lazily initialized field containing the result of the {@link #getTransitiveReachabilityPaths()}
      * method.
      */
+    @ToString.Exclude
     @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private Set<Path> transitiveReachabilityPaths;
 
     /**

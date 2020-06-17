@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.core.finder.lombok;
+package de.adesso.objectfieldcoverage.core.finder.lombok.generator;
 
 import lombok.AccessLevel;
 import lombok.extern.slf4j.Slf4j;

@@ -33,7 +33,7 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
         );
 
         // when
-        var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass);
+        var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass.getReference());
 
         // then
         var accessibleCtFields = accessibleFields.stream()
@@ -65,7 +65,7 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
         );
 
                // when
-        var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass);
+        var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass.getReference());
 
         // then
         var accessibleCtFields = accessibleFields.stream()
@@ -95,7 +95,7 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
         );
 
         // when
-        var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass);
+        var accessibleFields = testSubject.findAccessibleFields(boxClass, boxClass.getReference());
 
         // then
         var accessibleCtFields = accessibleFields.stream()
@@ -125,7 +125,7 @@ class LombokAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoonIn
         );
 
         // when
-        var accessibleFields = testSubject.findAccessibleFields(testClass, boxClass);
+        var accessibleFields = testSubject.findAccessibleFields(testClass, boxClass.getReference());
 
         // then
         var accessibleCtFields = accessibleFields.stream()

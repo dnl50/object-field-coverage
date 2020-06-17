@@ -1,10 +1,12 @@
 package de.adesso.objectfieldcoverage.api;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.CtTypedElement;
-import spoon.reflect.reference.CtFieldReference;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,13 +14,16 @@ import java.util.stream.Collectors;
 /**
  * An abstract class used to find <i>accessible</i> fields of a given type. The meaning of <i>accessible</i>
  * depends on the implementation.
+ * <br/>
+ * Implements the {@link Chainable} interface since multiple implementations might be used one after another.
  */
-public abstract class AccessibilityAwareFieldFinder {
+@Slf4j
+public abstract class AccessibilityAwareFieldFinder implements Chainable<Pair<CtType<?>, CtTypeReference<?>>> {
 
     /**
      *
      * @param accessingType
-     *          The class whose methods could potentially access the given {@code field},
+     *          The type whose methods could potentially access the given {@code field},
      *          not {@code null}.
      *
      * @param field
@@ -42,7 +47,7 @@ public abstract class AccessibilityAwareFieldFinder {
      * and {@link CtField} for which the {@link #isFieldAccessible(CtType, CtField)} method returns false.
      *
      * @param accessingType
-     *          The class whose methods can access the given {@code field}, not {@code null}. The
+     *          The type whose methods can access the given {@code field}, not {@code null}. The
      *          {@link #isFieldAccessible(CtType, CtField)} method <b>must</b> return {@code true} when being invoked
      *          with the given {@code accessingType} and {@code field}.
      *
@@ -64,38 +69,71 @@ public abstract class AccessibilityAwareFieldFinder {
     /**
      *
      * @param accessingType
-     *          The type whose methods could potentially access the given {@code type}'s
+     *          The type whose methods could potentially access the given {@code typeRef}'s
      *          fields, not {@code null}.
      *
-     * @param type
-     *          The type to get the accessible fields of, not {@code null}.
+     * @param typeRef
+     *          The reference of the type to get the accessible fields of, not {@code null}.
      *
      * @return
      *          A list of all fields which are accessible from the given {@code accessingType} combined with the
      *          typed element which grants access to the field. Includes fields which are directly declared in
-     *          the given {@code type} or in any super-type. An empty list is returned in case the
-     *          given {@code type} is an interface.
+     *          the given {@code typeRef} or in any super-type.
      */
     @SuppressWarnings("unchecked")
-    public List<AccessibleField<?>> findAccessibleFields(CtType<?> accessingType, CtType<?> type) {
-        Objects.requireNonNull(accessingType, "accessingType cannot be null!");
-        Objects.requireNonNull(type, "type cannot be null!");
+    public List<AccessibleField<?>> findAccessibleFields(CtType<?> accessingType, CtTypeReference<?> typeRef) {
+        Objects.requireNonNull(accessingType, "The accessing type cannot be null!");
+        Objects.requireNonNull(typeRef, "The type reference of the type containing fields cannot be null!");
 
-        if(type.isInterface()) {
-            return List.of();
-        }
-
-        return type.getAllFields().stream()
-                .map(CtFieldReference::getFieldDeclaration)
+        return findFieldsInType(typeRef).stream()
                 .filter(field -> this.isFieldAccessible(accessingType, field))
                 .map(field -> {
+                    var pseudo = isPseudoField(field);
                     var accessGrantingElements = this.findAccessGrantingElements(accessingType, field);
 
                     @SuppressWarnings("rawtypes")
-                    var accessibleField = (AccessibleField<?>) new AccessibleField(field, Set.copyOf(accessGrantingElements));
+                    var accessibleField = (AccessibleField<?>) new AccessibleField(field, Set.copyOf(accessGrantingElements), pseudo);
                     return accessibleField;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * <b>Note:</b> This method may be overridden by implementing classes when they do not rely on fields which
+     * are actually part of the given {@link CtTypeReference}.
+     *
+     * @param typeRef
+     *          The reference of the type to get the {@link CtField}s of, not {@code null}.
+     *
+     * @return
+     *          A set containing {@link CtTypeReference#getAllFields() all fields} whose field declaration
+     *          is present.
+     */
+    protected Set<CtField<?>> findFieldsInType(CtTypeReference<?> typeRef) {
+        return typeRef.getAllFields().stream()
+                .map(fieldRef -> {
+                    var fieldDeclaration = fieldRef.getFieldDeclaration();
+
+                    if(fieldDeclaration == null) {
+                        log.warn("No field declaration for field '{}' found!", fieldRef.getQualifiedName());
+                    }
+
+                    return fieldDeclaration;
+                })
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     *
+     * @param field
+     *          The {@link CtField field} to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code field} is a pseudo field. {@code false} is returned
+     *          otherwise.
+     */
+    protected boolean isPseudoField(CtField<?> field) {
+        return false;
     }
 
     /**

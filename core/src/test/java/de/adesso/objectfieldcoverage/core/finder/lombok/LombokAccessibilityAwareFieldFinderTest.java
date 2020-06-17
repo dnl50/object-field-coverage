@@ -1,6 +1,7 @@
 package de.adesso.objectfieldcoverage.core.finder.lombok;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
+import de.adesso.objectfieldcoverage.core.finder.lombok.generator.LombokGetterMethodGenerator;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -39,26 +40,26 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsDoesNotReturnFieldWhenGetterWithDifferentAccessLevelPresent(@Mock CtType typeMock,
+    void findAccessibleFieldsDoesNotReturnFieldWhenGetterWithDifferentAccessLevelPresent(@Mock CtTypeReference fieldDeclaringTypeRefMock,
+                                                                                         @Mock CtType fieldDeclaringTypeMock,
                                                                                          @Mock CtField fieldMock,
-                                                                                         @Mock CtClass fieldDeclaringClassMock,
                                                                                          @Mock CtClass testClazzMock,
                                                                                          @Mock Data dataAnnotationMock) {
         // given
         var getterAccessLevelMock = AccessLevel.PUBLIC;
 
-        setUpTypeMockToReturnFields(typeMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringTypeRefMock, List.of(fieldMock));
 
-        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
         given(fieldMock.getAnnotation(Getter.class)).willReturn(null);
 
-        setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Data.class, dataAnnotationMock);
+        setUpElementMockToReturnAnnotation(fieldDeclaringTypeMock, Data.class, dataAnnotationMock);
 
         given(methodGeneratorMock.isGetterMethodWithDifferentAccessModifierPresent(fieldMock, getterAccessLevelMock))
                 .willReturn(true);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, typeMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeRefMock);
 
         // then
         assertThat(actualFields).isEmpty();
@@ -67,6 +68,7 @@ class LombokAccessibilityAwareFieldFinderTest {
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsReturnsFieldWhenClassAnnotatedWithData(@Mock CtField fieldMock,
+                                                                    @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                     @Mock CtClass fieldDeclaringClassMock,
                                                                     @Mock CtClass testClazzMock,
                                                                     @Mock CtMethod getterMethodMock,
@@ -74,7 +76,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -94,7 +96,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(getterMethodMock.isPublic()).willReturn(true);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -102,8 +104,8 @@ class LombokAccessibilityAwareFieldFinderTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsReturnsFieldWhenDeclaringTypeIsAnnotatedWithPublicGetter(@Mock CtType typeMock,
-                                                                                      @Mock CtField fieldMock,
+    void findAccessibleFieldsReturnsFieldWhenDeclaringTypeIsAnnotatedWithPublicGetter(@Mock CtField fieldMock,
+                                                                                      @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                       @Mock CtClass fieldDeclaringClassMock,
                                                                                       @Mock CtClass testClazzMock,
                                                                                       @Mock CtMethod getterMethodMock,
@@ -111,7 +113,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -132,7 +134,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(getterMethodMock.isPublic()).willReturn(true);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -143,13 +145,14 @@ class LombokAccessibilityAwareFieldFinderTest {
     void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPublicGetter(@Mock CtField getterAnnotatedField,
                                                                               @Mock CtField otherFieldMock,
                                                                               @Mock CtClass fieldDeclaringClassMock,
+                                                                              @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                               @Mock CtClass testClazzMock,
                                                                               @Mock CtMethod getterMethodMock,
                                                                               @Mock Getter getterAnnotationMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(getterAnnotatedField, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(getterAnnotatedField, otherFieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(getterAnnotatedField, otherFieldMock));
 
         given(otherFieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -170,7 +173,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(getterMethodMock.isPublic()).willReturn(true);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -180,6 +183,7 @@ class LombokAccessibilityAwareFieldFinderTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithProtectedGetterAndTestClassIsInSamePackage(@Mock CtField fieldMock,
                                                                                                             @Mock CtClass fieldDeclaringClassMock,
+                                                                                                            @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                             @Mock CtClass testClazzMock,
                                                                                                             @Mock CtPackage packageMock,
                                                                                                             @Mock CtMethod getterMethodMock,
@@ -187,7 +191,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -211,7 +215,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(testClazzMock.getPackage()).willReturn(packageMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -230,7 +234,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -257,7 +261,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(fieldDeclaringClassRefMock.getTypeDeclaration()).willReturn(fieldDeclaringClassMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -267,13 +271,14 @@ class LombokAccessibilityAwareFieldFinderTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithProtectedGetterAndNotInSamePackageOrSubClass(@Mock CtField fieldMock,
                                                                                                                     @Mock CtClass fieldDeclaringClassMock,
+                                                                                                                    @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                                     @Mock CtClass testClazzMock,
                                                                                                                     @Mock CtPackage packageMock,
                                                                                                                     @Mock CtPackage otherPackageMock,
                                                                                                                     @Mock CtMethod getterMethodMock,
                                                                                                                     @Mock Getter getterAnnotationMock) {
         // given
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -299,7 +304,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(testClazzMock.getSuperclass()).willReturn(null);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).isEmpty();
@@ -309,6 +314,7 @@ class LombokAccessibilityAwareFieldFinderTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsInSamePackage(@Mock CtField fieldMock,
                                                                                                           @Mock CtClass fieldDeclaringClassMock,
+                                                                                                          @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                           @Mock CtClass testClazzMock,
                                                                                                           @Mock CtPackage packageMock,
                                                                                                           @Mock CtMethod getterMethodMock,
@@ -316,7 +322,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -342,7 +348,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(testClazzMock.getPackage()).willReturn(packageMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -352,14 +358,14 @@ class LombokAccessibilityAwareFieldFinderTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsInnerClass(@Mock CtField fieldMock,
                                                                                                        @Mock CtClass fieldDeclaringClassMock,
+                                                                                                       @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                        @Mock CtClass testClazzMock,
-                                                                                                       @Mock CtPackage packageMock,
                                                                                                        @Mock CtMethod getterMethodMock,
                                                                                                        @Mock Getter getterAnnotationMock) {
         // given
         var expectedAccessibleField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -375,7 +381,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedAccessibleField);
@@ -385,13 +391,14 @@ class LombokAccessibilityAwareFieldFinderTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithPackageGetterAndTestClazzIsNoInnerClass(@Mock CtField fieldMock,
                                                                                                                @Mock CtClass fieldDeclaringClassMock,
+                                                                                                               @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                                @Mock CtClass testClazzMock,
                                                                                                                @Mock CtPackage packageMock,
                                                                                                                @Mock CtPackage otherPackageMock,
                                                                                                                @Mock CtMethod getterMethodMock,
                                                                                                                @Mock Getter getterAnnotationMock) {
         // given
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -417,7 +424,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(testClazzMock.getPackage()).willReturn(otherPackageMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).isEmpty();
@@ -427,15 +434,14 @@ class LombokAccessibilityAwareFieldFinderTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsReturnsFieldWhenFieldIsAnnotatedWithPrivateGetterAndTestClazzIsInnerClass(@Mock CtField fieldMock,
                                                                                                        @Mock CtClass fieldDeclaringClassMock,
+                                                                                                       @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                        @Mock CtClass testClazzMock,
-                                                                                                       @Mock CtPackage packageMock,
-                                                                                                       @Mock CtPackage otherPackageMock,
                                                                                                        @Mock CtMethod getterMethodMock,
                                                                                                        @Mock Getter getterAnnotationMock) {
         // given
         var expectedField = new AccessibleField<>(fieldMock, getterMethodMock);
 
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -451,7 +457,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringClassMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).containsExactly(expectedField);
@@ -461,13 +467,14 @@ class LombokAccessibilityAwareFieldFinderTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void findAccessibleFieldsDoesNotReturnFieldWhenFieldIsAnnotatedWithPrivateGetterAndTestClazzIsNoInnerClass(@Mock CtField fieldMock,
                                                                                                                @Mock CtClass fieldDeclaringClassMock,
+                                                                                                               @Mock CtTypeReference fieldDeclaringClassRefMock,
                                                                                                                @Mock CtClass testClazzMock,
                                                                                                                @Mock CtPackage packageMock,
                                                                                                                @Mock CtPackage otherPackageMock,
                                                                                                                @Mock CtMethod getterMethodMock,
                                                                                                                @Mock Getter getterAnnotationMock) {
         // given
-        setUpTypeMockToReturnFields(fieldDeclaringClassMock, List.of(fieldMock));
+        setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
 
@@ -493,14 +500,14 @@ class LombokAccessibilityAwareFieldFinderTest {
         given(testClazzMock.getPackage()).willReturn(otherPackageMock);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassMock);
+        var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringClassRefMock);
 
         // then
         assertThat(actualFields).isEmpty();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void setUpTypeMockToReturnFields(CtType typeMock, Collection<CtField> fields) {
+    private void setUpTypeRefMockToReturnFields(CtTypeReference typeRefMock, Collection<CtField> fields) {
         var fieldReferences = fields.stream()
                 .map(field -> {
                     var fieldReferenceMock = (CtFieldReference<?>) mock(CtFieldReference.class);
@@ -509,7 +516,7 @@ class LombokAccessibilityAwareFieldFinderTest {
                 })
                 .collect(Collectors.toList());
 
-        doReturn(fieldReferences).when(typeMock).getAllFields();
+        doReturn(fieldReferences).when(typeRefMock).getAllFields();
     }
 
     @SuppressWarnings("unchecked")

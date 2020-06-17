@@ -8,6 +8,7 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,7 +28,7 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
         var model = buildModel("finder/getter/User.java");
         var userClass = findClassWithSimpleName(model, "User");
 
-        var expectedFields = List.<AccessibleField<?>>of(
+        var expectedFields = Set.<AccessibleField<?>>of(
                 new AccessibleField<>((CtField<String>) userClass.getField("id"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getId")),
                 new AccessibleField<>((CtField<String>) userClass.getField("name"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getName")),
                 new AccessibleField<>((CtField<Boolean>) userClass.getField("admin"), (CtMethod<Boolean>) findMethodWithSimpleName(userClass, "isAdmin")),
@@ -36,10 +37,10 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
         );
 
         // when
-        var actualFields = (List<AccessibleField<?>>) testSubject.findAccessibleFields(userClass, userClass);
+        var actualFields = (List<AccessibleField<?>>) testSubject.findAccessibleFields(userClass, userClass.getReference());
 
         // then
-        assertThat(actualFields).containsExactlyElementsOf(expectedFields);
+        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
     }
 
     @Test
@@ -50,7 +51,7 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
         var userClass = findClassWithSimpleName(model, "User");
         var classInSubPackage = findClassWithSimpleName(model,"OtherClassInSubPackage");
 
-        var expectedFields = List.<AccessibleField<?>>of(
+        var expectedFields = Set.<AccessibleField<?>>of(
                 new AccessibleField<>((CtField<String>) userClass.getField("id"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getId")),
                 new AccessibleField<>((CtField<String>) userClass.getField("name"), (CtMethod<String>) findMethodWithSimpleName(userClass, "getName")),
                 new AccessibleField<>((CtField<Boolean>) userClass.getField("admin"), (CtMethod<Boolean>) findMethodWithSimpleName(userClass, "isAdmin")),
@@ -58,10 +59,10 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
         );
 
         // when
-        var actualFields = (List<AccessibleField<?>>) testSubject.findAccessibleFields(classInSubPackage, userClass);
+        var actualFields = (List<AccessibleField<?>>) testSubject.findAccessibleFields(classInSubPackage, userClass.getReference());
 
         // then
-        assertThat(actualFields).containsExactlyElementsOf(expectedFields);
+        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
     }
 
 }

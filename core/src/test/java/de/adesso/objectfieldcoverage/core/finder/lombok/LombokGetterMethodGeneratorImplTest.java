@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.core.finder.lombok;
 
+import de.adesso.objectfieldcoverage.core.finder.lombok.generator.LombokGetterMethodGeneratorImpl;
 import lombok.AccessLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -9,7 +9,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.List;
@@ -36,14 +35,16 @@ class IterativeEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings("rawtypes")
-    void findAccessibleFieldsUsedInEqualsThrowsExceptionWhenClassEntryMisses(@Mock CtClass clazzMock,
+    void findAccessibleFieldsUsedInEqualsThrowsExceptionWhenClassEntryMisses(@Mock CtTypeReference clazzRefMock,
                                                                              @Mock AccessibleField accessibleFieldMock) {
         // given
         var givenAccessibleFields = Set.<AccessibleField<?>>of(accessibleFieldMock);
-        var givenMap = Map.<CtType<?>, Set<AccessibleField<?>>>of();
+        var givenMap = Map.<CtTypeReference<?>, Set<AccessibleField<?>>>of();
+
+        given(clazzRefMock.isClass()).willReturn(true);
 
         // when / then
-        assertThatThrownBy(() -> testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap))
+        assertThatThrownBy(() -> testSubject.findAccessibleFieldsUsedInEquals(clazzRefMock, givenAccessibleFields, givenMap))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
                         "a required entry for the given class or a superclass!");
@@ -51,19 +52,18 @@ class IterativeEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsUsedInEqualsThrowsExceptionWhenSuperclassEntryMisses(@Mock CtClass clazzMock,
+    void findAccessibleFieldsUsedInEqualsThrowsExceptionWhenSuperclassEntryMisses(@Mock CtTypeReference clazzRefMock,
                                                                                   @Mock CtTypeReference superClassTypeRef,
-                                                                                  @Mock CtClass superClazzMock,
                                                                                   @Mock AccessibleField accessibleFieldMock) {
         // given
         var givenAccessibleFields = Set.<AccessibleField<?>>of(accessibleFieldMock);
-        var givenMap = Map.<CtType<?>, Set<AccessibleField<?>>>of(superClazzMock, Set.of(accessibleFieldMock));
+        var givenMap = Map.<CtTypeReference<?>, Set<AccessibleField<?>>>of(superClassTypeRef, Set.of(accessibleFieldMock));
 
-        given(clazzMock.getSuperclass()).willReturn(superClassTypeRef);
-        given(superClassTypeRef.getTypeDeclaration()).willReturn(superClazzMock);
+        given(clazzRefMock.isClass()).willReturn(true);
+        given(clazzRefMock.getSuperclass()).willReturn(superClassTypeRef);
 
         // when / then
-        assertThatThrownBy(() -> testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap))
+        assertThatThrownBy(() -> testSubject.findAccessibleFieldsUsedInEquals(clazzRefMock, givenAccessibleFields, givenMap))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
                         "a required entry for the given class or a superclass!");
@@ -71,21 +71,26 @@ class IterativeEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsUsedInEqualsPassesClassToSupportingAnalyzers(@Mock CtClass clazzMock,
+    void findAccessibleFieldsUsedInEqualsPassesClassToSupportingAnalyzers(@Mock CtTypeReference clazzRefMock,
+                                                                          @Mock CtClass clazzMock,
                                                                           @Mock AccessibleField accessibleFieldMock,
                                                                           @Mock AccessibleField externalAccessibleField) {
         // given
         var givenAccessibleFields = Set.<AccessibleField<?>>of(externalAccessibleField);
-        var givenMap = Map.<CtType<?>, Set<AccessibleField<?>>>of(
-                clazzMock, Set.of(accessibleFieldMock)
+        var givenMap = Map.<CtTypeReference<?>, Set<AccessibleField<?>>>of(
+                clazzRefMock, Set.of(accessibleFieldMock)
         );
+
+        given(clazzRefMock.isClass()).willReturn(true);
+        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
+        given(clazzMock.getReference()).willReturn(clazzRefMock);
 
         given(equalsMethodAnalyzerMock.overridesEquals(clazzMock)).willReturn(true);
         given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzMock, Set.of(accessibleFieldMock)))
                 .willReturn(Set.of());
 
         // when
-        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap);
+        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzRefMock, givenAccessibleFields, givenMap);
 
         // then
         assertThat(actualResult).isEmpty();
@@ -93,15 +98,20 @@ class IterativeEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsUsedInEqualsPassesClassToSupportingAnalyzersReturningAccessibleField(@Mock CtClass clazzMock,
+    void findAccessibleFieldsUsedInEqualsPassesClassToSupportingAnalyzersReturningAccessibleField(@Mock CtTypeReference clazzRefMock,
+                                                                                                  @Mock CtClass clazzMock,
                                                                                                   @Mock AccessibleField accessibleFieldMock,
                                                                                                   @Mock AccessibleField externalAccessibleField,
                                                                                                   @Mock CtField fieldMock) {
         // given
         var givenAccessibleFields = Set.<AccessibleField<?>>of(externalAccessibleField);
-        var givenMap = Map.<CtType<?>, Set<AccessibleField<?>>>of(
-                clazzMock, Set.of(accessibleFieldMock)
+        var givenMap = Map.<CtTypeReference<?>, Set<AccessibleField<?>>>of(
+                clazzRefMock, Set.of(accessibleFieldMock)
         );
+
+        given(clazzRefMock.isClass()).willReturn(true);
+        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
+        given(clazzMock.getReference()).willReturn(clazzRefMock);
 
         given(equalsMethodAnalyzerMock.overridesEquals(clazzMock)).willReturn(true);
         given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzMock, Set.of(accessibleFieldMock)))
@@ -111,7 +121,7 @@ class IterativeEqualsMethodAnalyzerTest {
         given(externalAccessibleField.getActualField()).willReturn(fieldMock);
 
         // when
-        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap);
+        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzRefMock, givenAccessibleFields, givenMap);
 
         // then
         assertThat(actualResult).containsExactly(externalAccessibleField);
@@ -119,16 +129,21 @@ class IterativeEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsUsedInEqualsOmitsFieldIfNotAccessible(@Mock CtClass clazzMock,
+    void findAccessibleFieldsUsedInEqualsOmitsFieldIfNotAccessible(@Mock CtTypeReference clazzRefMock,
+                                                                   @Mock CtClass clazzMock,
                                                                    @Mock AccessibleField accessibleFieldMock,
                                                                    @Mock AccessibleField externalAccessibleField,
                                                                    @Mock CtField fieldMock,
                                                                    @Mock CtField externalFieldMock) {
         // given
         var givenAccessibleFields = Set.<AccessibleField<?>>of(externalAccessibleField);
-        var givenMap = Map.<CtType<?>, Set<AccessibleField<?>>>of(
-                clazzMock, Set.of(accessibleFieldMock)
+        var givenMap = Map.<CtTypeReference<?>, Set<AccessibleField<?>>>of(
+                clazzRefMock, Set.of(accessibleFieldMock)
         );
+
+        given(clazzRefMock.isClass()).willReturn(true);
+        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
+        given(clazzMock.getReference()).willReturn(clazzRefMock);
 
         given(equalsMethodAnalyzerMock.overridesEquals(clazzMock)).willReturn(true);
         given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzMock, Set.of(accessibleFieldMock)))
@@ -138,7 +153,7 @@ class IterativeEqualsMethodAnalyzerTest {
         given(externalAccessibleField.getActualField()).willReturn(externalFieldMock);
 
         // when
-        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap);
+        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzRefMock, givenAccessibleFields, givenMap);
 
         // then
         assertThat(actualResult).isEmpty();
@@ -146,8 +161,9 @@ class IterativeEqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findAccessibleFieldsWalksUpToParentIfSuperIsCalled(@Mock CtClass clazzMock,
-                                                            @Mock CtTypeReference superClassTypeRef,
+    void findAccessibleFieldsWalksUpToParentIfSuperIsCalled(@Mock CtTypeReference clazzRefMock,
+                                                            @Mock CtClass clazzMock,
+                                                            @Mock CtTypeReference superClassRefMock,
                                                             @Mock CtClass superClazzMock,
                                                             @Mock AccessibleField accessibleFieldMock,
                                                             @Mock AccessibleField externalAccessibleField,
@@ -155,13 +171,18 @@ class IterativeEqualsMethodAnalyzerTest {
 
         // given
         var givenAccessibleFields = Set.<AccessibleField<?>>of(externalAccessibleField);
-        var givenMap = Map.<CtType<?>, Set<AccessibleField<?>>>of(
-                clazzMock, Set.of(),
-                superClazzMock, Set.of(accessibleFieldMock)
+        var givenMap = Map.<CtTypeReference<?>, Set<AccessibleField<?>>>of(
+                clazzRefMock, Set.of(),
+                superClassRefMock, Set.of(accessibleFieldMock)
         );
 
-        given(clazzMock.getSuperclass()).willReturn(superClassTypeRef);
-        given(superClassTypeRef.getTypeDeclaration()).willReturn(superClazzMock);
+        given(clazzRefMock.isClass()).willReturn(true);
+        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
+        given(clazzRefMock.getSuperclass()).willReturn(superClassRefMock);
+        given(clazzMock.getReference()).willReturn(clazzRefMock);
+
+        given(superClassRefMock.getTypeDeclaration()).willReturn(superClazzMock);
+        given(superClazzMock.getReference()).willReturn(superClassRefMock);
 
         doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(clazzMock);
         doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(superClazzMock);
@@ -177,7 +198,7 @@ class IterativeEqualsMethodAnalyzerTest {
         given(externalAccessibleField.getActualField()).willReturn(fieldMock);
 
         // when
-        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzMock, givenAccessibleFields, givenMap);
+        var actualResult = testSubject.findAccessibleFieldsUsedInEquals(clazzRefMock, givenAccessibleFields, givenMap);
 
         // then
         assertThat(actualResult).containsExactly(externalAccessibleField);

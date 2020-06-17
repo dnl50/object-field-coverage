@@ -41,7 +41,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 .collect(Collectors.toList());
 
         // when
-        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType.getReference());
 
         // then
         var softly = new SoftAssertions();
@@ -77,7 +77,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 .collect(Collectors.toList());
 
         // when
-        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType.getReference());
 
         // then
         var softly = new SoftAssertions();
@@ -115,7 +115,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 .collect(Collectors.toList());
 
         // when
-        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType.getReference());
 
         // then
         var softly = new SoftAssertions();
@@ -150,7 +150,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 .collect(Collectors.toList());
 
         // when
-        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType.getReference());
 
         // then
         var softly = new SoftAssertions();
@@ -181,7 +181,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
                 .collect(Collectors.toList());
 
         // when
-        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType);
+        var actualAccessibleFields = testSubject.findAccessibleFields(testClazz, carType.getReference());
 
         // then
         var softly = new SoftAssertions();
@@ -206,7 +206,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
         var expectedField = new AccessibleField<>(lengthField, lengthField);
 
         // when
-        var actualFields = testSubject.findAccessibleFields(planeClass, rodInnerClass);
+        var actualFields = testSubject.findAccessibleFields(planeClass, rodInnerClass.getReference());
 
         // then
         assertThat(actualFields).containsExactly(expectedField);
@@ -221,7 +221,7 @@ class DirectAccessAccessibilityAwareFieldFinderIntegrationTest extends AbstractS
         var rodInnerClass = findClassWithSimpleName(model, "Rod");
 
         // when
-        var actualFields = testSubject.findAccessibleFields(carClass, rodInnerClass);
+        var actualFields = testSubject.findAccessibleFields(carClass, rodInnerClass.getReference());
 
         // then
         assertThat(actualFields).isEmpty();

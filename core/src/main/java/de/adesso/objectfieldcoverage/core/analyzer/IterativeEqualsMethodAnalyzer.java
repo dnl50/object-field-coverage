@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,8 +31,8 @@ public class IterativeEqualsMethodAnalyzer {
      * is reached or the parent class is not part of the underlying model. Analysis is stopped abruptly in
      * case a {@code equals} method in the hierarchy does not call its superclass implementation.
      *
-     * @param classToAnalyze
-     *          The {@link CtClass} to analyze the equals method of, not {@code null}.
+     * @param classRefToAnalyze
+     *          The {@link CtTypeReference} of the class to analyze the equals method of, not {@code null}.
      *
      * @param accessibleFields
      *          A set containing all accessible fields from which the fields which are used in the equals
@@ -39,10 +40,9 @@ public class IterativeEqualsMethodAnalyzer {
      *          (POV: class having a reference to {@code classToAnalyze} instance &rarr; {@code classToAnalyze}).
      *
      * @param accessibleFieldsInSuperTypes
-     *          A map which contains an entry for for the given {@code classToAnalyze} every superclass which is part of the
-     *          underlying model itself (excluding {@link Object}). The set to which the {@link CtType} is mapped
-     *          must contain all fields which are <i>accessible</i> from the given {@code classToAnalyze} (POV: {@code classToAnalyze} &rarr;
-     *          superclass).
+     *          A map which contains an entry for the given {@code classRefToAnalyze} and every superclass (excluding {@link Object}).
+     *          The set to which the {@link CtType} is mapped must contain all fields which are <i>accessible</i> from
+     *          the given {@code classRefToAnalyze} (POV: {@code classRefToAnalyze} &rarr; superclass).
      *
      * @return
      *          An <b>unmodifiable</b> set containing all accessible fields which are part of the given
@@ -51,19 +51,24 @@ public class IterativeEqualsMethodAnalyzer {
      * @throws IllegalArgumentException
      *          If the {@code accessibleFieldsInSuperTypes} map does not contain the required entries.
      */
-    public Set<AccessibleField<?>> findAccessibleFieldsUsedInEquals(CtClass<?> classToAnalyze,
+    public Set<AccessibleField<?>> findAccessibleFieldsUsedInEquals(CtTypeReference<?> classRefToAnalyze,
                                                                     Set<AccessibleField<?>> accessibleFields,
-                                                                    Map<CtType<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes) {
+                                                                    Map<CtTypeReference<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes) {
         if(accessibleFields.isEmpty()) {
             return Set.of();
         }
 
-        var superClassesIncludingClass = new LinkedList<>(TypeUtil.findExplicitSuperClassesIncludingClass(classToAnalyze));
+        var superClassRefsIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(classRefToAnalyze);
 
-        if(!accessibleFieldsInSuperTypes.keySet().containsAll(superClassesIncludingClass)) {
+        if(!accessibleFieldsInSuperTypes.keySet().containsAll(superClassRefsIncludingClass)) {
             throw new IllegalArgumentException("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +
                     "a required entry for the given class or a superclass!");
         }
+
+        var superClassesIncludingClass = superClassRefsIncludingClass.stream()
+                .map(CtTypeReference::getTypeDeclaration)
+                .map(type -> (CtClass<?>) type)
+                .collect(Collectors.toCollection(LinkedList::new));
 
         var accessibleFieldsComparedInEquals = new HashSet<AccessibleField<?>>();
         boolean typeOrSuperTypeOverridesEquals = false;
@@ -75,7 +80,7 @@ public class IterativeEqualsMethodAnalyzer {
                 typeOrSuperTypeOverridesEquals = true;
 
                 var comparedFields = findAccessibleFieldsComparedInEquals(analyzersForOverriddenEquals,
-                        currentClass, accessibleFields, accessibleFieldsInSuperTypes.get(currentClass));
+                        currentClass, accessibleFields, accessibleFieldsInSuperTypes.get(currentClass.getReference()));
                 accessibleFieldsComparedInEquals.addAll(comparedFields);
 
                 log.info("Equals method in '{}' compares {} fields!", currentClass.getQualifiedName(),
@@ -94,11 +99,11 @@ public class IterativeEqualsMethodAnalyzer {
 
         if(!typeOrSuperTypeOverridesEquals) {
             log.info("Equals method not overridden by '{}' or any of its {} superclasses (excluding Object)!",
-                    classToAnalyze.getQualifiedName(), superClassesIncludingClass.size() - 1);
+                    classRefToAnalyze.getQualifiedName(), superClassesIncludingClass.size() - 1);
         }
 
         log.info("Analyses of class '{}' finished! {} out of {} accessible fields are compared " +
-                "in the equals method!", classToAnalyze.getQualifiedName(), accessibleFieldsComparedInEquals.size(),
+                "in the equals method!", classRefToAnalyze.getQualifiedName(), accessibleFieldsComparedInEquals.size(),
                 accessibleFields.size());
 
         return Set.copyOf(accessibleFieldsComparedInEquals);

@@ -36,14 +36,52 @@ public class AccessibleField<T> {
     private Set<CtTypedElement<T>> accessGrantingElements;
 
     /**
+     * A boolean flag indication whether this field is a pseudo field.
+     */
+    private boolean pseudo;
+
+    /**
+     * The {@link #isPseudo() pseudo} flag is set to {@code false}.
      *
-     * @param actualField The actual {@link CtField} this instance refers to, not {@code null}.
+     * @param actualField
+     *          The actual {@link CtField} this instance refers to, not {@code null}.
      *
-     * @param accessGrantingElement The {@link CtTypedElement} which grants access to the given
-     *                              {@code actualField} (e.g. a getter method), not {@code null}.
+     * @param accessGrantingElement
+     *          The {@link CtTypedElement} which grants access to the given
+     *          {@code actualField} (e.g. a getter method), not {@code null}.
      */
     public AccessibleField(CtField<T> actualField, CtTypedElement<T> accessGrantingElement) {
-        this(actualField, Set.of(accessGrantingElement));
+        this(actualField, accessGrantingElement, false);
+    }
+
+    /**
+     *
+     * @param actualField
+     *          The actual {@link CtField} this instance refers to, not {@code null}.
+     *
+     * @param accessGrantingElement
+     *          The {@link CtTypedElement} which grants access to the given {@code actualField}
+     *          (e.g. a getter method), not {@code null}.
+     *
+     * @param pseudo
+     *          The flag specifying whether the accessible field is a pseudo field.
+     */
+    public AccessibleField(CtField<T> actualField, CtTypedElement<T> accessGrantingElement, boolean pseudo) {
+        this(actualField, Set.of(accessGrantingElement), pseudo);
+    }
+
+    /**
+     * The {@link #isPseudo() pseudo} flag is set to {@code false}.
+     *
+     * @param actualField
+     *          The actual {@link CtField} this instance refers to, not {@code null}.
+     *
+     * @param accessGrantingElements
+     *          The {@link CtTypedElement}s which grant access to the given {@code actualField} (e.g. getter
+     *          methods, direct field access), not {@code null}.
+     */
+    public AccessibleField(CtField<T> actualField, Collection<CtTypedElement<T>> accessGrantingElements) {
+        this(actualField, Set.copyOf(accessGrantingElements), false);
     }
 
     /**
@@ -82,12 +120,15 @@ public class AccessibleField<T> {
      *
      * @throws IllegalArgumentException
      *          When the {@link #getActualField() actual field} of the given {@code other} instance
-     *          is {@code null} or is not equal to the actual field of {@code this} instance.
+     *          is {@code null} or is not equal to the actual field of {@code this} instance or the
+     *          {@link #isPseudo() pseudo} flags are not equal.
      */
     public AccessibleField<T> unite(AccessibleField<T> other) {
         var otherActualField = other.actualField;
         if(!this.actualField.equals(otherActualField)) {
             throw new IllegalArgumentException("The actual fields are not equal!");
+        } else if(this.pseudo != other.pseudo) {
+            throw new IllegalArgumentException("The pseudo flag of the other AccessibleField instance is not the same!");
         }
 
         var unitedSetInitialCapacity = this.accessGrantingElements.size() + other.accessGrantingElements.size();
@@ -96,7 +137,7 @@ public class AccessibleField<T> {
         unitedSet.addAll(this.accessGrantingElements);
         unitedSet.addAll(other.accessGrantingElements);
 
-        return new AccessibleField<>(this.actualField, unitedSet);
+        return new AccessibleField<>(this.actualField, unitedSet, this.pseudo);
     }
 
     /**
@@ -165,6 +206,10 @@ public class AccessibleField<T> {
      *
      * @return
      *          A set containing a single {@link AccessibleField} instance for each {@link CtField}.
+     *
+     * @throws IllegalArgumentException
+     *          When two {@link AccessibleField} instances with the same internal {@link CtField} are present,
+     *          but their {@link #isPseudo() pseudo} flag status differs.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Set<AccessibleField<?>> uniteAll(Collection<? extends AccessibleField<?>> accessibleFields) {
@@ -173,7 +218,17 @@ public class AccessibleField<T> {
 
         var resultSet = new HashSet<AccessibleField<?>>();
 
-        groupedByFieldMap.values().forEach(accessibleFieldsForCtField -> {
+        groupedByFieldMap.forEach((actualField, accessibleFieldsForCtField) -> {
+            var isPseudoAndNonPseudo = accessibleFieldsForCtField.stream()
+                    .map(AccessibleField::isPseudo)
+                    .collect(Collectors.toSet())
+                    .size() == 2;
+
+            if(isPseudoAndNonPseudo) {
+                throw new IllegalArgumentException(String.format("The pseudo field flag for field '%s' is not consistent!",
+                        actualField.getSimpleName()));
+            }
+
             AccessibleField unitedAccessibleField = null;
 
             for(var accessibleField : accessibleFieldsForCtField) {

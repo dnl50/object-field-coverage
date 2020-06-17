@@ -319,19 +319,6 @@ class ExecutableUtilIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetExecutablesReturnsSingleVoidExecutableWhenTestTargetAnnotationPresentAndExceptionExpectedFlagSet() {
-        // given
-        var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "singleKnownVoidTestTargetWithFlagSet");
-        var expectedExecutable = findMethodWithSimpleName(executableUtilTestClass, "voidMethod");
-
-        // when
-        var actualExecutables = ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel);
-
-        // then
-        assertThat(actualExecutables).containsExactly(expectedExecutable);
-    }
-
-    @Test
     void findTargetExecutablesReturnsMultipleExecutablesWhenTestTargetsAnnotationPresent() {
         // given
         var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "multipleKnownNonVoidTestTarget");
@@ -347,7 +334,7 @@ class ExecutableUtilIntegrationTest extends AbstractSpoonIntegrationTest {
     }
 
     @Test
-    void findTargetExecutablesThrowsExceptionWhenTargetExecutableIsVoidAndExceptionExpectedFlagNotSet() {
+    void findTargetExecutablesThrowsExceptionWhenTargetExecutableIsVoid() {
         // given
         var annotatedMethod = findMethodWithSimpleName(executableUtilTestClass, "singleKnownVoidTestTarget");
         var methodIdentifier = annotatedMethod.getAnnotation(TestTarget.class).value();
@@ -355,7 +342,7 @@ class ExecutableUtilIntegrationTest extends AbstractSpoonIntegrationTest {
         // when / then
         assertThatThrownBy(() -> ExecutableUtil.findTargetExecutables(annotatedMethod, spoonModel))
                 .isInstanceOf(IllegalMethodSignatureException.class)
-                .hasMessage("The target executable '%s' is a void method, but the exceptionExpected flag is set to false!",
+                .hasMessage("The target executable '%s' is a void method!",
                         methodIdentifier);
     }
 

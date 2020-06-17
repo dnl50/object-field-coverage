@@ -2,10 +2,12 @@ package de.adesso.objectfieldcoverage.core.finder;
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
 import java.util.Set;
@@ -58,6 +60,19 @@ public class DirectAccessAccessibilityAwareFieldFinder extends AccessibilityAwar
     @Override
     public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
         return Set.of(field);
+    }
+
+    /**
+     *
+     * @param accessingTypeTypeRefPair
+     *          A pair containing the accessing type and the field declaring type, not {@code null}.
+     *
+     * @return
+     *          {@code true}, since a type can make a field accessible through several options.
+     */
+    @Override
+    public boolean callNext(Pair<CtType<?>, CtTypeReference<?>> accessingTypeTypeRefPair) {
+        return true;
     }
 
 }

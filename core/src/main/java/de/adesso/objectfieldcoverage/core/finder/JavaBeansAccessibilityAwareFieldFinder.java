@@ -3,10 +3,12 @@ package de.adesso.objectfieldcoverage.core.finder;
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -127,6 +129,19 @@ public class JavaBeansAccessibilityAwareFieldFinder extends AccessibilityAwareFi
         var isOfBooleanReferenceType = "java.lang.Boolean".equals(fieldTypeName);
 
         return (isOfBooleanPrimitiveType || isOfBooleanReferenceType) ? "is" : "get";
+    }
+
+    /**
+     *
+     * @param accessingTypeTypeRefPair
+     *          A pair containing the accessing type and the field declaring type, not {@code null}.
+     *
+     * @return
+     *          {@code true}, since a type can make a field accessible through several options.
+     */
+    @Override
+    public boolean callNext(Pair<CtType<?>, CtTypeReference<?>> accessingTypeTypeRefPair) {
+        return true;
     }
 
 }

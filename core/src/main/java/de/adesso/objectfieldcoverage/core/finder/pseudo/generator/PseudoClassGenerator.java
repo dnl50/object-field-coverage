@@ -1,10 +1,10 @@
-package de.adesso.objectfieldcoverage.core.processor.evaluation.graph.pseudo;
+package de.adesso.objectfieldcoverage.core.finder.pseudo.generator;
 
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.factory.Factory;
+import spoon.reflect.factory.ClassFactory;
 
 /**
- * Functional interface abstraction to generate pseudo classes for pseudo fields.
+ * Functional interface abstraction to generate {@code public} pseudo classes for pseudo fields.
  */
 @FunctionalInterface
 public interface PseudoClassGenerator {
@@ -19,7 +19,7 @@ public interface PseudoClassGenerator {
      * present in the underlying model!
      *
      * @param factory
-     *          The {@link Factory} to create the {@link CtClass} with, not {@code null}.
+     *          The {@link ClassFactory} to create the {@link CtClass} with, not {@code null}.
      *
      * @param simpleClassName
      *          The simple class name of the class which should be generated, not blank.
@@ -27,11 +27,11 @@ public interface PseudoClassGenerator {
      *
      * @param packageQualifiedName
      *          The qualified name of the package the {@link CtClass} should be declared in, not {@code null}. An empty
-     *          String indicates the default package.
+     *          String indicates the default package. Is not allowed to end with a dot.
      *
      * @return
      *          The generated {@link CtClass}.
      */
-    CtClass<?> generatePseudoClass(Factory factory, String simpleClassName, String packageQualifiedName);
+    CtClass<?> generatePseudoClass(ClassFactory factory, String simpleClassName, String packageQualifiedName);
 
 }

@@ -6,7 +6,6 @@ import de.adesso.objectfieldcoverage.core.analyzer.lombok.LombokEqualsMethodAnal
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtType;
 
 import java.util.List;
 import java.util.Map;
@@ -77,14 +76,14 @@ class IterativeEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegrat
                 new AccessibleField<>(excludedInt, excludedInt)
         );
 
-        var accessibleFieldsInSuperTypeMap = Map.<CtType<?>, Set<AccessibleField<?>>>of(
-                dataClazz, accessibleSuperFieldsDataClazz,
-                extendingClazz, accessibleSuperFieldsExtendingClazz,
-                equalsAndHashCodeClazz, allAccessibleFields
+        var accessibleFieldsInSuperTypeMap = Map.of(
+                dataClazz.getReference(), accessibleSuperFieldsDataClazz,
+                extendingClazz.getReference(), accessibleSuperFieldsExtendingClazz,
+                equalsAndHashCodeClazz.getReference(), allAccessibleFields
         );
 
         // when
-        var actualFields = testSubject.findAccessibleFieldsUsedInEquals(equalsAndHashCodeClazz, allAccessibleFields,
+        var actualFields = testSubject.findAccessibleFieldsUsedInEquals(equalsAndHashCodeClazz.getReference(), allAccessibleFields,
                 accessibleFieldsInSuperTypeMap);
 
         // then

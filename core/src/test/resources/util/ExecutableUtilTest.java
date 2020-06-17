@@ -76,7 +76,7 @@ public class ExecutableUtilTest {
         // do nothing
     }
 
-    @TestTarget(value = "de.adesso.test.ExecutableUtilTest#voidMethod()", exceptionExpected = true)
+    @TestTarget(value = "de.adesso.test.ExecutableUtilTest#voidMethod()")
     public void singleKnownVoidTestTargetWithFlagSet() {
         // do nothing
     }

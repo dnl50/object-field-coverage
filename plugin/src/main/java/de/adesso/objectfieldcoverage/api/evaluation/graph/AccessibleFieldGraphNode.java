@@ -7,10 +7,7 @@ import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Representation of a node in a {@link AccessibleFieldGraph}. Each node represents a single
@@ -53,6 +50,8 @@ public class AccessibleFieldGraphNode {
     /**
      * The child nodes of {@code this} node. Might contain {@code this} node
      * itself (cyclic reference).
+     * <br/>
+     * Must be a {@link LinkedHashSet} since a normal {@link HashSet} causes issues when adding child nodes.
      */
     @ToString.Exclude
     private final Set<AccessibleFieldGraphNode> children;
@@ -90,7 +89,7 @@ public class AccessibleFieldGraphNode {
     public static AccessibleFieldGraphNode of(AccessibleField<?> accessibleField) {
         Objects.requireNonNull(accessibleField, "The AccessibleField of a node cannot be null!");
 
-        return new AccessibleFieldGraphNode(accessibleField, new HashSet<>());
+        return new AccessibleFieldGraphNode(accessibleField, new LinkedHashSet<>());
     }
 
     @Override
