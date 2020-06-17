@@ -52,15 +52,15 @@ class AccessibleFieldTest {
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
-    void uniteThrowsExceptionWhenPseudoFlagsNotEqual(@Mock CtField fieldMock, @Mock CtField otherFieldMock) {
+    void uniteThrowsExceptionWhenPseudoFlagsNotEqual(@Mock CtField fieldMock) {
         // given
         var testSubject = new AccessibleField<>(fieldMock, Set.of(), true);
-        var other = new AccessibleField<>(otherFieldMock, Set.of(), false);
+        var other = new AccessibleField<>(fieldMock, Set.of(), false);
 
         // when / then
         assertThatThrownBy(() -> testSubject.unite(other))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("The pseudo flag of the other AccessibleField instance is the same!");
+                .hasMessage("The pseudo flag of the other AccessibleField instance is not the same!");
     }
 
     @Test
@@ -243,13 +243,17 @@ class AccessibleFieldTest {
     @SuppressWarnings({"rawtypes", "unchecked"})
     void uniteAllThrowsExceptionWhenPseudoFlagNotConsistent(@Mock CtField fieldMock) {
         // given
+        var fieldName = "fieldMock";
+
         var accessibleField = new AccessibleField<>(fieldMock, fieldMock);
         var otherAccessibleField = new AccessibleField<>(fieldMock, fieldMock, true);
+
+        given(fieldMock.getSimpleName()).willReturn(fieldName);
 
         // when / then
         assertThatThrownBy(() -> AccessibleField.uniteAll(Set.<AccessibleField<?>>of(accessibleField, otherAccessibleField)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("The pseudo flag of the other AccessibleField instance is the same!");
+                .hasMessage("The pseudo field flag for field '%s' is not consistent!", fieldName);
     }
 
 }

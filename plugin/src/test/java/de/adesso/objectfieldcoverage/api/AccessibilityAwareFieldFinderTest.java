@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.api;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -214,6 +215,11 @@ class AccessibilityAwareFieldFinderTest {
         @Override
         public <T> Collection<CtTypedElement<T>> findAccessGrantingElements(CtType<?> accessingType, CtField<T> field) {
             return Set.of();
+        }
+
+        @Override
+        public boolean callNext(Pair<CtType<?>, CtTypeReference<?>> ctTypeCtTypeReferencePair) {
+            return false;
         }
 
     }
