@@ -13,13 +13,8 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = false)
 public class BooleanTypeAssertion extends PrimitiveTypeAssertion<Boolean> {
 
-    public BooleanTypeAssertion(CtExpression<Boolean> assertedExpression) {
-        super(assertedExpression, PrimitiveType.BOOLEAN);
-    }
-
-    @Override
-    public CtMethod<?> getOriginTestMethod() {
-        return null;
+    public BooleanTypeAssertion(CtExpression<Boolean> assertedExpression, CtMethod<?> originTestMethod) {
+        super(assertedExpression, originTestMethod, PrimitiveType.BOOLEAN);
     }
 
     @Override

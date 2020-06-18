@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.processor.evaluation.graph.util;
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.AccessibleField;
+import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
@@ -12,8 +13,11 @@ import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGen
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.graph.AccessibleFieldGraphBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -33,6 +37,45 @@ class AccessibleFieldGraphBuilderIntegrationTest extends AbstractSpoonIntegratio
                 new CollectionPseudoFieldFinder(new PseudoClassGeneratorImpl(), new PseudoFieldGeneratorImpl()),
                 new PrimitiveTypePseudoFieldFinder(new PseudoClassGeneratorImpl(), new PseudoFieldGeneratorImpl()),
                 new JavaBeansAccessibilityAwareFieldFinder());
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {
+            boolean.class, Boolean.class,
+            char.class, Character.class,
+            byte.class, Byte.class,
+            short.class, Short.class,
+            int.class, Integer.class,
+            long.class, Long.class,
+            float.class, Float.class,
+            double.class, Double.class
+    })
+    void buildGraphReturnsGraphWithSingleNodeForPrimitiveType(Class<?> clazz) {
+        // given
+        var model = buildModel("graph/City.java");
+        var typeFactory = model.getUnnamedModule()
+                .getFactory()
+                .Type();
+        var typeRef = typeFactory.createReference(clazz);
+        var accessingType = findClassWithSimpleName(model, "City");
+
+        var testSubject = new AccessibleFieldGraphBuilder(fieldFinders, accessingType);
+
+        var pseudoClassName = StringUtils.capitalize(PrimitiveTypeUtils.getPrimitiveTypeReference(typeRef).getSimpleName())
+                + PseudoClassGenerator.PSEUDO_CLASS_SUFFIX;
+
+        // when
+        var actualGraph = testSubject.buildGraph(typeRef);
+
+        // then
+        var pseudoClass = findClassWithSimpleName(model, pseudoClassName);
+
+        var pseudoField = pseudoClass.getField("value");
+        var accessiblePseudoField = new AccessibleField<>(pseudoField, Set.of(), true);
+        var pseudoFieldNode = AccessibleFieldGraphNode.of(accessiblePseudoField);
+        var expectedGraph = new AccessibleFieldGraph(Set.of(pseudoFieldNode), typeRef, accessingType.getReference());
+
+        assertThat(actualGraph).isEqualTo(expectedGraph);
     }
 
     @Test

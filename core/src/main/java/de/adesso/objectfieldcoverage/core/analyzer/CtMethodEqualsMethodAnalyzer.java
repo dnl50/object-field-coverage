@@ -75,18 +75,18 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
     /**
      * This method does not check if any invocation of the equals method is actually reachable.
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}. The {@link #overridesEquals(CtClass)} method
-     *          must return {@code true} for the given {@code clazz}.
+     * @param clazzRef
+     *          The {@link CtTypeReference} to check, not {@code null}. The {@link #overridesEquals(CtTypeReference)}
+     *          method must return {@code true} for the given {@code clazz}.
      *
      * @return
      *          {@code true}, if the {@link #equals(Object)} method of the super class is invoked and its
-     *          result is either directly returned with a {@code return} statement or is assigned to a
-     *          local variable. {@code false} is returned otherwise.
+     *          result is either directly returned with a {@code return} statement or is used inside another
+     *          expression or statement. {@code false} is returned otherwise.
      */
     @Override
-    protected boolean callsSuperInternal(CtClass<?> clazz) {
-        var equalsMethod = getEqualsMethod(clazz);
+    protected boolean callsSuperInternal(CtTypeReference<?> clazzRef) {
+        var equalsMethod = getEqualsMethod(clazzRef);
         var superEqualsMethodInvocations = getSuperEqualsMethodInvocationsIn(equalsMethod);
 
         if(superEqualsMethodInvocations.isEmpty()) {
@@ -138,7 +138,7 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
      *          {@link AccessibleField}s not matching that criteria are omitted.
      */
     @Override
-    protected Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtClass<?> clazzOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
+    protected Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtTypeReference<?> clazzRefOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
         var comparedExpressions = findExpressionsComparedInEqualsMethod(getEqualsMethod(clazzOverridingEquals));
 
         Set<CtExecutable<?>> comparedExecutables = comparedExpressions.stream()
@@ -182,16 +182,23 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
 
     /**
      *
-     * @param clazz
-     *          The {@link CtClass} to get the {@link CtMethod} representation of the {@link Object#equals(Object)}
+     * @param clazzRef
+     *          The {@link CtTypeReference} to get the {@link CtMethod} representation of the {@link Object#equals(Object)}
      *          method from, not {@code null}.
      *
      * @return
      *          The {@link CtMethod} representation of the {@link Object#equals(Object)} method or {@code null}
-     *          if the equals method is not overridden in the given {@code clazz}.
+     *          if the equals method is not overridden in the given {@code clazzRef}.
      */
-    protected CtMethod<Boolean> getEqualsMethod(CtClass<?> clazz) {
-        return clazz.getMethod(BOOLEAN_PRIM_TYPE_REF, EQUALS_METHOD_SIMPLE_NAME, OBJECT_TYPE_REF);
+    protected CtMethod<Boolean> getEqualsMethod(CtTypeReference<?> clazzRef) {
+        var clazzType = clazzRef.getTypeDeclaration();
+
+        if(clazzType == null) {
+            log.warn("CtType instance of '{}' not found!", clazzRef.getQualifiedName());
+            return null;
+        }
+
+        return clazzType.getMethod(BOOLEAN_PRIM_TYPE_REF, EQUALS_METHOD_SIMPLE_NAME, OBJECT_TYPE_REF);
     }
 
     /**

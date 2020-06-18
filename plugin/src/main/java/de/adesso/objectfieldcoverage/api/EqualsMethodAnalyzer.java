@@ -7,6 +7,7 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.TypeFactory;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Optional;
 import java.util.Set;
@@ -30,53 +31,61 @@ public abstract class EqualsMethodAnalyzer {
      * {@link CtField} declared in the type itself or any super-type is compared in the equals
      * method.
      *
-     * @param clazz
-     *          The type to find the {@link CtField fields} in which are compared in the
-     *          types {@link Object#equals(Object)} method, not {@code null}.
+     * @param clazzRef
+     *          The type reference to find the {@link AccessibleField fields} in which are compared in the
+     *          types {@link Object#equals(Object)} method, not {@code null}. Must be a class or enum
+     *          type reference.
      *
      * @param accessibleFieldsOfType
      *          A set containing the <i>accessible</i> fields which are declared in the {@code clazz} itself
-     *          and all superclasses of the {@code clazz}, not {@code null}. The fields are <i>accessible</i>
-     *          from the given {@code clazz}. Useful when the equals method uses getters or other ways
-     *          of accessing fields internally.
+     *          and all superclasses of the {@code clazz}, not {@code null}. May include pseudo fields as well.
+     *          The fields are <i>accessible</i> from the given {@code clazz}. Useful when the equals method uses
+     *          getters or other ways of accessing fields internally.
      *
      * @return
-     *          An <b>unmodifiable</b> set containing all fields of the given {@code clazz} which are compared
+     *          An <b>unmodifiable</b> set containing all fields of the given {@code clazzRef} which are compared
      *          in the type's {@link Object#equals(Object)} method. An empty set will be returned when the
-     *          given {@code accessibleFieldsOfType} set is empty or the {@link #overridesEquals(CtClass)} method
+     *          given {@code accessibleFieldsOfType} set is empty or the {@link #overridesEquals(CtTypeReference)} method
      *          returns {@code false}.
+     *
+     * @throws IllegalArgumentException
+     *          When the given {@code clazzRef} is not a class or enum type reference.
      */
-    public Set<AccessibleField<?>> findFieldsComparedInEqualsMethod(CtClass<?> clazz, Set<AccessibleField<?>> accessibleFieldsOfType) {
+    public Set<AccessibleField<?>> findFieldsComparedInEqualsMethod(CtTypeReference<?> clazzRef, Set<AccessibleField<?>> accessibleFieldsOfType) {
+        if(!clazzRef.isClass() && !clazzRef.isEnum()) {
+            throw new IllegalArgumentException("The given type reference must be a class or enum reference!");
+        }
+
         if(accessibleFieldsOfType.isEmpty()) {
             return Set.of();
         }
 
-        if(!overridesEquals(clazz)) {
-            log.info("Equals method not overridden by '{}'!", clazz.getQualifiedName());
+        if(!overridesEquals(clazzRef)) {
+            log.info("Equals method not overridden by '{}'!", clazzRef.getQualifiedName());
             return Set.of();
         }
 
-        return findFieldsComparedInEqualsMethodInternal(clazz, accessibleFieldsOfType);
+        return findFieldsComparedInEqualsMethodInternal(clazzRef, accessibleFieldsOfType);
     }
 
     /**
-     * This method can only return {@code true} if the {@link #overridesEquals(CtClass)} method
+     * This method can only return {@code true} if the {@link #overridesEquals(CtTypeReference)} method
      * returns {@code true}.
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}.
+     * @param clazzRef
+     *          The reference of the type to check, not {@code null}.
      *
      * @return
      *          {@code true} if the {@link Object#equals(Object) equals} method of the super-class
      *          is called inside the given {@code clazz}' equals method. {@code false} is returned
      *          otherwise.
      */
-    public boolean callsSuper(CtClass<?> clazz) {
-        if(!overridesEquals(clazz)) {
+    public boolean callsSuper(CtTypeReference<?> clazzRef) {
+        if(!overridesEquals(clazzRef)) {
             return false;
         }
 
-        return callsSuperInternal(clazz);
+        return callsSuperInternal(clazzRef);
     }
 
     /**
@@ -107,45 +116,46 @@ public abstract class EqualsMethodAnalyzer {
      * Abstract method to check if a given {@link CtType} overrides the {@link Object#equals(Object) equals}
      * method defined {@link Object}. Does <b>not</b> check if a super-class overrides that method.
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}. Must ba a real sub-class of {@link Object}.
+     * @param clazzRef
+     *          The type reference to check, not {@code null}. Must be a real sub-class of {@link Object}.
      *
      * @return
-     *          {@code true}, if the given {@code clazz} overrides the {@link Object#equals(Object) equals}
+     *          {@code true}, if the given {@code clazzRef} overrides the {@link Object#equals(Object) equals}
      *          method declared in {@link Object}. {@code false} is returned otherwise.
      */
-    public abstract boolean overridesEquals(CtClass<?> clazz);
+    public abstract boolean overridesEquals(CtTypeReference<?> clazzRef);
 
     /**
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}. The {@link #overridesEquals(CtClass)} method
-     *          must return {@code true} for the given {@code clazz}.
+     * @param clazzRef
+     *          The {@link CtTypeReference} to check, not {@code null}. The {@link #overridesEquals(CtTypeReference)}
+     *          method must return {@code true} for the given {@code clazz}.
      *
      * @return
      *          {@code true} if the {@link Object#equals(Object) equals} method of the super-class
-     *          is called inside the given {@code clazz}' equals method. {@code false} is returned
-     *          otherwise. Implementations might throw an exceptions when the {@link #overridesEquals(CtClass)}
+     *          is called inside the given {@code clazzRef}'s equals method. {@code false} is returned
+     *          otherwise. Implementations might throw an exceptions when the {@link #overridesEquals(CtTypeReference)}
      *          method returns false.
      */
-    protected abstract boolean callsSuperInternal(CtClass<?> clazz);
+    protected abstract boolean callsSuperInternal(CtTypeReference<?> clazzRef);
 
     /**
      *
-     * @param clazzOverridingEquals
-     *          The {@link CtClass} which overrides the equals method declared in {@link Object#equals(Object)},
-     *          not {@code null}. The {@link #overridesEquals(CtClass)} method must return {@code true}.
+     * @param clazzRefOverridingEquals
+     *          The reference of the type which overrides the equals method declared in {@link Object#equals(Object)},
+     *          not {@code null}. The {@link #overridesEquals(CtTypeReference)} method must return {@code true} for the
+     *          this type reference.
      *
      * @param accessibleFields
-     *          A set containing the <i>accessible</i> fields which are declared in the {@code clazz} itself
+     *          A set containing the <i>accessible</i> fields which are declared in the {@code clazzRefOverridingEquals} itself
      *          and all superclasses of the {@code clazz}, not {@code null}. The fields are <i>accessible</i>
      *          from the given {@code clazz}.
      *
      * @return
-     *          A set containing all fields which are compared inside the given {@code clazzOverridingEquals}
-     *          equals method.
+     *          A set containing all fields which are compared inside the given {@code clazzOverridingEquals}'
+     *          equals method. Must be a subset of the given {@code accessibleFields} set.
      */
-    protected abstract Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtClass<?> clazzOverridingEquals,
+    protected abstract Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtTypeReference<?> clazzRefOverridingEquals,
                                                                                         Set<AccessibleField<?>> accessibleFields);
 
 }

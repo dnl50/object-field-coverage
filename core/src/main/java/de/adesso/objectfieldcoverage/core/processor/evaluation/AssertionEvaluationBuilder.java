@@ -87,17 +87,25 @@ public class AssertionEvaluationBuilder {
 
         var assertedTypeRef = assertion.getAssertedExpression()
                 .getType();
-        var accessingType = assertion.getAssertedExpression()
+        var accessingType = assertion.getOriginTestMethod()
                 .getParent(CtType.class);
-        var cacheKey = Pair.of(assertedTypeRef, accessingType);
-
-        if(resultCache.containsKey(cacheKey)) {
-            log.debug("[Cache Hit] Cache contained entry for (asserted type '{}' | accessing type '{}') pair!",
-                    assertedTypeRef.getQualifiedName(), accessingType.getQualifiedName());
-            return resultCache.get(cacheKey);
-        }
 
         return buildAndCacheResult(assertedTypeRef, accessingType);
+    }
+
+    /**
+     *
+     * @param accessingType
+     *          The {@link CtType} which accesses the fields of the given {@code typeRef}, not {@code null}.
+     *
+     * @param typeRef
+     *          The reference of the type which is accessed by the given {@code accessingType}, not {@code null}.
+     *
+     * @return
+     *          The {@link AssertionEvaluationInformation} for the given {@code accessingType} and {@code typeRef}.
+     */
+    public AssertionEvaluationInformation build(CtType<?> accessingType, CtTypeReference<?> typeRef) {
+        return buildAndCacheResult(typeRef, accessingType);
     }
 
     /**
@@ -115,6 +123,14 @@ public class AssertionEvaluationBuilder {
      *          The cached {@link AssertionEvaluationInformation} instance.
      */
     private AssertionEvaluationInformation buildAndCacheResult(CtTypeReference<?> assertedTypeRef, CtType<?> accessingType) {
+        var cacheKey = Pair.of(assertedTypeRef, accessingType);
+
+        if(resultCache.containsKey(cacheKey)) {
+            log.debug("[Cache Hit] Cache contained entry for (asserted type '{}' | accessing type '{}') pair!",
+                    assertedTypeRef.getQualifiedName(), accessingType.getQualifiedName());
+            return resultCache.get(cacheKey);
+        }
+
         AssertionEvaluationInformation result;
 
         if(assertedTypeRef.isPrimitive()) {

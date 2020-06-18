@@ -10,6 +10,10 @@ import de.adesso.objectfieldcoverage.core.analyzer.lombok.LombokEqualsMethodAnal
 import de.adesso.objectfieldcoverage.core.finder.DirectAccessAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.JavaBeansAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.lombok.LombokAccessibilityAwareFieldFinder;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.CollectionPseudoFieldFinder;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.PrimitiveTypePseudoFieldFinder;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +35,11 @@ class AssertionEvaluationBuilderIntegrationTest extends AbstractSpoonIntegration
 
     @BeforeEach
     void setUp() {
-        var fieldFinders = List.of(new DirectAccessAccessibilityAwareFieldFinder(), new JavaBeansAccessibilityAwareFieldFinder(),
+        var fieldFinders = List.of(
+                new PrimitiveTypePseudoFieldFinder(new PseudoClassGeneratorImpl(), new PseudoFieldGeneratorImpl()),
+                new CollectionPseudoFieldFinder(new PseudoClassGeneratorImpl(), new PseudoFieldGeneratorImpl()),
+                new DirectAccessAccessibilityAwareFieldFinder(),
+                new JavaBeansAccessibilityAwareFieldFinder(),
                 new LombokAccessibilityAwareFieldFinder());
         var equalsMethodAnalyzers = List.of(new PrimitiveTypeEqualsMethodAnalyzer(), new ObjectsEqualsMethodAnalyzer(),
                 new LombokEqualsMethodAnalyzer());
@@ -48,23 +56,20 @@ class AssertionEvaluationBuilderIntegrationTest extends AbstractSpoonIntegration
         var testMethod = (CtMethod<Boolean>) findMethodWithSimpleName(testClass, "isTestReturnsTrue");
         var assertedExpression = (CtInvocation<Boolean>) testMethod.getElements(new TypeFilter<>(CtInvocation.class))
                 .get(1);
-        var givenAssertion = new BooleanTypeAssertion(assertedExpression);
-
-        var expectedAssertedTypeRef = new TypeFactory().BOOLEAN_PRIMITIVE;
-        var expectedAccessibleFieldGraph = new AccessibleFieldGraph(expectedAssertedTypeRef, testClass.getReference());
-        var expectedResult = new AssertionEvaluationInformation(expectedAssertedTypeRef, expectedAccessibleFieldGraph,
-                expectedAccessibleFieldGraph, Set.of());
+        var givenAssertion = new BooleanTypeAssertion(assertedExpression, testMethod);
 
         // when
         var actualResult = testSubject.build(givenAssertion);
 
         // then
+        var booleanPseudoClassName =
+        var pseudoClass = findClassWithSimpleName(model, )
+        var expectedAssertedTypeRef = new TypeFactory().BOOLEAN_PRIMITIVE;
+        var expectedAccessibleFieldGraph = new AccessibleFieldGraph(expectedAssertedTypeRef, testClass.getReference());
+        var expectedResult = new AssertionEvaluationInformation(expectedAssertedTypeRef, expectedAccessibleFieldGraph,
+                expectedAccessibleFieldGraph, Set.of());
+
         assertThat(actualResult).isEqualTo(expectedResult);
     }
-
-    //TODO: add tests for reference type assertions with the following cases
-    //  - all compared
-    //  - at least one root node not compared
-    //  - cyclic accessible field graph and cycle not compared in equals
 
 }

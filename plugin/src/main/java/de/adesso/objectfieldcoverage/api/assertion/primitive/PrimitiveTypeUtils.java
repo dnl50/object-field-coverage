@@ -100,32 +100,6 @@ public class PrimitiveTypeUtils {
     }
 
     /**
-     * Static utility method used to build a {@link BooleanTypeAssertion} from a given
-     * {@link CtExpression}. The expression must be {@link #isCandidateForBooleanTypeAssertion(CtExpression)
-     * compatible}.
-     *
-     * @param expression
-     *          The expression to build a {@link BooleanTypeAssertion} from, not {@code null}.
-     *          {@link #isCandidateForBooleanTypeAssertion(CtExpression)} must return {@code true}
-     *          for the given {@code expression}, otherwise a exception will be thrown.
-     *
-     * @return
-     *          The boolean type assertion.
-     *
-     * @throws IllegalArgumentException
-     *          In case {@link #isCandidateForBooleanTypeAssertion(CtExpression)} returns {@code false}
-     *          for the given {@code expression}.
-     */
-    @SuppressWarnings("unchecked")
-    public static BooleanTypeAssertion buildBooleanTypeAssertion(CtExpression<?> expression) throws IllegalArgumentException {
-        if(!isCandidateForBooleanTypeAssertion(expression)) {
-            throw new IllegalArgumentException("The given expression's return type is not compatible!");
-        }
-
-        return new BooleanTypeAssertion((CtExpression<Boolean>) expression);
-    }
-
-    /**
      *
      * @param typeReference
      *          The {@link CtTypeReference} to check.

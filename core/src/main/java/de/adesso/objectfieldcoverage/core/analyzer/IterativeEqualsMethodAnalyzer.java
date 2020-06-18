@@ -74,7 +74,7 @@ public class IterativeEqualsMethodAnalyzer {
         boolean typeOrSuperTypeOverridesEquals = false;
 
         for(var currentClass : superClassesIncludingClass) {
-            var analyzersForOverriddenEquals = overridesEqualsAnalyzers(currentClass);
+            var analyzersForOverriddenEquals = analyzersSayingTypeOverridesEquals(currentClass);
 
             if(!analyzersForOverriddenEquals.isEmpty()) {
                 typeOrSuperTypeOverridesEquals = true;
@@ -118,7 +118,7 @@ public class IterativeEqualsMethodAnalyzer {
      *          A list containing a sublist of the registered {@link EqualsMethodAnalyzer}s whose
      *          {@link EqualsMethodAnalyzer#overridesEquals(CtClass)} returns {@code true}.
      */
-    private List<EqualsMethodAnalyzer> overridesEqualsAnalyzers(CtClass<?> clazz) {
+    private List<EqualsMethodAnalyzer> analyzersSayingTypeOverridesEquals(CtClass<?> clazz) {
         return equalsMethodAnalyzers.stream()
                 .filter(equalsMethodAnalyzer -> equalsMethodAnalyzer.overridesEquals(clazz))
                 .collect(Collectors.toList());

@@ -1,6 +1,5 @@
 package de.adesso.objectfieldcoverage.api.assertion.primitive;
 
-import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -99,53 +98,6 @@ class PrimitiveTypeUtilsTest {
 
         // then
         assertThat(actualResult).isFalse();
-    }
-
-    @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    void buildBooleanTypeAssertionReturnsBooleanTypeAssertionWhenExpressionTypeIsPrimitiveBoolean(@Mock CtExpression expressionMock,
-                                                                                                  @Mock CtTypeReference typeRefMock) {
-        // given
-        var booleanWrapper = new TypeFactory().BOOLEAN_PRIMITIVE;
-        given(expressionMock.getType()).willReturn(booleanWrapper);
-
-        var expectedAssertion = new BooleanTypeAssertion(expressionMock);
-
-        // when
-        var actualAssertion = PrimitiveTypeUtils.buildBooleanTypeAssertion(expressionMock);
-
-        // then
-        assertThat(actualAssertion).isEqualTo(expectedAssertion);
-    }
-
-    @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    void buildBooleanTypeAssertionReturnsBooleanTypeAssertionWhenExpressionTypeIsWrapperBoolean(@Mock CtExpression expressionMock,
-                                                                                                @Mock CtTypeReference typeRefMock) {
-        // given
-        var booleanWrapper = new TypeFactory().BOOLEAN;
-        given(expressionMock.getType()).willReturn(booleanWrapper);
-
-        var expectedAssertion = new BooleanTypeAssertion(expressionMock);
-
-        // when
-        var actualAssertion = PrimitiveTypeUtils.buildBooleanTypeAssertion(expressionMock);
-
-        // then
-        assertThat(actualAssertion).isEqualTo(expectedAssertion);
-    }
-
-    @Test
-    @SuppressWarnings("rawtypes")
-    void buildBooleanTypeAssertionThrowsExceptionWhenExpressionTypeDoesNotMatch(@Mock CtExpression expressionMock,
-                                                                                @Mock CtTypeReference typeRefMock) {
-        // given
-        given(expressionMock.getType()).willReturn(typeRefMock);
-
-        // when / then
-        assertThatThrownBy(() -> PrimitiveTypeUtils.buildBooleanTypeAssertion(expressionMock))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("The given expression's return type is not compatible!");
     }
 
     @Test
