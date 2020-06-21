@@ -1,6 +1,6 @@
 package de.adesso.objectfieldcoverage.api;
 
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
@@ -13,12 +13,13 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Abstract base class for equals method analysers to find out which fields in a given
- * class are compared in the equals method. Only takes fields into account which are declared
- * in the class itself or any superclass.
+ * Abstract base class for equals analysers to find out which fields in a given class are compared in the equals
+ * method. Provides methods for analyzing an actual methods, but other analysis may also be performed.
+ * <b/>
+ * All implementations must provide a public no-arg default constructor.
  */
 @Slf4j
-@RequiredArgsConstructor
+@NoArgsConstructor
 public abstract class EqualsMethodAnalyzer {
 
     /**

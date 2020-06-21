@@ -1,17 +1,21 @@
 package de.adesso.objectfieldcoverage.core.processor.evaluation;
 
+import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
+import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
-import de.adesso.objectfieldcoverage.core.analyzer.ObjectsEqualsMethodAnalyzer;
-import de.adesso.objectfieldcoverage.core.analyzer.PrimitiveTypeEqualsMethodAnalyzer;
+import de.adesso.objectfieldcoverage.core.analyzer.PseudoFieldEqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.core.analyzer.lombok.LombokEqualsMethodAnalyzer;
+import de.adesso.objectfieldcoverage.core.analyzer.method.ObjectsEqualsMethodEqualsMethodAnalyzer;
+import de.adesso.objectfieldcoverage.core.analyzer.method.PrimitiveTypeEqualsMethodEqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.core.finder.DirectAccessAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.JavaBeansAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.lombok.LombokAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.CollectionPseudoFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.PrimitiveTypePseudoFieldFinder;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.List;
@@ -41,8 +44,12 @@ class AssertionEvaluationBuilderIntegrationTest extends AbstractSpoonIntegration
                 new DirectAccessAccessibilityAwareFieldFinder(),
                 new JavaBeansAccessibilityAwareFieldFinder(),
                 new LombokAccessibilityAwareFieldFinder());
-        var equalsMethodAnalyzers = List.of(new PrimitiveTypeEqualsMethodAnalyzer(), new ObjectsEqualsMethodAnalyzer(),
-                new LombokEqualsMethodAnalyzer());
+        var equalsMethodAnalyzers = List.of(
+                new PseudoFieldEqualsMethodAnalyzer(),
+                new PrimitiveTypeEqualsMethodEqualsMethodAnalyzer(),
+                new ObjectsEqualsMethodEqualsMethodAnalyzer(),
+                new LombokEqualsMethodAnalyzer()
+        );
 
         this.testSubject = new AssertionEvaluationBuilder(fieldFinders, equalsMethodAnalyzers);
     }
@@ -62,10 +69,12 @@ class AssertionEvaluationBuilderIntegrationTest extends AbstractSpoonIntegration
         var actualResult = testSubject.build(givenAssertion);
 
         // then
-        var booleanPseudoClassName =
-        var pseudoClass = findClassWithSimpleName(model, )
-        var expectedAssertedTypeRef = new TypeFactory().BOOLEAN_PRIMITIVE;
-        var expectedAccessibleFieldGraph = new AccessibleFieldGraph(expectedAssertedTypeRef, testClass.getReference());
+        var booleanPseudoClassName = "Boolean" + PseudoClassGenerator.PSEUDO_CLASS_SUFFIX;
+        var pseudoClass = findClassWithSimpleName(model, booleanPseudoClassName);
+        var expectedAssertedTypeRef = pseudoClass.getFactory().Type().BOOLEAN_PRIMITIVE;
+        var expectedGraphNode = AccessibleFieldGraphNode.of(new AccessibleField<>(pseudoClass.getField("value"), Set.of(), true));
+        var expectedAccessibleFieldGraph = new AccessibleFieldGraph(expectedAssertedTypeRef, testClass.getReference(),
+                expectedGraphNode);
         var expectedResult = new AssertionEvaluationInformation(expectedAssertedTypeRef, expectedAccessibleFieldGraph,
                 expectedAccessibleFieldGraph, Set.of());
 

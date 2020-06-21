@@ -11,6 +11,7 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.factory.ClassFactory;
+import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
@@ -234,7 +235,7 @@ public abstract class PseudoFieldFinder extends AccessibilityAwareFieldFinder {
                 .findFirst();
 
         if(pseudoFieldOptional.isPresent()) {
-            var existingPseudoField = pseudoFieldOptional.get();
+            var existingPseudoField = (CtFieldReference<T>) pseudoFieldOptional.get();
 
             if(!fieldTypeRef.equals(existingPseudoField.getType())) {
                 var exceptionMessage = String.format("Pseudo field '%s' exists but has different type " +
@@ -248,7 +249,7 @@ public abstract class PseudoFieldFinder extends AccessibilityAwareFieldFinder {
 
             log.debug("Pseudo field '{}' already exists!", fieldName);
 
-            return (CtField<T>) pseudoFieldOptional.get();
+            return existingPseudoField.getDeclaration();
         } else {
             log.debug("Pseudo field '{}' does not exist and needs to be generated!", fieldName);
             var fieldFactory = pseudoClass.getFactory().Field();

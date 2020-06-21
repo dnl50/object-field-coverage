@@ -82,11 +82,9 @@ class IterativeEqualsMethodAnalyzerTest {
         );
 
         given(clazzRefMock.isClass()).willReturn(true);
-        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
-        given(clazzMock.getReference()).willReturn(clazzRefMock);
 
-        given(equalsMethodAnalyzerMock.overridesEquals(clazzMock)).willReturn(true);
-        given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzMock, Set.of(accessibleFieldMock)))
+        given(equalsMethodAnalyzerMock.overridesEquals(clazzRefMock)).willReturn(true);
+        given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzRefMock, Set.of(accessibleFieldMock)))
                 .willReturn(Set.of());
 
         // when
@@ -110,11 +108,9 @@ class IterativeEqualsMethodAnalyzerTest {
         );
 
         given(clazzRefMock.isClass()).willReturn(true);
-        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
-        given(clazzMock.getReference()).willReturn(clazzRefMock);
 
-        given(equalsMethodAnalyzerMock.overridesEquals(clazzMock)).willReturn(true);
-        given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzMock, Set.of(accessibleFieldMock)))
+        given(equalsMethodAnalyzerMock.overridesEquals(clazzRefMock)).willReturn(true);
+        given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzRefMock, Set.of(accessibleFieldMock)))
                 .willReturn(Set.of(accessibleFieldMock));
 
         given(accessibleFieldMock.getActualField()).willReturn(fieldMock);
@@ -142,11 +138,9 @@ class IterativeEqualsMethodAnalyzerTest {
         );
 
         given(clazzRefMock.isClass()).willReturn(true);
-        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
-        given(clazzMock.getReference()).willReturn(clazzRefMock);
 
-        given(equalsMethodAnalyzerMock.overridesEquals(clazzMock)).willReturn(true);
-        given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzMock, Set.of(accessibleFieldMock)))
+        given(equalsMethodAnalyzerMock.overridesEquals(clazzRefMock)).willReturn(true);
+        given(equalsMethodAnalyzerMock.findFieldsComparedInEqualsMethod(clazzRefMock, Set.of(accessibleFieldMock)))
                 .willReturn(Set.of(accessibleFieldMock));
 
         given(accessibleFieldMock.getActualField()).willReturn(fieldMock);
@@ -164,7 +158,6 @@ class IterativeEqualsMethodAnalyzerTest {
     void findAccessibleFieldsWalksUpToParentIfSuperIsCalled(@Mock CtTypeReference clazzRefMock,
                                                             @Mock CtClass clazzMock,
                                                             @Mock CtTypeReference superClassRefMock,
-                                                            @Mock CtClass superClazzMock,
                                                             @Mock AccessibleField accessibleFieldMock,
                                                             @Mock AccessibleField externalAccessibleField,
                                                             @Mock CtField fieldMock) {
@@ -177,22 +170,17 @@ class IterativeEqualsMethodAnalyzerTest {
         );
 
         given(clazzRefMock.isClass()).willReturn(true);
-        given(clazzRefMock.getTypeDeclaration()).willReturn(clazzMock);
         given(clazzRefMock.getSuperclass()).willReturn(superClassRefMock);
-        given(clazzMock.getReference()).willReturn(clazzRefMock);
 
-        given(superClassRefMock.getTypeDeclaration()).willReturn(superClazzMock);
-        given(superClazzMock.getReference()).willReturn(superClassRefMock);
+        doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(clazzRefMock);
+        doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(superClassRefMock);
 
-        doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(clazzMock);
-        doReturn(true).when(equalsMethodAnalyzerMock).overridesEquals(superClazzMock);
+        doReturn(true).when(equalsMethodAnalyzerMock).callsSuper(clazzRefMock);
+        doReturn(false).when(equalsMethodAnalyzerMock).callsSuper(superClassRefMock);
 
-        doReturn(true).when(equalsMethodAnalyzerMock).callsSuper(clazzMock);
-        doReturn(false).when(equalsMethodAnalyzerMock).callsSuper(superClazzMock);
-
-        doReturn(Set.of()).when(equalsMethodAnalyzerMock).findFieldsComparedInEqualsMethod(clazzMock, Set.of());
+        doReturn(Set.of()).when(equalsMethodAnalyzerMock).findFieldsComparedInEqualsMethod(clazzRefMock, Set.of());
         doReturn(Set.of(accessibleFieldMock)).when(equalsMethodAnalyzerMock)
-                .findFieldsComparedInEqualsMethod(superClazzMock, Set.of(accessibleFieldMock));
+                .findFieldsComparedInEqualsMethod(superClassRefMock, Set.of(accessibleFieldMock));
 
         given(accessibleFieldMock.getActualField()).willReturn(fieldMock);
         given(externalAccessibleField.getActualField()).willReturn(fieldMock);

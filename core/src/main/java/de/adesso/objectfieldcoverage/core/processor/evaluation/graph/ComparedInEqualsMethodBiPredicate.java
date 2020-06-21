@@ -29,12 +29,6 @@ import java.util.stream.Collectors;
 public class ComparedInEqualsMethodBiPredicate implements BiPredicate<AccessibleField<?>, CtTypeReference<?>> {
 
     /**
-     * A regex matching the {@code java} package and any sub package. It is assumed that the package name which
-     * this regex matches is a valid package name.
-     */
-    private static final String JAVA_PACKAGE_REGEX = "^java(\\..*)?$";
-
-    /**
      * The {@link EqualsMethodAnalyzer}s which are used to filter out {@link AccessibleField}s which
      * are not compared in the equals method.
     */
@@ -71,10 +65,6 @@ public class ComparedInEqualsMethodBiPredicate implements BiPredicate<Accessible
             return false;
         }
 
-        if(isInJavaPackage(originTypeRef)) {
-            return true;
-        }
-
         var superClassesIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(originTypeRef);
         var aggregatingFieldFinderChain = new AccessibilityAwareFieldFinderChain(fieldFinders);
         Map<CtTypeReference<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes = superClassesIncludingClass.stream()
@@ -84,21 +74,6 @@ public class ComparedInEqualsMethodBiPredicate implements BiPredicate<Accessible
                     .findAccessibleFieldsUsedInEquals(originTypeRef, Set.of(accessibleField), accessibleFieldsInSuperTypes);
 
         return !accessibleFields.isEmpty();
-    }
-
-    /**
-     *
-     * @param typeRef
-     *          The {@link CtTypeReference} to check the package of, not {@code null}.
-     *
-     * @return
-     *          {@code true}, if the package the given {@code typeRef} is declared in the {@code java} package or any
-     *          sub package. {@code false} is returned otherwise.
-     */
-    private boolean isInJavaPackage(CtTypeReference<?> typeRef) {
-        return typeRef.getPackage()
-                .getQualifiedName()
-                .matches(JAVA_PACKAGE_REGEX);
     }
 
 }

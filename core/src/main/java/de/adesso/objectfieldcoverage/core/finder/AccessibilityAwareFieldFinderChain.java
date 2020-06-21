@@ -37,7 +37,7 @@ public class AccessibilityAwareFieldFinderChain {
      *
      * @param accessingType
      *          The type whose methods could potentially access the given {@code typeRef}'s
-     *          fields, not {@code null}.
+     *          fields, not {@code null}. The type declaration must be present!
      *
      * @param typeRef
      *          The reference of the type to get the accessible fields of, not {@code null}.
@@ -52,6 +52,7 @@ public class AccessibilityAwareFieldFinderChain {
         Objects.requireNonNull(typeRef, "The type reference of the type containing fields cannot be null!");
 
         if(fieldFinders.isEmpty()) {
+            log.warn("No field finders configured! Returning empty set!");
             return Set.of();
         }
 

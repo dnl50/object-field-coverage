@@ -1,10 +1,13 @@
-package de.adesso.objectfieldcoverage.core.analyzer;
+package de.adesso.objectfieldcoverage.core.analyzer.method;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.*;
-import spoon.reflect.declaration.*;
+import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
@@ -47,7 +50,7 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
 
     /**
      * The {@link CtExpression}s returned by this method are used in
-     * {@link #findFieldsComparedInEqualsMethodInternal(CtClass, Set)} to filter out {@link AccessibleField}s which
+     * {@link #findFieldsComparedInEqualsMethodInternal(CtTypeReference, Set)} to filter out {@link AccessibleField}s which
      * are not compared in the {@code equalsMethod}.
      *
      * @param equalsMethod
@@ -60,16 +63,16 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
 
     /**
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}. Must ba a real sub-class of {@link Object}.
+      * @param clazzRef
+     *          The type reference to check, not {@code null}. Must be a real sub-class of {@link Object}.
      *
      * @return
      *          {@code true}, if the {@link Object#equals(Object)} method of given {@code clazz} is overridden
      *          in that class. {@code false} is returned otherwise.
      */
     @Override
-    public boolean overridesEquals(CtClass<?> clazz) {
-        return this.getEqualsMethod(clazz) != null;
+    public boolean overridesEquals(CtTypeReference<?> clazzRef) {
+        return this.getEqualsMethod(clazzRef) != null;
     }
 
     /**
@@ -101,7 +104,7 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
 
         if(assignmentWithSuperEqualsInvocationRhsPresent) {
             log.debug("Result of super.equals method invocation in equals method of '{}' is used as the " +
-                    "right hand side in an assignment!", clazz.getQualifiedName());
+                    "right hand side in an assignment!", clazzRef.getQualifiedName());
             return true;
         }
 
@@ -114,7 +117,7 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
 
         if(returnExpressionOfReturnStatement) {
             log.debug("Result of super.equals method invocation in equals method of '{}' is returned!",
-                    clazz.getQualifiedName());
+                    clazzRef.getQualifiedName());
             return true;
         }
 
@@ -123,12 +126,13 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
 
     /**
      *
-     * @param clazzOverridingEquals
-     *          The {@link CtClass} which overrides the equals method declared in {@link Object#equals(Object)},
-     *          not {@code null}. The {@link #overridesEquals(CtClass)} method must return {@code true}.
+     * @param clazzRefOverridingEquals
+     *          The reference of the type which overrides the equals method declared in {@link Object#equals(Object)},
+     *          not {@code null}. The {@link #overridesEquals(CtTypeReference)} method must return {@code true} for the
+     *          this type reference.
      *
      * @param accessibleFields
-     *          A set containing the <i>accessible</i> fields which are declared in the {@code clazz} itself
+     *          A set containing the <i>accessible</i> fields which are declared in the {@code clazzRefOverridingEquals} itself
      *          and all superclasses of the {@code clazz}, not {@code null}. The fields are <i>accessible</i>
      *          from the given {@code clazz}.
      *
@@ -139,7 +143,7 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
      */
     @Override
     protected Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtTypeReference<?> clazzRefOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
-        var comparedExpressions = findExpressionsComparedInEqualsMethod(getEqualsMethod(clazzOverridingEquals));
+        var comparedExpressions = findExpressionsComparedInEqualsMethod(getEqualsMethod(clazzRefOverridingEquals));
 
         Set<CtExecutable<?>> comparedExecutables = comparedExpressions.stream()
                 .filter(arg -> arg instanceof CtInvocation)
@@ -166,14 +170,14 @@ public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer 
                     for(var accessGrantingElement : accessibleField.getAccessGrantingElements()) {
                         if(typedElementsSet.contains(accessGrantingElement)) {
                             log.debug("Accessible field {} compared in equals method of '{}' through typed element '{}'",
-                                    accessibleField, clazzOverridingEquals.getQualifiedName(), accessGrantingElement);
+                                    accessibleField, clazzRefOverridingEquals.getQualifiedName(), accessGrantingElement);
 
                             return true;
                         }
                     }
 
                     log.debug("Accessible field {} not compared in equals method of '{}'!", accessibleField,
-                            clazzOverridingEquals.getQualifiedName());
+                            clazzRefOverridingEquals.getQualifiedName());
 
                     return false;
                 })

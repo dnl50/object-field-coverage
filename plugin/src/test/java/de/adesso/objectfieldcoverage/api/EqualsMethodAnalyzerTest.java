@@ -13,6 +13,7 @@ import spoon.reflect.reference.CtTypeReference;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -30,13 +31,15 @@ class EqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findFieldsComparedInEqualsMethodReturnsEmptySetWhenClassDoesNotOverrideEquals(@Mock CtClass classMock,
+    void findFieldsComparedInEqualsMethodReturnsEmptySetWhenClassDoesNotOverrideEquals(@Mock CtTypeReference classRefMock,
                                                                                        @Mock AccessibleField accessibleFieldMock) {
         // given
-        doReturn(false).when(testSubjectSpy).overridesEquals(classMock);
+        given(classRefMock.isClass()).willReturn(true);
+
+        doReturn(false).when(testSubjectSpy).overridesEquals(classRefMock);
 
         // when
-        var actualResult = testSubjectSpy.findFieldsComparedInEqualsMethod(classMock, Set.of(accessibleFieldMock));
+        var actualResult = testSubjectSpy.findFieldsComparedInEqualsMethod(classRefMock, Set.of(accessibleFieldMock));
 
         // then
         assertThat(actualResult).isEmpty();
@@ -46,53 +49,78 @@ class EqualsMethodAnalyzerTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findFieldsComparedInEqualsMethodReturnsExpectedSetWhenClassOverridesEquals(@Mock CtClass classMock,
+    void findFieldsComparedInEqualsMethodReturnsExpectedSetWhenClassOverridesEquals(@Mock CtTypeReference classRefMock,
                                                                                     @Mock AccessibleField accessibleFieldMock) {
         // given
-        doReturn(true).when(testSubjectSpy).overridesEquals(classMock);
+        given(classRefMock.isClass()).willReturn(true);
+
+        doReturn(true).when(testSubjectSpy).overridesEquals(classRefMock);
         doReturn(Set.of(accessibleFieldMock)).when(testSubjectSpy)
-                .findFieldsComparedInEqualsMethodInternal(classMock, Set.of(accessibleFieldMock));
+                .findFieldsComparedInEqualsMethodInternal(classRefMock, Set.of(accessibleFieldMock));
 
         // when
-        var actualResult = testSubjectSpy.findFieldsComparedInEqualsMethod(classMock, Set.of(accessibleFieldMock));
+        var actualResult = testSubjectSpy.findFieldsComparedInEqualsMethod(classRefMock, Set.of(accessibleFieldMock));
 
         // then
         assertThat(actualResult).containsExactly(accessibleFieldMock);
     }
 
     @Test
-    void callsSuperReturnsTrueWhenClassOverrideEqualsAndCallsSuper(@Mock CtClass<String> classMock) {
+    void findFieldsComparedInEqualsMethodThrowsExceptionWhenTypeReferenceIsNoClassReference(@Mock CtTypeReference<?> typeRefMock) {
         // given
-        doReturn(true).when(testSubjectSpy).overridesEquals(classMock);
-        doReturn(true).when(testSubjectSpy).callsSuperInternal(classMock);
+        given(typeRefMock.isClass()).willReturn(false);
+
+        // when / then
+        assertThatThrownBy(() -> testSubjectSpy.findFieldsComparedInEqualsMethod(typeRefMock, Set.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The given type reference must be a class or enum reference!");
+    }
+
+    @Test
+    void findFieldsComparedInEqualsMethodThrowsExceptionWhenTypeReferenceIsNoEnumReference(@Mock CtTypeReference<?> typeRefMock) {
+        // given
+        given(typeRefMock.isEnum()).willReturn(false);
+
+        // when / then
+        assertThatThrownBy(() -> testSubjectSpy.findFieldsComparedInEqualsMethod(typeRefMock, Set.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The given type reference must be a class or enum reference!");
+    }
+
+
+    @Test
+    void callsSuperReturnsTrueWhenClassOverrideEqualsAndCallsSuper(@Mock CtTypeReference<String> classRefMock) {
+        // given
+        doReturn(true).when(testSubjectSpy).overridesEquals(classRefMock);
+        doReturn(true).when(testSubjectSpy).callsSuperInternal(classRefMock);
 
         // when
-        var actualResult = testSubjectSpy.callsSuper(classMock);
+        var actualResult = testSubjectSpy.callsSuper(classRefMock);
 
         // then
         assertThat(actualResult).isTrue();
     }
 
     @Test
-    void callsSuperReturnsFalseWhenClassOverrideEqualsButDoesNotCallsSuper(@Mock CtClass<String> classMock) {
+    void callsSuperReturnsFalseWhenClassOverrideEqualsButDoesNotCallsSuper(@Mock CtTypeReference<String> classRefMock) {
         // given
-        doReturn(true).when(testSubjectSpy).overridesEquals(classMock);
-        doReturn(false).when(testSubjectSpy).callsSuperInternal(classMock);
+        doReturn(true).when(testSubjectSpy).overridesEquals(classRefMock);
+        doReturn(false).when(testSubjectSpy).callsSuperInternal(classRefMock);
 
         // when
-        var actualResult = testSubjectSpy.callsSuper(classMock);
+        var actualResult = testSubjectSpy.callsSuper(classRefMock);
 
         // then
         assertThat(actualResult).isFalse();
     }
 
     @Test
-    void callsSuperReturnsFalseWhenClassDoesNotOverrideEquals(@Mock CtClass<String> classMock) {
+    void callsSuperReturnsFalseWhenClassDoesNotOverrideEquals(@Mock CtTypeReference<String> classRefMock) {
         // given
-        doReturn(false).when(testSubjectSpy).overridesEquals(classMock);
+        doReturn(false).when(testSubjectSpy).overridesEquals(classRefMock);
 
         // when
-        var actualResult = testSubjectSpy.callsSuper(classMock);
+        var actualResult = testSubjectSpy.callsSuper(classRefMock);
 
         // then
         assertThat(actualResult).isFalse();

@@ -35,7 +35,7 @@ class LombokEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegration
         );
 
         // when
-        var fieldComparedInEquals = testSubject.findFieldsComparedInEqualsMethod(clazz, accessibleFields);
+        var fieldComparedInEquals = testSubject.findFieldsComparedInEqualsMethod(clazz.getReference(), accessibleFields);
 
         // then
         assertThat(fieldComparedInEquals).containsExactlyInAnyOrderElementsOf(accessibleFields);
@@ -68,7 +68,7 @@ class LombokEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegration
         );
 
         // when
-        var fieldComparedInEquals = testSubject.findFieldsComparedInEqualsMethod(extendingClazz, accessibleFields);
+        var fieldComparedInEquals = testSubject.findFieldsComparedInEqualsMethod(extendingClazz.getReference(), accessibleFields);
 
         // then
         assertThat(fieldComparedInEquals).containsExactlyInAnyOrderElementsOf(expectedFields);

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,23 +22,29 @@ public class LombokEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
 
     /**
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}. Must ba a real sub-class of {@link Object}.
+     * @param clazzRef
+     *          The {@link CtTypeReference} to check, not {@code null}. Must ba a real sub-class of {@link Object}.
      *
      * @return
      *          {@code true}, if the given {@code type} is annotated with {@link Data} or
      *          {@link EqualsAndHashCode}.
      */
     @Override
-    public boolean overridesEquals(CtClass<?> clazz) {
-        return clazz.getAnnotation(Data.class) != null ||
-                clazz.getAnnotation(EqualsAndHashCode.class) != null;
+    public boolean overridesEquals(CtTypeReference<?> clazzRef) {
+        var classDeclaration = getTypeDeclaration(clazzRef);
+
+        if(classDeclaration == null) {
+            return false;
+        }
+
+        return classDeclaration.getAnnotation(Data.class) != null ||
+                classDeclaration.getAnnotation(EqualsAndHashCode.class) != null;
     }
 
     /**
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}.
+     * @param clazzRef
+     *          The {@link CtTypeReference} to check, not {@code null}.
      *
      * @return
      *          {@code true}, if the given {@code clazz} is annotated with Lombok's {@link EqualsAndHashCode}
@@ -45,27 +52,32 @@ public class LombokEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
      *          is returned otherwise.
      */
     @Override
-    protected boolean callsSuperInternal(CtClass<?> clazz) {
-        var equalsAndHashCodeAnnotation = clazz.getAnnotation(EqualsAndHashCode.class);
+    protected boolean callsSuperInternal(CtTypeReference<?> clazzRef) {
+        var equalsAndHashCodeAnnotation = getTypeDeclaration(clazzRef).getAnnotation(EqualsAndHashCode.class);
         return equalsAndHashCodeAnnotation != null && equalsAndHashCodeAnnotation.callSuper();
     }
 
     /**
      *
-     * @param clazzOverridingEquals
+     * @param clazzRefOverridingEquals
      *          The {@link CtClass} which overrides the equals method declared in {@link Object#equals(Object)},
-     *          not {@code null}. The {@link #overridesEquals(CtClass)} method must return {@code true}.
+     *          not {@code null}. The {@link #overridesEquals(CtTypeReference)} method must return {@code true}.
      *
      * @param accessibleFields
      *          The fields of the declared in the class itself and in all super-classes which can be accessed
-     *          in the equals method of the given {@code clazzOverridingEquals}, not {@code null}.
+     *          in the equals method of the given {@code clazzRefOverridingEquals}, not {@code null}.
      *
      * @return
      *          A <b>unmodifiable</b> set containing all fields which are used in Lombok's generated
-     *          getter method.
+     *          equals method.
      */
     @Override
-    public Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtClass<?> clazzOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
+    public Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtTypeReference<?> clazzRefOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
+        var clazzOverridingEquals = getTypeDeclaration(clazzRefOverridingEquals);
+        if(clazzOverridingEquals == null) {
+            return Set.of();
+        }
+
         var fieldsDeclaredInDeclaringType = clazzOverridingEquals.getFields();
         var accessibleFieldsDeclaredInType = accessibleFields.stream()
                 .filter(accessibleField -> fieldsDeclaredInDeclaringType.contains(accessibleField.getActualField()))
@@ -76,15 +88,15 @@ public class LombokEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
 
         if(onlyIncludeExplicit) {
             log.info("Declaring type '{}' only includes explicitly annotated fields in its generated " +
-                    "equals method!", clazzOverridingEquals.getQualifiedName());
+                    "equals method!", clazzRefOverridingEquals.getQualifiedName());
 
             var includedFields = fieldsDeclaredInDeclaringType.stream()
-                .filter(field -> field.getAnnotation(EqualsAndHashCode.Include.class) != null)
-                .collect(Collectors.toSet());
+                    .filter(field -> field.getAnnotation(EqualsAndHashCode.Include.class) != null)
+                    .collect(Collectors.toSet());
 
             return accessibleFieldsDeclaredInType.stream()
-                .filter(accessibleField -> includedFields.contains(accessibleField.getActualField()))
-                .collect(Collectors.toSet());
+                    .filter(accessibleField -> includedFields.contains(accessibleField.getActualField()))
+                    .collect(Collectors.toSet());
         }
 
         var excludedFields = fieldsDeclaredInDeclaringType.stream()
@@ -92,11 +104,32 @@ public class LombokEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
                 .collect(Collectors.toSet());
 
         log.info("Declaring type '{}' excludes the following fields from its generated equals " +
-                "method: {}", clazzOverridingEquals.getQualifiedName(), excludedFields);
+                "method: {}", clazzRefOverridingEquals.getQualifiedName(), excludedFields);
 
         return accessibleFieldsDeclaredInType.stream()
                 .filter(accessibleField -> !excludedFields.contains(accessibleField.getActualField()))
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     *
+     * @param classRef
+     *          The class reference to get the class declaration for, not {@code null}.
+     *
+     * @param <T>
+     *          The type of the class.
+     *
+     * @return
+     *          The type declaration or {@code null} if no type declaration was found.
+     */
+    private <T> CtClass<T> getTypeDeclaration(CtTypeReference<T> classRef) {
+        var classDeclaration = classRef.getTypeDeclaration();
+
+        if(classDeclaration == null) {
+            log.warn("No CtClass for '{}' reference found!", classRef.getQualifiedName());
+        }
+
+        return (CtClass<T>) classDeclaration;
     }
 
 }

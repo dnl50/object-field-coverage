@@ -3,7 +3,6 @@ package de.adesso.objectfieldcoverage.core.processor.evaluation;
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
-import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.Path;
@@ -131,35 +130,27 @@ public class AssertionEvaluationBuilder {
             return resultCache.get(cacheKey);
         }
 
-        AssertionEvaluationInformation result;
+        var graphBuilder = graphBuilderSupplier.apply(fieldFinders, accessingType);
 
-        if(assertedTypeRef.isPrimitive()) {
-            var primitiveType = PrimitiveTypeUtils.getPrimitiveTypeReference(assertedTypeRef.getSimpleName());
-            var emptyGraph = AccessibleFieldGraph.empty(primitiveType, accessingType.getReference());
-            result = new AssertionEvaluationInformation(assertedTypeRef, emptyGraph, emptyGraph, Set.of());
+        var accessibleFieldGraph = graphBuilder.buildGraph(assertedTypeRef);
+        var accessibleFieldsUsedInEqualsGraph = graphBuilder.buildGraph(assertedTypeRef,
+                new ComparedInEqualsMethodBiPredicate(equalsMethodAnalyzers, fieldFinders));
+        var pathsOfFieldsNotComparedInEquals = findPathsOfFieldsNotComparedInEquals(accessibleFieldGraph,
+                accessibleFieldsUsedInEqualsGraph);
+
+        if(pathsOfFieldsNotComparedInEquals.isEmpty()) {
+            log.info("All {} accessible fields are compared in the equals method!",
+                    accessibleFieldGraph.getAllNodes().size());
         } else {
-            var graphBuilder = graphBuilderSupplier.apply(fieldFinders, accessingType);
-
-            var accessibleFieldGraph = graphBuilder.buildGraph(assertedTypeRef);
-            var accessibleFieldsUsedInEqualsGraph = graphBuilder.buildGraph(assertedTypeRef,
-                    new ComparedInEqualsMethodBiPredicate(equalsMethodAnalyzers, fieldFinders));
-            var pathsOfFieldsNotComparedInEquals = findPathsOfFieldsNotComparedInEquals(accessibleFieldGraph,
-                    accessibleFieldsUsedInEqualsGraph);
-
-            if(pathsOfFieldsNotComparedInEquals.isEmpty()) {
-                log.info("All {} accessible fields are compared in the equals method!",
-                        accessibleFieldGraph.getAllNodes().size());
-            } else {
-                log.info("{} accessible fields and their accessible child fields (if present) are not compared in the equals method!",
-                        pathsOfFieldsNotComparedInEquals.size());
-            }
-
-            result = new AssertionEvaluationInformation(assertedTypeRef, accessibleFieldGraph,
-                    accessibleFieldsUsedInEqualsGraph, pathsOfFieldsNotComparedInEquals);
+            log.info("{} accessible fields and their accessible child fields (if present) are not compared in the equals method!",
+                    pathsOfFieldsNotComparedInEquals.size());
         }
 
-        return cacheResult(result, assertedTypeRef, accessingType);
-    }
+        var resultIngEvaluationInformation = new AssertionEvaluationInformation(assertedTypeRef, accessibleFieldGraph,
+                accessibleFieldsUsedInEqualsGraph, pathsOfFieldsNotComparedInEquals);
+
+        return cacheResult(resultIngEvaluationInformation, assertedTypeRef, accessingType);
+}
 
     /**
      * Since {@code usedInEqualsGraph} ({@code B}) <b>must</b> be a subgraph of {@code accessibleFieldGraph} ({@code A}),

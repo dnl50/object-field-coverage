@@ -1,5 +1,6 @@
-package de.adesso.objectfieldcoverage.core.analyzer;
+package de.adesso.objectfieldcoverage.core.analyzer.method;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
@@ -15,7 +16,8 @@ import java.util.stream.Collectors;
  * method implementations which use reference comparison for primitive types.
  */
 @Slf4j
-public class PrimitiveTypeEqualsMethodAnalyzer extends CtMethodEqualsMethodAnalyzer {
+@NoArgsConstructor
+public class PrimitiveTypeEqualsMethodEqualsMethodAnalyzer extends CtMethodEqualsMethodAnalyzer {
 
     /**
      *

@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import de.adesso.objectfieldcoverage.core.analyzer.method.PrimitiveTypeEqualsMethodEqualsMethodAnalyzer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtField;
@@ -13,11 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PrimitiveTypeEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegrationTest {
 
-    private PrimitiveTypeEqualsMethodAnalyzer testSubject;
+    private PrimitiveTypeEqualsMethodEqualsMethodAnalyzer testSubject;
 
     @BeforeEach
     void setUp() {
-        this.testSubject = new PrimitiveTypeEqualsMethodAnalyzer();
+        this.testSubject = new PrimitiveTypeEqualsMethodEqualsMethodAnalyzer();
     }
 
     @Test
@@ -52,7 +53,7 @@ class PrimitiveTypeEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonInte
         allAccessibleFields.add(new AccessibleField<>(stringField, stringField));
 
         // when
-        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz, allAccessibleFields);
+        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz.getReference(), allAccessibleFields);
 
         // then
         assertThat(actualResult).containsExactlyInAnyOrderElementsOf(expectedAccessibleFields);

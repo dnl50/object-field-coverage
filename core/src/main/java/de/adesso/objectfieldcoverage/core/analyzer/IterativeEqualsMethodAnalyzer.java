@@ -65,41 +65,36 @@ public class IterativeEqualsMethodAnalyzer {
                     "a required entry for the given class or a superclass!");
         }
 
-        var superClassesIncludingClass = superClassRefsIncludingClass.stream()
-                .map(CtTypeReference::getTypeDeclaration)
-                .map(type -> (CtClass<?>) type)
-                .collect(Collectors.toCollection(LinkedList::new));
-
         var accessibleFieldsComparedInEquals = new HashSet<AccessibleField<?>>();
         boolean typeOrSuperTypeOverridesEquals = false;
 
-        for(var currentClass : superClassesIncludingClass) {
-            var analyzersForOverriddenEquals = analyzersSayingTypeOverridesEquals(currentClass);
+        for(var currentClassRef : superClassRefsIncludingClass) {
+            var analyzersForOverriddenEquals = analyzersSayingTypeOverridesEquals(currentClassRef);
 
             if(!analyzersForOverriddenEquals.isEmpty()) {
                 typeOrSuperTypeOverridesEquals = true;
 
                 var comparedFields = findAccessibleFieldsComparedInEquals(analyzersForOverriddenEquals,
-                        currentClass, accessibleFields, accessibleFieldsInSuperTypes.get(currentClass.getReference()));
+                        currentClassRef, accessibleFields, accessibleFieldsInSuperTypes.get(currentClassRef));
                 accessibleFieldsComparedInEquals.addAll(comparedFields);
 
-                log.info("Equals method in '{}' compares {} fields!", currentClass.getQualifiedName(),
+                log.info("Equals method in '{}' compares {} fields!", currentClassRef.getQualifiedName(),
                         comparedFields.size());
 
-                if(!equalsCallsSuper(currentClass)) {
+                if(!equalsCallsSuper(currentClassRef)) {
                     log.info("Class '{}' overrides equals without calling its superclass implementation!",
-                            currentClass.getQualifiedName());
+                            currentClassRef.getQualifiedName());
                     break;
                 }
 
             } else {
-                log.info("Class '{}' does not override equals method!", currentClass.getQualifiedName());
+                log.info("Class '{}' does not override equals method!", currentClassRef.getQualifiedName());
             }
         }
 
         if(!typeOrSuperTypeOverridesEquals) {
             log.info("Equals method not overridden by '{}' or any of its {} superclasses (excluding Object)!",
-                    classRefToAnalyze.getQualifiedName(), superClassesIncludingClass.size() - 1);
+                    classRefToAnalyze.getQualifiedName(), superClassRefsIncludingClass.size() - 1);
         }
 
         log.info("Analyses of class '{}' finished! {} out of {} accessible fields are compared " +
@@ -111,31 +106,31 @@ public class IterativeEqualsMethodAnalyzer {
 
     /**
      *
-     * @param clazz
-     *          The {@link CtClass} to check, not {@code null}.
+     * @param clazzRef
+     *          The {@link CtTypeReference} to check, not {@code null}.
      *
      * @return
      *          A list containing a sublist of the registered {@link EqualsMethodAnalyzer}s whose
-     *          {@link EqualsMethodAnalyzer#overridesEquals(CtClass)} returns {@code true}.
+     *          {@link EqualsMethodAnalyzer#overridesEquals(CtTypeReference)} returns {@code true}.
      */
-    private List<EqualsMethodAnalyzer> analyzersSayingTypeOverridesEquals(CtClass<?> clazz) {
+    private List<EqualsMethodAnalyzer> analyzersSayingTypeOverridesEquals(CtTypeReference<?> clazzRef) {
         return equalsMethodAnalyzers.stream()
-                .filter(equalsMethodAnalyzer -> equalsMethodAnalyzer.overridesEquals(clazz))
+                .filter(equalsMethodAnalyzer -> equalsMethodAnalyzer.overridesEquals(clazzRef))
                 .collect(Collectors.toList());
     }
 
     /**
      *
-     * @param clazz
+     * @param clazzRef
      *          The {@link CtClass} which overrides the equals method, not {@code null}.
      *
      * @return
      *          {@code true}, when a registered {@link EqualsMethodAnalyzer}'s
-     *          {@link EqualsMethodAnalyzer#overridesEquals(CtClass)} returns {@code true}.
+     *          {@link EqualsMethodAnalyzer#overridesEquals(CtTypeReference)} returns {@code true}.
      */
-    private boolean equalsCallsSuper(CtClass<?> clazz) {
+    private boolean equalsCallsSuper(CtTypeReference<?> clazzRef) {
         return equalsMethodAnalyzers.stream()
-                .anyMatch(equalsMethodAnalyzer -> equalsMethodAnalyzer.callsSuper(clazz));
+                .anyMatch(equalsMethodAnalyzer -> equalsMethodAnalyzer.callsSuper(clazzRef));
     }
 
 
@@ -144,8 +139,8 @@ public class IterativeEqualsMethodAnalyzer {
      *          The {@link EqualsMethodAnalyzer}s which can analyze the equals method in the given
      *          {@code classOverridingEquals}, not {@code null}.
      *
-     * @param classOverridingEquals
-     *          The {@link CtClass} to analyze the equals method of, not {@code null}.
+     * @param classRefOverridingEquals
+     *          The {@link CtTypeReference} to analyze the equals method of, not {@code null}.
      *
      * @param accessibleFieldsInRootType
      *          A set containing all accessible fields from which the field which are used in the equals
@@ -164,11 +159,11 @@ public class IterativeEqualsMethodAnalyzer {
      *          If the {@code accessibleFieldsInSuperTypes} map does not contain the required entries.
      */
     private Set<AccessibleField<?>> findAccessibleFieldsComparedInEquals(List<EqualsMethodAnalyzer> analyzersForMethod,
-                                                                         CtClass<?> classOverridingEquals,
+                                                                         CtTypeReference<?> classRefOverridingEquals,
                                                                          Set<AccessibleField<?>> accessibleFieldsInRootType,
                                                                          Set<AccessibleField<?>> accessibleFieldsInSuperTypes) {
         var fieldsComparedInEquals = analyzersForMethod.stream()
-                .map(equalsMethodAnalyzer -> equalsMethodAnalyzer.findFieldsComparedInEqualsMethod(classOverridingEquals, accessibleFieldsInSuperTypes))
+                .map(equalsMethodAnalyzer -> equalsMethodAnalyzer.findFieldsComparedInEqualsMethod(classRefOverridingEquals, accessibleFieldsInSuperTypes))
                 .flatMap(Collection::stream)
                 .map(AccessibleField::getActualField)
                 .collect(Collectors.toSet());

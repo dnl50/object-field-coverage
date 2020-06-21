@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import de.adesso.objectfieldcoverage.core.analyzer.method.ObjectsEqualsMethodEqualsMethodAnalyzer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtField;
@@ -12,11 +13,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegrationTest {
 
-    private ObjectsEqualsMethodAnalyzer testSubject;
+    private ObjectsEqualsMethodEqualsMethodAnalyzer testSubject;
 
     @BeforeEach
     void setUp() {
-        this.testSubject = new ObjectsEqualsMethodAnalyzer();
+        this.testSubject = new ObjectsEqualsMethodEqualsMethodAnalyzer();
     }
 
     @Test
@@ -26,7 +27,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var givenClazz = findClassWithSimpleName(model, "ClassNotOverridingEquals");
 
         // when
-        var actualResult = testSubject.overridesEquals(givenClazz);
+        var actualResult = testSubject.overridesEquals(givenClazz.getReference());
 
         // then
         assertThat(actualResult).isFalse();
@@ -39,7 +40,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var givenClazz = findClassWithSimpleName(model, "ClassOverridingEquals");
 
         // when
-        var actualResult = testSubject.overridesEquals(givenClazz);
+        var actualResult = testSubject.overridesEquals(givenClazz.getReference());
 
         // then
         assertThat(actualResult).isTrue();
@@ -53,7 +54,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var givenClazz = findClassWithSimpleName(model, "ClassWithOverriddenEqualsInSuperClass");
 
         // when
-        var actualResult = testSubject.overridesEquals(givenClazz);
+        var actualResult = testSubject.overridesEquals(givenClazz.getReference());
 
         // then
         assertThat(actualResult).isFalse();
@@ -66,7 +67,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var givenClazz = findClassWithSimpleName(model, "ClassOverridingEquals");
 
         // when
-        var actualResult = testSubject.callsSuper(givenClazz);
+        var actualResult = testSubject.callsSuper(givenClazz.getReference());
 
         // then
         assertThat(actualResult).isFalse();
@@ -79,7 +80,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var givenClazz = findClassWithSimpleName(model, "ClassOverridingEqualsWithIgnoringResultOfSuperInvocation");
 
         // when
-        var actualResult = testSubject.callsSuper(givenClazz);
+        var actualResult = testSubject.callsSuper(givenClazz.getReference());
 
         // then
         assertThat(actualResult).isFalse();
@@ -92,7 +93,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var givenClazz = findClassWithSimpleName(model, "ClassOverridingEqualsWithCallingSuper");
 
         // when
-        var actualResult = testSubject.callsSuper(givenClazz);
+        var actualResult = testSubject.callsSuper(givenClazz.getReference());
 
         // then
         assertThat(actualResult).isTrue();
@@ -105,7 +106,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var givenClazz = findClassWithSimpleName(model, "ClassOverridingEqualsWithCallingSuperAssigningToVariable");
 
         // when
-        var actualResult = testSubject.callsSuper(givenClazz);
+        var actualResult = testSubject.callsSuper(givenClazz.getReference());
 
         // then
         assertThat(actualResult).isTrue();
@@ -129,7 +130,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         );
 
         // when
-        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz, accessibleFields);
+        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz.getReference(), accessibleFields);
 
         // then
         assertThat(actualResult).containsExactlyInAnyOrderElementsOf(accessibleFields);
@@ -161,7 +162,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         );
 
         // when
-        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz, accessibleFields);
+        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz.getReference(), accessibleFields);
 
         // then
         assertThat(actualResult).containsExactlyInAnyOrderElementsOf(accessibleFields);
@@ -185,7 +186,7 @@ class ObjectsEqualsMethodAnalyzerIntegrationTest extends AbstractSpoonIntegratio
         var expectedResult = Set.of(new AccessibleField<>(included, included));
 
         // when
-        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz, accessibleFields);
+        var actualResult = testSubject.findFieldsComparedInEqualsMethod(givenClazz.getReference(), accessibleFields);
 
         // then
         assertThat(actualResult).containsExactlyElementsOf(expectedResult);

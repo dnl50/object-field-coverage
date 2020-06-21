@@ -1,5 +1,6 @@
-package de.adesso.objectfieldcoverage.core.analyzer;
+package de.adesso.objectfieldcoverage.core.analyzer.method;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldRead;
@@ -18,7 +19,8 @@ import java.util.stream.Collectors;
  * method implementations which use the {@link java.util.Objects#equals(Object, Object)} helper method internally.
  */
 @Slf4j
-public class ObjectsEqualsMethodAnalyzer extends CtMethodEqualsMethodAnalyzer {
+@NoArgsConstructor
+public class ObjectsEqualsMethodEqualsMethodAnalyzer extends CtMethodEqualsMethodAnalyzer {
 
     /**
      *
