@@ -13,7 +13,7 @@ import java.util.Objects;
 
 //TODO: JavaDoc, Test
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class AssertionUtil {
+public class AssertionUtils {
 
     /**
      *

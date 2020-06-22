@@ -1,36 +1,51 @@
-package de.adesso.objectfieldcoverage.core.util;
+package de.adesso.objectfieldcoverage.core.finder.executable;
 
+import de.adesso.objectfieldcoverage.api.Order;
+import de.adesso.objectfieldcoverage.api.TargetExecutableFinder;
+import de.adesso.objectfieldcoverage.api.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.api.annotation.TestTargets;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
-import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import spoon.reflect.CtModel;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtConstructor;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.*;
 import spoon.reflect.factory.ConstructorFactory;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Utility class used to find an executable in a given {@link CtModel} identified by a <i>method identifier</i>. See
- * {@link de.adesso.objectfieldcoverage.core.annotation.TestTarget} for a detailed explanation.
+ * {@link TargetExecutableFinder} implementation using the <i>method identifier</i> specified in a {@link TestTarget}
+ * and {@link TestTargets} annotation to find the targeted executables.
+ * <br/>
+ * Annotated with the {@link Order} annotation with the lowest possible ordering value so other
+ * {@link TargetExecutableFinder} implementations may generate the {@link TestTarget} annotation before the
+ * invocation of {@code this} one.
+ *
+ * @see TestTarget
+ * @see TestTargets
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TargetExecutableFinder {
+@Order(Order.LOWEST)
+@NoArgsConstructor
+public class AnnotationBasedTargetExecutableFinder implements TargetExecutableFinder {
+
+    /**
+     * The prefix of a fully qualified type in the {@code java} package.
+     */
+    private static final String JAVA_FULLY_QUALIFIED_PREFIX = "java.";
+
+    /**
+     * The fully qualified package name of the {@code java.lang} package.
+     */
+    private static final String JAVA_LANG_PACKAGE_QUALIFIED_NAME = "java.lang";
 
     /**
      * The simplified regex for a Java <i>Identifier</i> as specified by §3.8 of the Java Language specification. Does match
@@ -121,11 +136,66 @@ public class TargetExecutableFinder {
     private static final TypeFactory typeFactory = new TypeFactory();
 
     /**
+     *
+     * @param testMethod
+     *          The test method for which the target executables should be found, not {@code null}.
+     *
+     * @param helperMethods
+     *          All helper methods which are invoked inside the given {@code testMethod}. Not used by this
+     *          implementation.
+     *
+     * @return
+     *          A list containing all {@link CtExecutable}s which have been specified by the <i>method identifier</i>s
+     *          of the {@link TestTarget} and {@link TestTargets} annotation. An empty set is returned if the
+     *          given {@code testMethod} is not annotated with either annotation.
+     */
+    @Override
+    public Set<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+        Objects.requireNonNull(testMethod, "The test method cannot be null!");
+
+        var testTargetAnnotation = testMethod.getAnnotation(TestTarget.class);
+        var testTargetsAnnotation = testMethod.getAnnotation(TestTargets.class);
+
+        if(testTargetAnnotation == null && testTargetsAnnotation == null) {
+            log.info("Test method '{}' is neither annotated with @TestTarget nor @TestTargets!",
+                    testMethod.getSignature());
+            return Set.of();
+        }
+
+        var methodIdentifiers = new HashSet<String>();
+
+        if(testTargetAnnotation != null) {
+            methodIdentifiers.add(testTargetAnnotation.value());
+        }
+
+        if(testTargetsAnnotation != null) {
+            var specifiedTestTargetAnnotations = testTargetsAnnotation.value();
+
+            if(specifiedTestTargetAnnotations.length == 0) {
+                log.warn("Test method '{}' is annotated with @TestTargets, but no @TestTarget values are specified!",
+                        testMethod.getSignature());
+            } else {
+                for(var specifiedTestTargetAnnotation : specifiedTestTargetAnnotations) {
+                    methodIdentifiers.add(specifiedTestTargetAnnotation.value());
+                }
+            }
+        }
+
+        var underlyingModel = testMethod.getFactory().getModel();
+
+        return methodIdentifiers.stream()
+                .map(methodIdentifier -> findTargetExecutable(methodIdentifier, underlyingModel))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+    }
+
+    /**
      * <b>Note:</b> Constructors are viewed as a special kind of method.
      *
      * @param methodIdentifier
      *          The method identifier by which the target method is identified, not {@code null}. Must be
-     *          a valid method identifier. See {@link de.adesso.objectfieldcoverage.core.annotation.TestTarget}
+     *          a valid method identifier. See {@link de.adesso.objectfieldcoverage.api.annotation.TestTarget}
      *          for a detailed explanation.
      *
      * @param model
@@ -135,13 +205,18 @@ public class TargetExecutableFinder {
      *          An optional containing the target executable in case it is present in the given model or
      *          an empty optional in case the target type is not present or the target type does
      *          not have a method that matches the specified signature.
+     *
+     * @throws IllegalArgumentException
+     *          When the given {@code methodIdentifier} is not valid according to
+     *          {@link #matchesMethodIdentifierPattern(String)}.
      */
-    public static Optional<CtExecutable<?>> findTargetExecutable(String methodIdentifier, CtModel model) {
-        Objects.requireNonNull(methodIdentifier, "methodIdentifier cannot be null!");
-        Objects.requireNonNull(model, "model cannot be null!");
+    private static Optional<CtExecutable<?>> findTargetExecutable(String methodIdentifier, CtModel model) {
+        Objects.requireNonNull(methodIdentifier, "The method identifier cannot be null!");
+        Objects.requireNonNull(model, "The model cannot be null!");
 
         if(!matchesMethodIdentifierPattern(methodIdentifier)) {
-            throw new IllegalArgumentException(String.format("Given method identifier '%s' is not a valid identifier!",
+            log.warn("Method identifier '{}' is not a valid method identifier!", methodIdentifier);
+            throw new IllegalArgumentException(String.format("Method identifier '%s' is not a valid identifier!",
                     methodIdentifier));
         }
 
@@ -160,12 +235,7 @@ public class TargetExecutableFinder {
      *          {@link #METHOD_IDENTIFIER_REGEX}. {@code false} is returned otherwise.
      */
     private static boolean matchesMethodIdentifierPattern(String methodIdentifier) {
-        if(METHOD_IDENTIFIER_MATCH_PREDICATE.test(methodIdentifier)) {
-            return true;
-        }
-
-        log.warn("Method identifier '{}' is not a valid identifier!", methodIdentifier);
-        return false;
+        return METHOD_IDENTIFIER_MATCH_PREDICATE.test(methodIdentifier);
     }
 
     /**
@@ -384,9 +454,9 @@ public class TargetExecutableFinder {
         }
 
         var isFullyQualified = formalMethodParameter.contains(".");
-        var fullyQualifiedClassName = isFullyQualified ? formalMethodParameter : String.format("java.lang.%s", formalMethodParameter);
+        var fullyQualifiedClassName = isFullyQualified ? formalMethodParameter : String.format("%s.%s", JAVA_LANG_PACKAGE_QUALIFIED_NAME, formalMethodParameter);
 
-        if(fullyQualifiedClassName.startsWith("java.")) {
+        if(fullyQualifiedClassName.startsWith(JAVA_FULLY_QUALIFIED_PREFIX)) {
             return buildJavaReferenceType(fullyQualifiedClassName);
         }
 

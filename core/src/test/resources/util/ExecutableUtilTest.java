@@ -1,8 +1,7 @@
 package de.adesso.test;
 
-import de.adesso.objectfieldcoverage.core.annotation.TestTarget;
-import de.adesso.objectfieldcoverage.core.annotation.TestTargets;
-import org.junit.jupiter.api.Test;
+import de.adesso.objectfieldcoverage.api.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.api.annotation.TestTargets;
 
 public class ExecutableUtilTest {
 

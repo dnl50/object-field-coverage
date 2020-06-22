@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * Utility class providing static utility methods for {@link CtType} instances.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TypeUtil {
+public class TypeUtils {
 
     /**
      * The fully qualified name of the {@link Object} class.

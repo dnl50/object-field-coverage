@@ -1,13 +1,8 @@
 package de.adesso.objectfieldcoverage.core.util;
 
-import de.adesso.objectfieldcoverage.core.annotation.TestTarget;
-import de.adesso.objectfieldcoverage.core.annotation.TestTargets;
-import de.adesso.objectfieldcoverage.core.util.exception.IllegalMethodSignatureException;
-import de.adesso.objectfieldcoverage.core.util.exception.TargetMethodNotFoundException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import spoon.reflect.CtModel;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
@@ -15,16 +10,14 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 //TODO: JavaDoc
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ExecutableUtil {
+public class ExecutableUtils {
 
     /**
      * Checks whether a given {@link CtExecutable executable} was invoked inside a given
@@ -137,96 +130,6 @@ public class ExecutableUtil {
         var methodReturnType = executable.getType();
 
         return typeFactory.VOID_PRIMITIVE.equals(methodReturnType) || typeFactory.VOID.equals(methodReturnType);
-    }
-
-    /**
-     * Utility method to find the executables which are targeted by a given test method. The given
-     * {@link CtMethod} must be annotated with either {@link TestTarget} or {@link TestTargets}.
-     *
-     * @param testMethod
-     *          The test method to find the targeted methods of, not {@code null}. Must be annotated
-     *          with either {@link TestTarget} or {@link TestTargets}. The {@link TestTargets}
-     *          must must contain at least one {@link TestTarget} annotation in case it is present.
-     *
-     * @return
-     *          A list containing the target executables which are specified using the method identifiers
-     *          given in the {@link TestTarget} annotation(s).
-     *
-     * @throws IllegalArgumentException
-     *          When the given {@code testMethod} is neither annotated with {@link TestTarget} nor
-     *          {@link TestTargets}.
-     */
-    public static List<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod, CtModel underlyingModel) {
-        Objects.requireNonNull(testMethod, "testMethod cannot be null!");
-        Objects.requireNonNull(underlyingModel, "underlyingModel cannot be null!");
-
-        var testTargetAnnotation = testMethod.getAnnotation(TestTarget.class);
-        if(Objects.nonNull(testTargetAnnotation)) {
-            return List.of(findTargetExecutable(testTargetAnnotation, underlyingModel));
-        }
-
-        var testTargetsAnnotation = testMethod.getAnnotation(TestTargets.class);
-        if(testTargetsAnnotation != null) {
-            var testTargetAnnotations = testTargetsAnnotation.value();
-
-            if(testTargetAnnotations.length == 0) {
-                var exceptionMessage = String.format("@TestTargets annotation on test method %s is empty!",
-                        testMethod.getSimpleName());
-
-                log.error(exceptionMessage);
-                throw new IllegalArgumentException(exceptionMessage);
-            }
-
-            return Arrays.stream(testTargetsAnnotation.value())
-                    .map(testTarget -> findTargetExecutable(testTarget, underlyingModel))
-                    .collect(Collectors.toList());
-        }
-
-        var exceptionMessage = String.format("Given test method '%s' neither annotated with @TestTarget nor with @TestTargets",
-                testMethod.getSimpleName());
-        log.error(exceptionMessage);
-        throw new IllegalArgumentException(exceptionMessage);
-    }
-
-    /**
-     * Utility method to find the executable identified by the method identifier specified
-     * in a given {@link TestTarget} annotation.
-     *
-     * @param testTargetAnnotation
-     *          The annotation containing the method identifier, not {@code null}.
-     *
-     * @param underlyingModel
-     *          The Spoon meta-model to find the target executable in, not {@code null}.
-     *
-     * @return
-     *          The target executable.
-     *
-     * @throws TargetMethodNotFoundException
-     *          When no executable was found in the given {@code underlyingModel} using the
-     *          given {@code methodIdentifier}.
-     *
-     * @throws IllegalMethodSignatureException
-     *          When the target executable is a <i>void</i> method and the {@code exceptionExpected}
-     *          flag of the given {@code testTargetAnnotation} is set to {@code false}.
-     */
-    public static CtExecutable<?> findTargetExecutable(TestTarget testTargetAnnotation, CtModel underlyingModel) {
-        Objects.requireNonNull(testTargetAnnotation, "testTargetAnnotation cannot be null!");
-        Objects.requireNonNull(underlyingModel, "underlyingModel cannot be null!");
-
-        var methodIdentifier = testTargetAnnotation.value();
-
-        var targetExecutable = TargetExecutableFinder.findTargetExecutable(methodIdentifier, underlyingModel)
-                .orElseThrow(() -> new TargetMethodNotFoundException(methodIdentifier));
-
-        if(isVoidExecutable(targetExecutable)) {
-            var exceptionMessage = String.format("The target executable '%s' is a void method!",
-                    methodIdentifier);
-
-            log.error(exceptionMessage);
-            throw new IllegalMethodSignatureException(exceptionMessage);
-        }
-
-        return targetExecutable;
     }
 
 }

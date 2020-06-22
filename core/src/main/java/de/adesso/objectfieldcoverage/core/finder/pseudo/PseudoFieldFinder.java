@@ -1,6 +1,7 @@
 package de.adesso.objectfieldcoverage.core.finder.pseudo;
 
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
+import de.adesso.objectfieldcoverage.api.Order;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGenerator;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,11 @@ import java.util.stream.Collectors;
 
 /**
  * Abstract {@link AccessibilityAwareFieldFinder} implementation for finding pseudo fields in a given
- * type reference.
+ * type reference. Annotated with the {@link Order} annotation with its value set to {@value Order#HIGHEST}
+ * since pseudo field generation is a short circuit operation.
  */
 @Slf4j
+@Order(Order.HIGHEST)
 @RequiredArgsConstructor
 public abstract class PseudoFieldFinder extends AccessibilityAwareFieldFinder {
 

@@ -20,7 +20,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ClasspathUtil {
+public class ClasspathUtils {
+
+    /**
+     * The base package where implementations are searched in.
+     */
+    private static final String BASE_PACKAGE = "de.adesso";
+
+    /**
+     * Reusable Reflections instance for increased performance. Must be initialized once.
+     */
+    private static Reflections reflections;
 
     /**
      *
@@ -32,29 +42,25 @@ public class ClasspathUtil {
      *
      * @return
      *          A list a single instance of each concrete class implementing/extending the given {@code type} which
-     *          declares a public no-arg constructor inm the {@code de.adesso} package. The list is in descending order
+     *          declares a public no-arg constructor inm the {@value #BASE_PACKAGE} package. The list is in descending order
      *          according to the value specified in the {@link Order} annotation. {@link Order#DEFAULT} used when
      *          the type is not annotated.
      */
-    public static <T> List<? extends T> loadClassesImplementingInterfaceOrExtendingClass(Class<T> type) {
+    public static <T> List<T> loadClassesImplementingInterfaceOrExtendingClass(Class<T> type) {
         Objects.requireNonNull(type, "The given type cannot be null!");
 
-        Reflections reflections = new Reflections(new ConfigurationBuilder()
-                .setUrls(ClasspathHelper.forPackage("de.adesso"))
-                .addScanners(new SubTypesScanner())
-        );
-        var subtypes = reflections.getSubTypesOf(type);
+        var subtypes = initReflections().getSubTypesOf(type);
 
-        var foundTypes = subtypes.stream()
-                .filter(ClasspathUtil::isConcreteClass)
-                .filter(ClasspathUtil::hasPublicNoArgConstructor)
-                .map(ClasspathUtil::getOrderPair)
+        List<T> foundTypes = subtypes.stream()
+                .filter(ClasspathUtils::isConcreteClass)
+                .filter(ClasspathUtils::hasPublicNoArgConstructor)
+                .map(ClasspathUtils::getOrderPair)
                 .sorted(Comparator.comparing(Pair::getRight, (i1, i2) -> -1 * Integer.compare(i1, i2)))
                 .map(Pair::getKey)
-                .map(ClasspathUtil::instantiateWithPublicNoArgConstructor)
+                .map(ClasspathUtils::instantiateWithPublicNoArgConstructor)
                 .collect(Collectors.toList());
 
-        log.debug("Found {} subtypes of {}!", foundTypes.size(), type.getName());
+        log.debug("Found {} concrete subtypes of {}!", foundTypes.size(), type.getName());
 
         return foundTypes;
     }
@@ -158,6 +164,23 @@ public class ClasspathUtil {
             log.error("Error instantiating '{}' with public no-arg constructor!", type.getName());
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Initializes the {@link #reflections} field in case it is {@code null}.
+     *
+     * @return
+     *          The initialized {@link Reflections} instance.
+     */
+    private static Reflections initReflections() {
+        if(reflections == null) {
+            reflections = new Reflections(new ConfigurationBuilder()
+                    .setUrls(ClasspathHelper.forPackage(BASE_PACKAGE))
+                    .addScanners(new SubTypesScanner())
+            );
+        }
+
+        return reflections;
     }
 
 }

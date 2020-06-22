@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
-class TypeUtilTest {
+class TypeUtilsTest {
 
     @Test
     void findExplicitSuperClassesReturnsEmptyListWhenNoSuperClassPresent(@Mock CtTypeReference<?> typeRefMock) {
@@ -23,7 +23,7 @@ class TypeUtilTest {
         given(typeRefMock.isClass()).willReturn(true);
 
         // when
-        var actualResult = TypeUtil.findExplicitSuperClasses(typeRefMock);
+        var actualResult = TypeUtils.findExplicitSuperClasses(typeRefMock);
 
         // then
         assertThat(actualResult).isEmpty();
@@ -40,7 +40,7 @@ class TypeUtilTest {
         given(objectClassRefMock.getQualifiedName()).willReturn("java.lang.Object");
 
         // when
-        var actualResult = TypeUtil.findExplicitSuperClasses(typeRefMock);
+        var actualResult = TypeUtils.findExplicitSuperClasses(typeRefMock);
 
         // then
         assertThat(actualResult).isEmpty();
@@ -57,7 +57,7 @@ class TypeUtilTest {
         given(enumClassRefMock.getQualifiedName()).willReturn("java.lang.Enum");
 
         // when
-        var actualResult = TypeUtil.findExplicitSuperClasses(typeRefMock);
+        var actualResult = TypeUtils.findExplicitSuperClasses(typeRefMock);
 
         // then
         assertThat(actualResult).isEmpty();
@@ -75,7 +75,7 @@ class TypeUtilTest {
         given(superClassRefMock.getSuperclass()).willReturn(superSuperClassRefMock);
 
         // when
-        var actualResult = TypeUtil.findExplicitSuperClasses(typeRefMock);
+        var actualResult = TypeUtils.findExplicitSuperClasses(typeRefMock);
 
         // then
         assertThat(actualResult).containsExactly(superClassRefMock, superSuperClassRefMock);
@@ -88,7 +88,7 @@ class TypeUtilTest {
         given(typeRefMock.isClass()).willReturn(true);
 
         // when
-        var actualResult = TypeUtil.findExplicitSuperClassesIncludingClass(typeRefMock);
+        var actualResult = TypeUtils.findExplicitSuperClassesIncludingClass(typeRefMock);
 
         // then
         assertThat(actualResult).containsExactly(typeRefMock);
@@ -101,7 +101,7 @@ class TypeUtilTest {
         given(typeRefMock.isClass()).willReturn(false);
 
         // when / then
-        assertThatThrownBy(() -> TypeUtil.findExplicitSuperClasses(typeRefMock))
+        assertThatThrownBy(() -> TypeUtils.findExplicitSuperClasses(typeRefMock))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("The given type reference is not a class reference!");
     }
@@ -118,7 +118,7 @@ class TypeUtilTest {
         given(superClassRefMock.getSuperclass()).willReturn(superSuperClassRefMock);
 
         // when
-        var actualResult = TypeUtil.findExplicitSuperClassesIncludingClass(typeRefMock);
+        var actualResult = TypeUtils.findExplicitSuperClassesIncludingClass(typeRefMock);
 
         // then
         assertThat(actualResult).containsExactly(typeRefMock, superClassRefMock, superSuperClassRefMock);
@@ -131,7 +131,7 @@ class TypeUtilTest {
         given(typeRefMock.isClass()).willReturn(false);
 
         // when / then
-        assertThatThrownBy(() -> TypeUtil.findExplicitSuperClassesIncludingClass(typeRefMock))
+        assertThatThrownBy(() -> TypeUtils.findExplicitSuperClassesIncludingClass(typeRefMock))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("The given type reference is not a class reference!");
     }
@@ -153,7 +153,7 @@ class TypeUtilTest {
         );
 
         // when
-        var actualSuperInterfaces = TypeUtil.findAllSuperInterfaces(givenType);
+        var actualSuperInterfaces = TypeUtils.findAllSuperInterfaces(givenType);
 
         // then
         assertThat(actualSuperInterfaces).containsExactlyInAnyOrderElementsOf(expectedSuperInterfaces);

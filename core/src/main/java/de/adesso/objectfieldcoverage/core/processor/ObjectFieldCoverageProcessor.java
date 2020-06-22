@@ -3,14 +3,8 @@ package de.adesso.objectfieldcoverage.core.processor;
 import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.api.AssertionFinder;
 import de.adesso.objectfieldcoverage.api.TestMethodFinder;
-import de.adesso.objectfieldcoverage.core.annotation.TestTargetPreProcessor;
-import de.adesso.objectfieldcoverage.core.finder.DirectAccessAccessibilityAwareFieldFinder;
-import de.adesso.objectfieldcoverage.core.finder.JavaBeansAccessibilityAwareFieldFinder;
-import de.adesso.objectfieldcoverage.core.finder.lombok.LombokAccessibilityAwareFieldFinder;
-import de.adesso.objectfieldcoverage.core.junit.JUnit4TestMethodFinder;
-import de.adesso.objectfieldcoverage.core.junit.JUnitJupiterTestMethodFinder;
-import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitAssertionFinder;
-import de.adesso.objectfieldcoverage.core.util.ExecutableUtil;
+import de.adesso.objectfieldcoverage.core.util.ClasspathUtils;
+import de.adesso.objectfieldcoverage.core.util.ExecutableUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.processing.AbstractProcessor;
@@ -23,8 +17,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-//TODO: properly implement, currently just a draft implementation
-
 @Slf4j
 @RequiredArgsConstructor
 public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> {
@@ -35,15 +27,10 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
 
     private final List<AssertionFinder> assertionFinders;
 
-    private final TestTargetPreProcessor testTargetPreProcessor;
-
-    //TODO: use Java ServiceLoader
     public ObjectFieldCoverageProcessor() {
-        this.fieldFinders = List.of(new LombokAccessibilityAwareFieldFinder(), new DirectAccessAccessibilityAwareFieldFinder(),
-                new JavaBeansAccessibilityAwareFieldFinder());
-        this.testMethodFinders = List.of(new JUnitJupiterTestMethodFinder(), new JUnit4TestMethodFinder());
-        this.assertionFinders = List.of(new JUnitAssertionFinder());
-        this.testTargetPreProcessor = new TestTargetPreProcessor();
+        this.fieldFinders = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(AccessibilityAwareFieldFinder.class);
+        this.testMethodFinders = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(TestMethodFinder.class);
+        this.assertionFinders = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(AssertionFinder.class);
     }
 
     @Override
@@ -51,7 +38,6 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         var testMethodsInClass = testMethodFinders.stream()
                 .map(finder -> finder.findTestMethods(clazz))
                 .flatMap(List::stream)
-                .map(testTargetPreProcessor::addTestTargetAnnotation)
                 .collect(Collectors.toList());
 
         if(testMethodsInClass.isEmpty()) {
@@ -112,7 +98,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     private Set<CtExecutable<?>> filterInvokedExecutables(CtMethod<?> testMethod, Collection<CtExecutable<?>> executables) {
         return executables.stream()
                 .filter(executable -> {
-                    if(!ExecutableUtil.isExecutableInvoked(testMethod, executable)) {
+                    if(!ExecutableUtils.isExecutableInvoked(testMethod, executable)) {
                         log.warn("Executable '{}' not invoked in method '{}'!", executable.getSignature(),
                                 testMethod.getSignature());
                         return false;

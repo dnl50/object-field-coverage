@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ClasspathUtilTest {
+class ClasspathUtilsTest {
 
     @Test
     void loadClassesImplementingInterfaceOrExtendingClassLoadsExpectedClassesRespectingOrder() {
@@ -20,7 +20,7 @@ class ClasspathUtilTest {
         );
 
         // when
-        var actualInstances = ClasspathUtil.loadClassesImplementingInterfaceOrExtendingClass(BaseInterface.class);
+        var actualInstances = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(BaseInterface.class);
 
         // then
         assertThat(actualInstances.stream().map(Object::getClass).collect(Collectors.<Class<?>>toList()))

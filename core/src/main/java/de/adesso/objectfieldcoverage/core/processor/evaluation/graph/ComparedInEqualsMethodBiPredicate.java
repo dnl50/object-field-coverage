@@ -5,7 +5,7 @@ import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.core.analyzer.IterativeEqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.core.finder.AccessibilityAwareFieldFinderChain;
-import de.adesso.objectfieldcoverage.core.util.TypeUtil;
+import de.adesso.objectfieldcoverage.core.util.TypeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
@@ -65,7 +65,7 @@ public class ComparedInEqualsMethodBiPredicate implements BiPredicate<Accessible
             return false;
         }
 
-        var superClassesIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(originTypeRef);
+        var superClassesIncludingClass = TypeUtils.findExplicitSuperClassesIncludingClass(originTypeRef);
         var aggregatingFieldFinderChain = new AccessibilityAwareFieldFinderChain(fieldFinders);
         Map<CtTypeReference<?>, Set<AccessibleField<?>>> accessibleFieldsInSuperTypes = superClassesIncludingClass.stream()
                 .collect(Collectors.toMap(Function.identity(), c -> Set.copyOf(aggregatingFieldFinderChain.findAccessibleFields(c.getTypeDeclaration(), c))));

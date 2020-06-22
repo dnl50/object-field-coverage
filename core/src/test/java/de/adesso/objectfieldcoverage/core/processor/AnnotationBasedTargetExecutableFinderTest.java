@@ -1,6 +1,9 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
-import de.adesso.objectfieldcoverage.core.util.TargetExecutableFinder;
+import de.adesso.objectfieldcoverage.api.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.api.annotation.TestTargets;
+import de.adesso.objectfieldcoverage.core.finder.executable.AnnotationBasedTargetExecutableFinder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -10,6 +13,7 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -21,36 +25,70 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TargetExecutableFinderTest {
+class AnnotationBasedTargetExecutableFinderTest {
 
     @Mock
     private CtModel modelMock;
 
-    @Test
-    void findTargetExecutableReturnsEmptyOptionalWhenMethodIdentifierIsValidButClassDoesNotExist() {
-        // given
-        var givenMethodIdentifier = "org.test.Test#test()";
+    @Mock
+    private CtMethod<?> testMethodMock;
 
-        given(modelMock.getElements(any())).willReturn(List.of());
+    private AnnotationBasedTargetExecutableFinder testSubject;
 
-        // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
-
-        // then
-        assertThat(actualTargetMethodOptional).isEmpty();
+    @BeforeEach
+    void setUp() {
+        this.testSubject = new AnnotationBasedTargetExecutableFinder();
     }
 
     @Test
-    void findTargetExecutableReturnsEmptyOptionalWhenMethodIdentifierIsValidButMethodDoesNotExist(@Mock CtClass<?> targetClassMock) {
+    void findTargetExecutablesReturnsEmptySetWhenTestMethodIsNotAnnotated() {
+        // given
+        doReturn(null).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+
+        // when
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
+
+        // then
+        assertThat(actualTargetExecutables).isEmpty();
+    }
+
+    @Test
+    void findTargetExecutablesReturnsEmptyListWhenTargetExecutableIsNotFound(@Mock TestTarget testTargetMock) {
+        // given
+        var givenMethodIdentifier = "org.test.Test#test()";
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
+        given(modelMock.getElements(any())).willReturn(List.of());
+
+        // when
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
+
+        // then
+        assertThat(actualTargetExecutables).isEmpty();
+    }
+
+    @Test
+    void findTargetExecutablesReturnsEmptyListWhenMethodIdentifierIsValidButMethodDoesNotExist(@Mock CtClass<?> targetClassMock,
+                                                                                               @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
         var targetMethodName = "test";
         var givenMethodIdentifier = String.format("%s#%s()", targetClassQualifiedName, targetMethodName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -59,21 +97,28 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getMethod(targetMethodName)).willReturn(null);
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).isEmpty();
+        assertThat(actualTargetExecutables).isEmpty();
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalWhenMethodIdentifierReferencesConstructorAndConstructorExists(@Mock CtClass targetClassMock,
-                                                                                                                   @Mock CtConstructor targetConstructorMock) {
+    void findTargetExecutablesReturnsPopulatedListWhenMethodIdentifierReferencesConstructorAndConstructorExists(@Mock CtClass targetClassMock,
+                                                                                                                @Mock CtConstructor targetConstructorMock,
+                                                                                                                @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
         var targetMethodName = "Test";
         var givenMethodIdentifier = String.format("%s#%s()", targetClassQualifiedName, targetMethodName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -83,22 +128,29 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getConstructor()).willReturn(targetConstructorMock);
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetConstructorMock);
+        assertThat(actualTargetExecutables).contains(targetConstructorMock);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalWhenMethodIdentifierReferencesConstructorAndConstructorWithParametersExists(@Mock CtClass targetClassMock,
-                                                                                                                                 @Mock CtConstructor targetConstructorMock) {
+    void findTargetExecutablesReturnsPopulatedListWhenMethodIdentifierReferencesConstructorAndConstructorWithParametersExists(@Mock CtClass targetClassMock,
+                                                                                                                              @Mock CtConstructor targetConstructorMock,
+                                                                                                                              @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
         var targetMethodName = "Test";
         var primitiveTypeName = "int";
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName, primitiveTypeName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -115,21 +167,28 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetConstructorMock);
+        assertThat(actualTargetExecutables).contains(targetConstructorMock);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalWhenMethodIdentifierIsValidAndMethodExists(@Mock CtClass targetClassMock,
-                                                                                                @Mock CtMethod targetMethodMock) {
+    void findTargetExecutablesReturnsPopulatedListWhenMethodIdentifierIsValidAndMethodExists(@Mock CtClass targetClassMock,
+                                                                                             @Mock CtMethod targetMethodMock,
+                                                                                             @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
         var targetMethodName = "test";
         var givenMethodIdentifier = String.format("%s#%s()", targetClassQualifiedName, targetMethodName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -138,16 +197,17 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getMethod(targetMethodName)).willReturn(targetMethodMock);
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethodMock);
+        assertThat(actualTargetExecutables).contains(targetMethodMock);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalForPrimitiveTypeArgument(@Mock CtClass targetClassMock,
-                                                                              @Mock CtMethod targetMethod) {
+    void findTargetExecutablesReturnsPopulatedListForPrimitiveTypeArgument(@Mock CtClass targetClassMock,
+                                                                           @Mock CtMethod targetMethod,
+                                                                           @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
@@ -155,6 +215,12 @@ class TargetExecutableFinderTest {
         var primitiveTypeName = "boolean";
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 primitiveTypeName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -173,16 +239,17 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethod);
+        assertThat(actualTargetExecutables).contains(targetMethod);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalForArrayPrimitiveTypeArgument(@Mock CtClass targetClassMock,
-                                                                                   @Mock CtMethod targetMethodMock) {
+    void findTargetExecutablesReturnsPopulatedListForArrayPrimitiveTypeArgument(@Mock CtClass targetClassMock,
+                                                                                @Mock CtMethod targetMethodMock,
+                                                                                @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
@@ -192,6 +259,12 @@ class TargetExecutableFinderTest {
         var expectedDimensionCount = 4;
         var givenMethodIdentifier = String.format("%s#%s(%s%s)", targetClassQualifiedName, targetMethodName,
                 primitiveTypeName, dimensions);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -210,16 +283,17 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethodMock);
+        assertThat(actualTargetExecutables).contains(targetMethodMock);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalForArrayPrimitiveTypeAndPrimitiveTypeArguments(@Mock CtClass targetClassMock,
-                                                                                                    @Mock CtMethod targetMethodMock) {
+    void findTargetExecutablesReturnsPopulatedListForArrayPrimitiveTypeAndPrimitiveTypeArguments(@Mock CtClass targetClassMock,
+                                                                                                 @Mock CtMethod targetMethodMock,
+                                                                                                 @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
@@ -230,6 +304,12 @@ class TargetExecutableFinderTest {
         var expectedDimensionCount = 2;
         var givenMethodIdentifier = String.format("%s#%s(%s%s, %s)", targetClassQualifiedName, targetMethodName,
                 arrayPrimitiveTypeName, dimensions, primitiveTypeName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -253,16 +333,17 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethodMock);
+        assertThat(actualTargetExecutables).contains(targetMethodMock);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalForFullyQualifiedJavaLangClass(@Mock CtClass targetClassMock,
-                                                                                    @Mock CtMethod targetMethodMock) {
+    void findTargetExecutablesReturnsPopulatedListForFullyQualifiedJavaLangClass(@Mock CtClass targetClassMock,
+                                                                                 @Mock CtMethod targetMethodMock,
+                                                                                 @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
@@ -270,6 +351,12 @@ class TargetExecutableFinderTest {
         var wkClassName = "java.lang.Boolean";
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 wkClassName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -288,18 +375,19 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethodMock);
+        assertThat(actualTargetExecutables).contains(targetMethodMock);
 
         verify(modelMock, never()).getAllTypes();
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalForNonQualifiedJavaLangClass(@Mock CtClass targetClassMock,
-                                                                                  @Mock CtMethod targetMethodMock) {
+    void findTargetExecutablesReturnsPopulatedListForNonQualifiedJavaLangClass(@Mock CtClass targetClassMock,
+                                                                               @Mock CtMethod targetMethodMock,
+                                                                               @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
@@ -308,6 +396,12 @@ class TargetExecutableFinderTest {
         var expectedFullyQualifiedClassName = "java.lang.Boolean";
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 wkClassName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -326,18 +420,19 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethodMock);
+        assertThat(actualTargetExecutables).contains(targetMethodMock);
 
         verify(modelMock, never()).getAllTypes();
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalForQualifiedJavaUtilClass(@Mock CtClass targetClassMock,
-                                                                               @Mock CtMethod targetMethodMock) {
+    void findTargetExecutablesReturnsPopulatedListForQualifiedJavaUtilClass(@Mock CtClass targetClassMock,
+                                                                            @Mock CtMethod targetMethodMock,
+                                                                            @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
@@ -345,6 +440,12 @@ class TargetExecutableFinderTest {
         var qualifiedClassName = "java.util.List";
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 qualifiedClassName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
@@ -363,20 +464,21 @@ class TargetExecutableFinderTest {
         });
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethodMock);
+        assertThat(actualTargetExecutables).contains(targetMethodMock);
 
         verify(modelMock, never()).getAllTypes();
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void findTargetExecutableReturnsPopulatedOptionalAndQueriesModelForNonJavaParameter(@Mock CtClass targetClassMock,
-                                                                                        @Mock CtType parameterTypeMock,
-                                                                                        @Mock CtTypeReference parameterTypeReferenceMock,
-                                                                                        @Mock CtMethod targetMethodMock) {
+    void findTargetExecutablesReturnsPopulatedListAndQueriesModelForNonJavaParameter(@Mock CtClass targetClassMock,
+                                                                                     @Mock CtType parameterTypeMock,
+                                                                                     @Mock CtTypeReference parameterTypeReferenceMock,
+                                                                                     @Mock CtMethod targetMethodMock,
+                                                                                     @Mock TestTarget testTargetMock) {
         // given
         var targetClassSimpleName = "Test";
         var targetClassQualifiedName = "org.test.Test";
@@ -384,6 +486,12 @@ class TargetExecutableFinderTest {
         var qualifiedClassName = "de.test.User";
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 qualifiedClassName);
+
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
 
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
         given(modelMock.getAllTypes()).willReturn(List.of(parameterTypeMock));
@@ -397,15 +505,16 @@ class TargetExecutableFinderTest {
         given(targetClassMock.getMethod(targetMethodName, parameterTypeReferenceMock)).willReturn(targetMethodMock);
 
         // when
-        var actualTargetMethodOptional = TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock);
+        var actualTargetExecutables = testSubject.findTargetExecutables(testMethodMock, List.of());
 
         // then
-        assertThat(actualTargetMethodOptional).contains(targetMethodMock);
+        assertThat(actualTargetExecutables).contains(targetMethodMock);
     }
 
     @Test
     @SuppressWarnings("rawtypes")
-    void findTargetExecutableThrowsExceptionWhenModelDoesNotContainType(@Mock CtClass targetClassMock) {
+    void findTargetExecutableThrowsExceptionWhenModelDoesNotContainType(@Mock CtClass targetClassMock,
+                                                                        @Mock TestTarget testTargetMock) {
         // given
         var targetClassQualifiedName = "org.test.Test";
         var targetMethodName = "test";
@@ -413,20 +522,27 @@ class TargetExecutableFinderTest {
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 qualifiedClassName);
 
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
+
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
         given(modelMock.getAllTypes()).willReturn(List.of());
 
         given(targetClassMock.getQualifiedName()).willReturn(targetClassQualifiedName);
 
         // when / then
-        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> testSubject.findTargetExecutables(testMethodMock, List.of()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("The model does not contain the type '%s'!", qualifiedClassName);
     }
 
     @Test
     @SuppressWarnings("rawtypes")
-    void findTargetExecutableThrowsExceptionWhenClassFromJavaPackageNotFound(@Mock CtClass targetClassMock) {
+    void findTargetExecutableThrowsExceptionWhenClassFromJavaPackageNotFound(@Mock CtClass targetClassMock,
+                                                                             @Mock TestTarget testTargetMock) {
         // given
         var targetClassQualifiedName = "org.test.Test";
         var targetMethodName = "test";
@@ -434,19 +550,27 @@ class TargetExecutableFinderTest {
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 qualifiedClassName);
 
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
+
+
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
         given(targetClassMock.getQualifiedName()).willReturn(targetClassQualifiedName);
 
         // when / then
-        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> testSubject.findTargetExecutables(testMethodMock, List.of()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Class '%s' was not found!", qualifiedClassName);
     }
 
     @Test
     @SuppressWarnings("rawtypes")
-    void findTargetExecutableThrowsExceptionWhenClassFromJavaPackageNotFoundAfterAddingJavaLangPrefix(@Mock CtClass targetClassMock) {
+    void findTargetExecutableThrowsExceptionWhenClassFromJavaPackageNotFoundAfterAddingJavaLangPrefix(@Mock CtClass targetClassMock,
+                                                                                                      @Mock TestTarget testTargetMock) {
         // given
         var targetClassQualifiedName = "org.test.Test";
         var targetMethodName = "test";
@@ -455,18 +579,24 @@ class TargetExecutableFinderTest {
         var givenMethodIdentifier = String.format("%s#%s(%s)", targetClassQualifiedName, targetMethodName,
                 unqualifiedClassName);
 
+        doReturn(testTargetMock).when(testMethodMock).getAnnotation(TestTarget.class);
+        doReturn(null).when(testMethodMock).getAnnotation(TestTargets.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+
+        this.setUpTestMethodMockToReturnModelMock();
+
         given(modelMock.getElements(any())).willReturn(List.of(targetClassMock));
 
         given(targetClassMock.getQualifiedName()).willReturn(targetClassQualifiedName);
 
         // when / then
-        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> testSubject.findTargetExecutables(testMethodMock, List.of()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Class '%s' was not found!", expectedQualifiedClassName);
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenClassNameIsMissing() {
+    void findTargetExecutablesThrowsExceptionWhenClassNameIsMissing() {
         // given
         var givenMethodIdentifier = "#test()";
 
@@ -475,7 +605,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenClassNameContainsSpaces() {
+    void findTargetExecutablesThrowsExceptionWhenClassNameContainsSpaces() {
         // given
         var givenMethodIdentifier = "Te st#test()";
 
@@ -484,7 +614,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenMethodNameContainsSpaces() {
+    void findTargetExecutablesThrowsExceptionWhenMethodNameContainsSpaces() {
         // given
         var givenMethodIdentifier = "test.Test#te st()";
 
@@ -493,7 +623,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenMethodNameIsMissing() {
+    void findTargetExecutablesThrowsExceptionWhenMethodNameIsMissing() {
         // given
         var givenMethodIdentifier = "test.Test#()";
 
@@ -502,7 +632,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenPackageNameStartsWithDigit() {
+    void findTargetExecutablesThrowsExceptionWhenPackageNameStartsWithDigit() {
         // given
         var givenMethodIdentifier = "0test.Test#test()";
 
@@ -511,7 +641,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenClassNameStartsWithDigit() {
+    void findTargetExecutablesThrowsExceptionWhenClassNameStartsWithDigit() {
         // given
         var givenMethodIdentifier = "test.0Test#test()";
 
@@ -520,7 +650,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenMethodNameStartsWithDigit() {
+    void findTargetExecutablesThrowsExceptionWhenMethodNameStartsWithDigit() {
         // given
         var givenMethodIdentifier = "test.Test#0test()";
 
@@ -529,7 +659,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenMultipleDotsFollowEachOther() {
+    void findTargetExecutablesThrowsExceptionWhenMultipleDotsFollowEachOther() {
         // given
         var givenMethodIdentifier = "test..Test#test()";
 
@@ -538,7 +668,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenNoRhombPresent() {
+    void findTargetExecutablesThrowsExceptionWhenNoRhombPresent() {
         // given
         var givenMethodIdentifier = "test.Test test()";
 
@@ -547,7 +677,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenMultipleRhombsPresent() {
+    void findTargetExecutablesThrowsExceptionWhenMultipleRhombsPresent() {
         // given
         var givenMethodIdentifier = "test.Test#Test#test()";
 
@@ -556,7 +686,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterListBracketsAreMissing() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterListBracketsAreMissing() {
         // given
         var givenMethodIdentifier = "test.Test#test";
 
@@ -565,7 +695,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterListClosingBracketIsMissing() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterListClosingBracketIsMissing() {
         // given
         var givenMethodIdentifier = "test.Test#test(";
 
@@ -574,7 +704,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterListOpeningBracketIsMissing() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterListOpeningBracketIsMissing() {
         // given
         var givenMethodIdentifier = "test.Test#test)";
 
@@ -583,7 +713,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterListBracketArePresentMultipleTimes() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterListBracketArePresentMultipleTimes() {
         // given
         var givenMethodIdentifier = "test.Test#test(())";
 
@@ -592,7 +722,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterDimensionOpeningBracketIsMissing() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterDimensionOpeningBracketIsMissing() {
         // given
         var givenMethodIdentifier = "test.Test#test(java.lang.String])";
 
@@ -601,7 +731,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterDimensionClosingBracketIsMissing() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterDimensionClosingBracketIsMissing() {
         // given
         var givenMethodIdentifier = "test.Test#test(java.lang.String[)";
 
@@ -610,7 +740,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenMultipleCommaFollowEachOther() {
+    void findTargetExecutablesThrowsExceptionWhenMultipleCommaFollowEachOther() {
         // given
         var givenMethodIdentifier = "test.Test#test(java.lang.String,,java.lang.String)";
 
@@ -619,7 +749,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterListEndsWithComma() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterListEndsWithComma() {
         // given
         var givenMethodIdentifier = "test.Test#test(java.lang.String,)";
 
@@ -628,7 +758,7 @@ class TargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutableThrowsExceptionWhenFormalParameterDimensioBracketsAreNested() {
+    void findTargetExecutablesThrowsExceptionWhenFormalParameterDimensioBracketsAreNested() {
         // given
         var givenMethodIdentifier = "test.Test#test(java.lang.String[[]])";
 
@@ -637,10 +767,25 @@ class TargetExecutableFinderTest {
     }
 
     private void assertIllegalArgumentExceptionIsThrown(String givenMethodIdentifier) {
+        // given
+        this.setUpTestMethodMockToReturnModelMock();
+
+        var testTargetMock = mock(TestTarget.class);
+        given(testTargetMock.value()).willReturn(givenMethodIdentifier);
+        given(testMethodMock.getAnnotation(TestTarget.class)).willReturn(testTargetMock);
+
         // when / then
-        assertThatThrownBy(() -> TargetExecutableFinder.findTargetExecutable(givenMethodIdentifier, modelMock))
+        assertThatThrownBy(() -> testSubject.findTargetExecutables(testMethodMock, List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Given method identifier '%s' is not a valid identifier!", givenMethodIdentifier);
+                .hasMessage("Method identifier '%s' is not a valid identifier!", givenMethodIdentifier);
+    }
+
+    private void setUpTestMethodMockToReturnModelMock() {
+        // when
+        var factoryMock = mock(Factory.class);
+
+        given(testMethodMock.getFactory()).willReturn(factoryMock);
+        given(factoryMock.getModel()).willReturn(modelMock);
     }
 
 }

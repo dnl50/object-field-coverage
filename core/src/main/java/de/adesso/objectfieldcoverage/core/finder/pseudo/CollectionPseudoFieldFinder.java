@@ -2,7 +2,7 @@ package de.adesso.objectfieldcoverage.core.finder.pseudo;
 
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGenerator;
-import de.adesso.objectfieldcoverage.core.util.TypeUtil;
+import de.adesso.objectfieldcoverage.core.util.TypeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.declaration.ModifierKind;
@@ -193,7 +193,7 @@ public class CollectionPseudoFieldFinder extends PseudoFieldFinder {
     private boolean isOrImplementsInterface(CtTypeReference<?> typeRef, Class<?>... interfaceTypes) {
         for(var interfaceType : interfaceTypes) {
             var interfaceTypeRef = getTypeReferenceFor(interfaceType);
-            if(interfaceTypeRef.equals(typeRef.getTypeErasure()) || TypeUtil.findAllSuperInterfaces(typeRef).contains(interfaceTypeRef)) {
+            if(interfaceTypeRef.equals(typeRef.getTypeErasure()) || TypeUtils.findAllSuperInterfaces(typeRef).contains(interfaceTypeRef)) {
                 return true;
             }
         }

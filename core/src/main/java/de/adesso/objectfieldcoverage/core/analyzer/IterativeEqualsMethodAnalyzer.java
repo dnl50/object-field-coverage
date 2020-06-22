@@ -2,7 +2,7 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
-import de.adesso.objectfieldcoverage.core.util.TypeUtil;
+import de.adesso.objectfieldcoverage.core.util.TypeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.declaration.CtClass;
@@ -58,7 +58,7 @@ public class IterativeEqualsMethodAnalyzer {
             return Set.of();
         }
 
-        var superClassRefsIncludingClass = TypeUtil.findExplicitSuperClassesIncludingClass(classRefToAnalyze);
+        var superClassRefsIncludingClass = TypeUtils.findExplicitSuperClassesIncludingClass(classRefToAnalyze);
 
         if(!accessibleFieldsInSuperTypes.keySet().containsAll(superClassRefsIncludingClass)) {
             throw new IllegalArgumentException("At least one entry in the accessibleFieldsInSuperTypes map does not contain " +

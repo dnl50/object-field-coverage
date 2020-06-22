@@ -1,10 +1,12 @@
 package de.adesso.objectfieldcoverage.core.util.exception;
 
+import de.adesso.objectfieldcoverage.core.util.ExecutableUtils;
+
 /**
  * Runtime exception thrown when a target method of a given test case cannot be found in the
  * current Spoon model.
  *
- * @see de.adesso.objectfieldcoverage.core.util.ExecutableUtil
+ * @see ExecutableUtils
  */
 public class TargetMethodNotFoundException extends RuntimeException {
 

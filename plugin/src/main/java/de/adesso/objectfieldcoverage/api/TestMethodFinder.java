@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * A functional interface abstraction whose implementations are used to identify test methods
- * in a given {@link CtClass}. All implementations must declare a <b>public no-arg</b> constructor.
+ * in a given {@link CtClass}. All implementations <b>must</b> declare a <b>public no-arg</b> constructor.
  */
 @FunctionalInterface
 public interface TestMethodFinder {

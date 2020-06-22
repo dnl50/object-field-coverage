@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.core.annotation;
+package de.adesso.objectfieldcoverage.api.annotation;
 
 import java.lang.annotation.*;
 
@@ -13,7 +13,7 @@ public @interface TestTargets {
     /**
      *
      * @return
-     *          The test target annotations to specify the targeted methods.
+     *          The test target annotations to specify the targeted executable (methods and constructors).
      */
     TestTarget[] value();
 
