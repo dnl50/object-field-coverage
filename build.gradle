@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'io.spring.dependency-management' version '1.0.6.RELEASE' apply false
+    id 'maven-publish'
 }
 
 group 'de.adesso'
@@ -9,6 +10,7 @@ version '0.0.1-SNAPSHOT'
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'maven-publish'
 
     sourceCompatibility = 11
     targetCompatibility = 11
@@ -64,6 +66,19 @@ subprojects {
 
     compileJava {
         options.compilerArgs << '-Xlint:unchecked'
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                // use jar target for publish
+                artifact jar
+
+                groupId = "${rootProject.group}"
+                artifactId = "${rootProject.name}-${project.name}"
+                version = "${rootProject.version}"
+            }
+        }
     }
 
 }

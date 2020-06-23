@@ -1,6 +1,6 @@
 package de.adesso.test;
 
-import de.adesso.objectfieldcoverage.api.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.annotation.TestTarget;
 import de.adesso.test.Melon;
 
 public class MelonTest {

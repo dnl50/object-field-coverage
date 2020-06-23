@@ -170,16 +170,18 @@ public class AccessibleFieldGraphBuilder {
         } while(!fieldDeclaringTypeProcessingQueue.isEmpty());
 
         // set children nodes in each created node at the end of the process so no
-        // update is required in the meantime
+        // update is required in the meantime. pseudo fields do not have child nodes by definition
         processedFieldDeclaringTypes.forEach(processedFieldDeclaringType -> {
             var existingNodesForCurrentTypeRef = typeRefToNodesMap.getOrDefault(processedFieldDeclaringType, Set.of());
             var childNodesForCurrentTypeRef = typeRefToChildNodesMap.getOrDefault(processedFieldDeclaringType, Set.of());
 
-            existingNodesForCurrentTypeRef.forEach(node -> node.addChildren(childNodesForCurrentTypeRef));
+            existingNodesForCurrentTypeRef.stream()
+                    .filter(Predicate.not(AccessibleFieldGraphNode::isPseudoFieldNode))
+                    .forEach(node -> node.addChildren(childNodesForCurrentTypeRef));
         });
 
         log.info("Finished graph build process (starting type: '{}', accessing type: '{}')! The resulting tree has " +
-                        "{} root nodes and {} nodes in total!", startingPoint.getQualifiedName(), accessingType.getQualifiedName(),
+                        "{} root node(s) and {} node(s) in total!", startingPoint.getQualifiedName(), accessingType.getQualifiedName(),
                 rootNodes.size(), typeRefToNodesMap.values().stream().mapToInt(Set::size).sum());
 
         return new AccessibleFieldGraph(rootNodes, startingPoint, accessingType.getReference());

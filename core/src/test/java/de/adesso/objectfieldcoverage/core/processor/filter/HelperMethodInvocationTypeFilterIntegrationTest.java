@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-import java.util.Set;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +22,7 @@ class HelperMethodInvocationTypeFilterIntegrationTest extends AbstractSpoonInteg
         var testSubject = new HelperMethodInvocationTypeFilter(testMethod);
 
         var allInvocations = testMethod.getElements(new TypeFilter<>(CtInvocation.class));
-        var expectedInvocations = Set.<CtInvocation<?>>of(
+        var expectedInvocations = List.<CtInvocation<?>>of(
                 allInvocations.get(0),
                 allInvocations.get(5)
         );

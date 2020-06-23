@@ -4,6 +4,7 @@ ext {
 
 dependencies {
     implementation project(':plugin')
+    implementation project(':annotation')
 
     // reflection utils for finding classes implementing interfaces and abstract classes
     implementation "org.reflections:reflections:${reflectionsVersion}"

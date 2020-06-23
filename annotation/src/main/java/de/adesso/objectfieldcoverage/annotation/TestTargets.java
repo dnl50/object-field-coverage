@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.api.annotation;
+package de.adesso.objectfieldcoverage.annotation;
 
 import java.lang.annotation.*;
 

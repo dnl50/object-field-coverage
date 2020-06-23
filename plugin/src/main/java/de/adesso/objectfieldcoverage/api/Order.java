@@ -1,14 +1,12 @@
 package de.adesso.objectfieldcoverage.api;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Type level annotation for annotating interface / abstract class implementations for basic ordering of implementations
  * when requesting a list of all available implementations of the interface / abstract class.
  */
+@Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Order {

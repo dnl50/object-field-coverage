@@ -1,9 +1,9 @@
 package de.adesso.objectfieldcoverage.core.finder.executable;
 
+import de.adesso.objectfieldcoverage.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.annotation.TestTargets;
 import de.adesso.objectfieldcoverage.api.Order;
 import de.adesso.objectfieldcoverage.api.TargetExecutableFinder;
-import de.adesso.objectfieldcoverage.api.annotation.TestTarget;
-import de.adesso.objectfieldcoverage.api.annotation.TestTargets;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -195,7 +195,7 @@ public class AnnotationBasedTargetExecutableFinder implements TargetExecutableFi
      *
      * @param methodIdentifier
      *          The method identifier by which the target method is identified, not {@code null}. Must be
-     *          a valid method identifier. See {@link de.adesso.objectfieldcoverage.api.annotation.TestTarget}
+     *          a valid method identifier. See {@link de.adesso.objectfieldcoverage.annotation.TestTarget}
      *          for a detailed explanation.
      *
      * @param model

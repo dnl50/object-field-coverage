@@ -1,4 +1,5 @@
 rootProject.name = 'object-field-coverage'
 include 'core'
 include 'plugin'
+include 'annotation'
 

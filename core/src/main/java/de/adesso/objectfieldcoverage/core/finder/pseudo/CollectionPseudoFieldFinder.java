@@ -1,7 +1,9 @@
 package de.adesso.objectfieldcoverage.core.finder.pseudo;
 
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGenerator;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.util.TypeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -56,6 +58,17 @@ public class CollectionPseudoFieldFinder extends PseudoFieldFinder {
 
         this.typeFactory = new TypeFactory();
         this.typeRefCache = new HashMap<>();
+    }
+
+    /**
+     * No-arg constructor initializing the {@link PseudoClassGenerator} and {@link PseudoFieldGenerator} fields
+     * of the super-class with the default implementations.
+     *
+     * @see CollectionPseudoFieldFinder#CollectionPseudoFieldFinder(PseudoClassGenerator, PseudoFieldGenerator)
+     */
+    @SuppressWarnings("unused")
+    public CollectionPseudoFieldFinder() {
+        this(new PseudoClassGeneratorImpl(), new PseudoFieldGeneratorImpl());
     }
 
     /**

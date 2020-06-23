@@ -5,18 +5,21 @@ import de.adesso.objectfieldcoverage.core.processor.filter.HelperMethodInvocatio
 import de.adesso.objectfieldcoverage.core.processor.filter.InvokedExecutableFilter;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Utility class providing static methods for executable invocations and more.
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ProcessorUtils {
 
@@ -52,6 +55,17 @@ public class ProcessorUtils {
     public static List<CtMethod<?>> findInvokedHelperMethods(CtMethod<?> testMethod) {
         return testMethod.getElements(new HelperMethodInvocationTypeFilter(testMethod)).stream()
                 .map(CtInvocation::getExecutable)
+                .map(executableRef -> {
+                    var executable = executableRef.getExecutableDeclaration();
+
+                    if(executable == null) {
+                        log.warn("Helper method declaration of '{}' not found!", executableRef.getSignature());
+                        return null;
+                    }
+
+                    return executable;
+                })
+                .filter(Objects::nonNull)
                 .map(executable -> (CtMethod<?>) executable)
                 .collect(Collectors.toList());
     }

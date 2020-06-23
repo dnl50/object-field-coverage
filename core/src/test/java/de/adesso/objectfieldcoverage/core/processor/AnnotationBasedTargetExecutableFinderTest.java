@@ -1,7 +1,7 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
-import de.adesso.objectfieldcoverage.api.annotation.TestTarget;
-import de.adesso.objectfieldcoverage.api.annotation.TestTargets;
+import de.adesso.objectfieldcoverage.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.annotation.TestTargets;
 import de.adesso.objectfieldcoverage.core.finder.executable.AnnotationBasedTargetExecutableFinder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

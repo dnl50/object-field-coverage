@@ -1,12 +1,11 @@
-package de.adesso.objectfieldcoverage.api.annotation;
+package de.adesso.objectfieldcoverage.annotation;
 
 import java.lang.annotation.*;
 
 /**
  * Method-level annotation used to mark test methods for which the coverage metric should be calculated. Methods
- * which are not annotated with this annotation may also be processed in case a
- * {@link de.adesso.objectfieldcoverage.api.TargetExecutableFinder} implementation is used which does not depend on
- * this annotation.
+ * which are not annotated with this annotation may also be processed in case an interface implementation is present
+ * which does not depend on this annotation.
  */
 @Documented
 @Repeatable(TestTargets.class)

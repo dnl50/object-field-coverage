@@ -139,11 +139,11 @@ public class AssertionEvaluationBuilder {
                 accessibleFieldsUsedInEqualsGraph);
 
         if(pathsOfFieldsNotComparedInEquals.isEmpty()) {
-            log.info("All {} accessible fields are compared in the equals method!",
-                    accessibleFieldGraph.getAllNodes().size());
+            log.info("All {} accessible fields of '{}' are compared in the equals method!",
+                    accessibleFieldGraph.getAllNodes().size(), assertedTypeRef.getQualifiedName());
         } else {
-            log.info("{} accessible fields and their accessible child fields (if present) are not compared in the equals method!",
-                    pathsOfFieldsNotComparedInEquals.size());
+            log.info("{} accessible fields of '{}' and their accessible child fields (if present) are not compared in the equals method!",
+                    assertedTypeRef.getQualifiedName(), pathsOfFieldsNotComparedInEquals.size());
         }
 
         var resultIngEvaluationInformation = new AssertionEvaluationInformation(assertedTypeRef, accessibleFieldGraph,

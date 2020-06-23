@@ -2,7 +2,9 @@ package de.adesso.objectfieldcoverage.core.finder.pseudo;
 
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGenerator;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.reference.CtTypeReference;
@@ -27,6 +29,17 @@ public class PrimitiveTypePseudoFieldFinder extends PseudoFieldFinder {
 
     public PrimitiveTypePseudoFieldFinder(PseudoClassGenerator pseudoClassGenerator, PseudoFieldGenerator pseudoFieldGenerator) {
         super(pseudoClassGenerator, pseudoFieldGenerator);
+    }
+
+    /**
+     * No-arg constructor initializing the {@link PseudoClassGenerator} and {@link PseudoFieldGenerator} fields
+     * of the super-class with the default implementations.
+     *
+     * @see PrimitiveTypePseudoFieldFinder#PrimitiveTypePseudoFieldFinder(PseudoClassGenerator, PseudoFieldGenerator)
+     */
+    @SuppressWarnings("unused")
+    public PrimitiveTypePseudoFieldFinder() {
+        this(new PseudoClassGeneratorImpl(), new PseudoFieldGeneratorImpl());
     }
 
     /**

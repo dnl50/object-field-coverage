@@ -66,15 +66,14 @@ public class AccessibleFieldGraphNode {
     }
 
     /**
-     * If this method returns {@code true}, it is guaranteed that the {@link #getChildren() children}
-     * set of this node is empty, because primitive types do not contain fields.
+     * A pseudo field node does not have any child nodes.
      *
      * @return
-     *          The result of the {@link AccessibleField#isPrimitiveTypeField()} method invocation
-     *          on the contained {@link #getAccessibleField() accessible field}.
+     *          {@code true}, if the {@link #getAccessibleField() accessible field} of {@code this} node
+     *          {@link AccessibleField#isPseudo() is a pseudo field}. {@code false} is returned otherwise.
      */
-    public boolean isPrimitiveTypeNode() {
-        return accessibleField.isPrimitiveTypeField();
+    public boolean isPseudoFieldNode() {
+        return accessibleField.isPseudo();
     }
 
     /**

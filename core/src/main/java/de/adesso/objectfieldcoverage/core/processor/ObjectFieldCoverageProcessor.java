@@ -1,10 +1,8 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
-import de.adesso.objectfieldcoverage.api.AccessibilityAwareFieldFinder;
-import de.adesso.objectfieldcoverage.api.AssertionFinder;
-import de.adesso.objectfieldcoverage.api.TargetExecutableFinder;
-import de.adesso.objectfieldcoverage.api.TestMethodFinder;
-import de.adesso.objectfieldcoverage.api.annotation.IgnoreCoverage;
+import de.adesso.objectfieldcoverage.annotation.IgnoreCoverage;
+import de.adesso.objectfieldcoverage.api.*;
+import de.adesso.objectfieldcoverage.core.processor.evaluation.AssertionEvaluationBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.processing.AbstractProcessor;
@@ -33,8 +31,24 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
 
     private final List<AssertionFinder> assertionFinders;
 
+    private final List<EqualsMethodAnalyzer> equalsMethodAnalyzers;
+
     @Override
     public void process(CtClass<?> clazz) {
+        try {
+            processInternal(clazz);
+        } catch (RuntimeException e) {
+            log.error(String.format("Error while processing class '%s': ", clazz.getQualifiedName()), e);
+        }
+    }
+
+    private void processInternal(CtClass<?> clazz) {
+        // exclude anonymous classes
+        if(clazz.isAnonymous()) {
+            log.debug("Anonymous class '{}' will be ignored!", clazz.getQualifiedName());
+            return;
+        }
+
         var testMethodsInClass = findAllTestMethods(clazz);
 
         if(testMethodsInClass.isEmpty()) {
@@ -52,17 +66,21 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         log.info("Started processing of test method '{}'!", testMethod.getSimpleName());
 
         var invokedHelperMethods = findInvokedHelperMethods(testMethod);
-        log.debug("Test method '{}' invokes {} helper methods: {}", testMethod.getSignature(),
-                invokedHelperMethods.size(), invokedHelperMethods);
+        if(log.isDebugEnabled()) {
+            log.debug("Test method '{}' invokes {} helper methods: {}", testMethod.getSignature(),
+                    invokedHelperMethods.size(), invokedHelperMethods.stream().map(CtExecutable::getSignature).collect(Collectors.toList()));
+        }
 
         var targetExecutables = findTargetExecutables(testMethod, invokedHelperMethods);
-        log.debug("Test method '{}' targets {} executables: {}", testMethod.getSignature(), targetExecutables.size(),
-                targetExecutables);
+        if(log.isDebugEnabled()) {
+            log.debug("Test method '{}' targets {} executables: {}", testMethod.getSignature(), targetExecutables.size(),
+                    targetExecutables.stream().map(CtExecutable::getSignature).collect(Collectors.toList()));
+        }
 
         var testAndHelperMethods = new HashSet<>(invokedHelperMethods);
         testAndHelperMethods.add(testMethod);
         var invokedTargetExecutables = filterInvokedExecutables(testAndHelperMethods, targetExecutables);
-        log.debug("{} of {} target executables are invoked!", invokedTargetExecutables.size(), invokedHelperMethods.size());
+        log.debug("{} of {} target executables are invoked at least once!", invokedTargetExecutables.size(), targetExecutables.size());
 
         for (var invokedTargetExecutable : invokedTargetExecutables) {
             var invocationsOfTargetExecutable = findInvocationsOfExecutable(testAndHelperMethods, invokedTargetExecutable);
@@ -78,7 +96,10 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     }
 
     private void processTargetExecutableInvocation(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods, CtInvocation<?> targetExecutableInvocation) {
+        var assertionEvalInformation = new AssertionEvaluationBuilder(fieldFinders, equalsMethodAnalyzers)
+                .build(testMethod.getDeclaringType(), targetExecutableInvocation.getType());
 
+        int i = 5;
     }
 
     /**

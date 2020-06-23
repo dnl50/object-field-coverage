@@ -1,7 +1,7 @@
 package de.adesso.test;
 
-import de.adesso.objectfieldcoverage.api.annotation.TestTarget;
-import de.adesso.objectfieldcoverage.api.annotation.TestTargets;
+import de.adesso.objectfieldcoverage.annotation.TestTarget;
+import de.adesso.objectfieldcoverage.annotation.TestTargets;
 
 public class MelonServiceTest {
 

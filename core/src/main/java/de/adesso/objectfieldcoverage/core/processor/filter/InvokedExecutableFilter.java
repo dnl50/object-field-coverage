@@ -61,8 +61,10 @@ public class InvokedExecutableFilter implements Predicate<CtExecutable<?>> {
                 .map(CtAbstractInvocation::getExecutable)
                 .collect(Collectors.toSet());
 
-        log.debug("Found a total of {} invocations in the following methods: {}", invokedExecutables.size(),
-                methodsToFindInvocationsIn);
+        if(log.isDebugEnabled()) {
+            log.debug("Found a total of {} invocations in the following methods: {}", invokedExecutables.size(),
+                    methodsToFindInvocationsIn.stream().map(CtExecutable::getSignature).collect(Collectors.toList()));
+        }
     }
 
 }
