@@ -22,7 +22,8 @@ public interface TargetExecutableFinder {
      *          All helper methods which are invoked inside the given {@code testMethod}, not {@code null}.
      *
      * @return
-     *          A set containing all executables which are targeted by the given {@code testMethod}.
+     *          A set containing all executables which are targeted by the given {@code testMethod}. The
+     *          executables do not have to be invoked.
      */
     Set<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods);
 

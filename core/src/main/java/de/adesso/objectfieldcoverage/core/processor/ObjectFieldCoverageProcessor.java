@@ -5,8 +5,6 @@ import de.adesso.objectfieldcoverage.api.AssertionFinder;
 import de.adesso.objectfieldcoverage.api.TargetExecutableFinder;
 import de.adesso.objectfieldcoverage.api.TestMethodFinder;
 import de.adesso.objectfieldcoverage.api.annotation.IgnoreCoverage;
-import de.adesso.objectfieldcoverage.core.processor.filter.HelperMethodInvocationFilter;
-import de.adesso.objectfieldcoverage.core.util.ExecutableUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.processing.AbstractProcessor;
@@ -16,9 +14,12 @@ import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static de.adesso.objectfieldcoverage.core.processor.util.ProcessorUtils.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -50,55 +51,34 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     private void processTestMethod(CtMethod<?> testMethod, CtClass<?> testClazz) {
         log.info("Started processing of test method '{}'!", testMethod.getSimpleName());
 
-        var helperMethods = findHelperMethods(testMethod);
+        var invokedHelperMethods = findInvokedHelperMethods(testMethod);
+        log.debug("Test method '{}' invokes {} helper methods: {}", testMethod.getSignature(),
+                invokedHelperMethods.size(), invokedHelperMethods);
 
+        var targetExecutables = findTargetExecutables(testMethod, invokedHelperMethods);
+        log.debug("Test method '{}' targets {} executables: {}", testMethod.getSignature(), targetExecutables.size(),
+                targetExecutables);
+
+        var testAndHelperMethods = new HashSet<>(invokedHelperMethods);
+        testAndHelperMethods.add(testMethod);
+        var invokedTargetExecutables = filterInvokedExecutables(testAndHelperMethods, targetExecutables);
+        log.debug("{} of {} target executables are invoked!", invokedTargetExecutables.size(), invokedHelperMethods.size());
+
+        for (var invokedTargetExecutable : invokedTargetExecutables) {
+            var invocationsOfTargetExecutable = findInvocationsOfExecutable(testAndHelperMethods, invokedTargetExecutable);
+            log.debug("Target executable '{}' invoked {} times!", invokedTargetExecutable.getSignature(),
+                    invocationsOfTargetExecutable.size());
+
+            for(var targetExecutableInvocation : invocationsOfTargetExecutable) {
+                processTargetExecutableInvocation(testMethod, invokedHelperMethods, targetExecutableInvocation);
+            }
+        }
 
         log.info("Finished processing of test method '{}'!", testMethod.getSimpleName());
     }
 
-    private void processTargetMethodInvocation() {
+    private void processTargetExecutableInvocation(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods, CtInvocation<?> targetExecutableInvocation) {
 
-    }
-
-    /**
-     *
-     * @param testMethod
-     *          The test method in which the given {@code executables} should get invoked, not {@code null}.
-     *
-     * @param executables
-     *          The corresponding executables, not {@code null}.
-     *
-     * @return
-     *          A set containing all executables which are contained in the given {@code executables}
-     *          collection and which are invoked inside the given method.
-     */
-    private Set<CtExecutable<?>> filterInvokedExecutables(CtMethod<?> testMethod, Collection<CtExecutable<?>> executables) {
-        return executables.stream()
-                .filter(executable -> {
-                    if(!ExecutableUtils.isExecutableInvoked(testMethod, executable)) {
-                        log.warn("Executable '{}' not invoked in method '{}'!", executable.getSignature(),
-                                testMethod.getSignature());
-                        return false;
-                    }
-
-                    return true;
-                })
-                .collect(Collectors.toSet());
-    }
-
-    /**
-     *
-     * @param testMethod
-     *          The test method to find all invoked helper methods in, not {@code null}.
-     *
-     * @return
-     *          A list containing all helper methods in order of their invocation.
-     */
-    private List<CtMethod<?>> findHelperMethods(CtMethod<?> testMethod) {
-        return testMethod.getElements(new HelperMethodInvocationFilter(testMethod)).stream()
-                .map(CtInvocation::getExecutable)
-                .map(executable -> (CtMethod<?>) executable)
-                .collect(Collectors.toList());
     }
 
     /**
@@ -110,7 +90,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
      *          A list containing all test methods returned by all registered {@link TestMethodFinder}s
      *          with {@link IgnoreCoverage} annotated methods excluded.
      */
-    private List<CtMethod<?>> findAllTestMethods(CtClass<?> clazz) {
+    List<CtMethod<?>> findAllTestMethods(CtClass<?> clazz) {
         return testMethodFinders.stream()
                 .map(finder -> finder.findTestMethods(clazz))
                 .flatMap(List::stream)
@@ -130,10 +110,16 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     /**
      *
      * @param testMethod
+     *          The test method to find the target executables of, not {@code null}.
+     *
      * @param helperMethods
+     *          The helper methods which are invoked inside the given {@code testMethod}, not {@code null}.
+     *
      * @return
+     *          All target executables of the given {@code testMethod}. The executables might not actually be
+     *          invoked inside the given methods.
      */
-    private Set<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+    Set<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
         return targetExecutableFinders.stream()
                 .map(finder -> finder.findTargetExecutables(testMethod, helperMethods))
                 .flatMap(Collection::stream)

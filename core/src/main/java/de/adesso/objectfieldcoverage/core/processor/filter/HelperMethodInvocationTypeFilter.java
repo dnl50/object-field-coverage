@@ -14,7 +14,7 @@ import java.util.Objects;
  * concrete method which is declared in same class or any parent class as the specified test method.
  */
 @Slf4j
-public class HelperMethodInvocationFilter extends TypeFilter<CtInvocation<?>> {
+public class HelperMethodInvocationTypeFilter extends TypeFilter<CtInvocation<?>> {
 
     /**
      * The test method to find the invocations of helper methods for. Must be declared
@@ -27,7 +27,7 @@ public class HelperMethodInvocationFilter extends TypeFilter<CtInvocation<?>> {
      * @param testMethod
      *          The test method which is used to find the helper methods invocations in, not {@code null}.
      */
-    public HelperMethodInvocationFilter(CtMethod<?> testMethod) {
+    public HelperMethodInvocationTypeFilter(CtMethod<?> testMethod) {
         super(CtInvocation.class);
 
         this.testMethod = Objects.requireNonNull(testMethod, "The test method cannot be null!");

@@ -9,7 +9,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class HelperMethodInvocationFilterIntegrationTest extends AbstractSpoonIntegrationTest {
+class HelperMethodInvocationTypeFilterIntegrationTest extends AbstractSpoonIntegrationTest {
 
     @Test
     void matchesReturnsExpectedHelperMethods() {
@@ -19,7 +19,7 @@ class HelperMethodInvocationFilterIntegrationTest extends AbstractSpoonIntegrati
         var testClass = findClassWithSimpleName(model, "Test");
 
         var testMethod = findMethodWithSimpleName(testClass, "test");
-        var testSubject = new HelperMethodInvocationFilter(testMethod);
+        var testSubject = new HelperMethodInvocationTypeFilter(testMethod);
 
         var allInvocations = testMethod.getElements(new TypeFilter<>(CtInvocation.class));
         var expectedInvocations = Set.<CtInvocation<?>>of(
