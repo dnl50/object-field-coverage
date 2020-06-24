@@ -15,6 +15,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +47,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         given(typeMock.isPublic()).willReturn(true);
         given(fieldMock.isPublic()).willReturn(true);
         given(fieldMock.getDeclaringType()).willReturn(typeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
@@ -71,6 +73,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         given(typeMock.isPublic()).willReturn(true);
         given(fieldMock.isProtected()).willReturn(true);
         given(fieldMock.getDeclaringType()).willReturn(typeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
@@ -100,6 +103,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         given(fieldDeclaringTypeMock.isPublic()).willReturn(true);
         given(fieldMock.isProtected()).willReturn(true);
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
@@ -130,6 +134,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         given(fieldDeclaringTypeMock.isPublic()).willReturn(true);
         given(fieldMock.isProtected()).willReturn(true);
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
@@ -162,6 +167,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
         given(fieldMock.isProtected()).willReturn(false);
         given(fieldMock.isPrivate()).willReturn(false);
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
 
@@ -189,6 +195,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
         given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
         given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeRefMock);
@@ -210,6 +217,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
         given(testClazzMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
         given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         // when
         var actualFields = testSubject.findAccessibleFields(testClazzMock, fieldDeclaringTypeRefMock);
@@ -231,6 +239,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
         given(fieldMock.isPrivate()).willReturn(true);
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(testClazzMock.getTopLevelType()).willReturn(testClazzMock);
         given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
@@ -254,6 +263,7 @@ class DirectAccessAccessibilityAwareFieldFinderTest {
 
         given(fieldDeclaringTypeMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
         given(fieldMock.getTopLevelType()).willReturn(fieldDeclaringTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         // when
         var actualFields = testSubject.findAccessibleFields(fieldDeclaringTypeMock, fieldDeclaringTypeRefMock);

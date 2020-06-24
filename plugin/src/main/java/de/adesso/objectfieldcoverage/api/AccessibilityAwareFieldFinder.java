@@ -2,10 +2,7 @@ package de.adesso.objectfieldcoverage.api;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtType;
-import spoon.reflect.declaration.CtTypeMember;
-import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.declaration.*;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.*;
@@ -13,7 +10,7 @@ import java.util.stream.Collectors;
 
 /**
  * An abstract class used to find <i>accessible</i> fields of a given type. The meaning of <i>accessible</i>
- * depends on the implementation.
+ * depends on the implementation. Transient and static final fields are omitted.
  * <br/>
  * Implements the {@link Chainable} interface since multiple implementations might be used one after another.
  */
@@ -78,7 +75,7 @@ public abstract class AccessibilityAwareFieldFinder implements Chainable<Pair<Ct
      * @return
      *          A list of all fields which are accessible from the given {@code accessingType} combined with the
      *          typed element which grants access to the field. Includes fields which are directly declared in
-     *          the given {@code typeRef} or in any super-type.
+     *          the given {@code typeRef} or in any super-type. Transient and constant fields are omitted.
      */
     @SuppressWarnings("unchecked")
     public List<AccessibleField<?>> findAccessibleFields(CtType<?> accessingType, CtTypeReference<?> typeRef) {
@@ -86,6 +83,7 @@ public abstract class AccessibilityAwareFieldFinder implements Chainable<Pair<Ct
         Objects.requireNonNull(typeRef, "The type reference of the type containing fields cannot be null!");
 
         return findFieldsInType(typeRef).stream()
+                .filter(field -> !isTransient(field) && !isCompileTimeConstant(field))
                 .filter(field -> this.isFieldAccessible(accessingType, field))
                 .map(field -> {
                     var pseudo = isPseudoField(field);
@@ -120,7 +118,34 @@ public abstract class AccessibilityAwareFieldFinder implements Chainable<Pair<Ct
 
                     return fieldDeclaration;
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     *
+     * @param field
+     *          The {@link CtField} to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code field} is declared transient. {@code false} is returned
+     *          otherwise.
+     */
+    protected boolean isTransient(CtField<?> field) {
+        return hasModifiers(field, ModifierKind.TRANSIENT);
+    }
+
+    /**
+     *
+     * @param field
+     *          The {@link CtField} to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code field} is declared static and final. {@code false} is returned
+     *          otherwise.
+     */
+    protected boolean isCompileTimeConstant(CtField<?> field) {
+        return hasModifiers(field, ModifierKind.STATIC, ModifierKind.FINAL);
     }
 
     /**
@@ -320,6 +345,39 @@ public abstract class AccessibilityAwareFieldFinder implements Chainable<Pair<Ct
         var typePackage = type.getPackage();
 
         return declaringTypePackage.equals(typePackage);
+    }
+
+    /**
+     *
+     * @param field
+     *          The {@link CtField} to check, not {@code null}.
+     *
+     * @param modifierKind
+     *          A {@link ModifierKind} which must be present, not {@code null}.
+     *
+     * @param additionalModifierKinds
+     *          Additional {@link ModifierKind}s which must be present, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code field}'s modifiers contain the given {@link ModifierKind}s. {@code false}
+     *          is returned otherwise.
+     */
+    private boolean hasModifiers(CtField<?> field, ModifierKind modifierKind, ModifierKind... additionalModifierKinds) {
+        var fieldModifiers = field.getModifiers();
+
+        if(!fieldModifiers.contains(modifierKind)) {
+            return false;
+        }
+
+        if(additionalModifierKinds != null) {
+            for(var additionalModifierKind : additionalModifierKinds) {
+                if(!fieldModifiers.contains(additionalModifierKind)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
 }

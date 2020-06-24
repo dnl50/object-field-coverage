@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.processor;
 
 import de.adesso.objectfieldcoverage.api.*;
 import de.adesso.objectfieldcoverage.core.util.ClasspathUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.MavenLauncher;
 import spoon.support.QueueProcessingManager;
@@ -9,6 +10,7 @@ import spoon.support.QueueProcessingManager;
 class ObjectFieldCoverageProcessorIntegrationTest {
 
     @Test
+    @Disabled
     void process() throws Exception {
         var launcher = new MavenLauncher("C:\\Users\\Daniel\\Documents\\JavaProjects\\commons-lang", MavenLauncher.SOURCE_TYPE.ALL_SOURCE);
         launcher.getEnvironment().setComplianceLevel(11);

@@ -7,13 +7,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.declaration.*;
+import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class AccessibilityAwareFieldFinderTest {
@@ -23,6 +26,29 @@ class AccessibilityAwareFieldFinderTest {
     @BeforeEach
     void setUp() {
         this.testSubject = new DefaultAccessibilityAwareFieldFinder();
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void findAccessibleFieldsOmitsTransientAndCompileTimeConstantFields(@Mock CtType accessingTypeMock,
+                                                                        @Mock CtTypeReference typeRefMock,
+                                                                        @Mock CtField transientFieldMock,
+                                                                        @Mock CtField staticFinalFieldMock,
+                                                                        @Mock CtField finalFieldMock) {
+        // given
+        given(transientFieldMock.getModifiers()).willReturn(Set.of(ModifierKind.TRANSIENT));
+        given(staticFinalFieldMock.getModifiers()).willReturn(Set.of(ModifierKind.STATIC, ModifierKind.FINAL));
+        given(finalFieldMock.getModifiers()).willReturn(Set.of(ModifierKind.FINAL));
+
+        setUpTypeRefMockToReturnFields(typeRefMock, Set.of(transientFieldMock, staticFinalFieldMock, finalFieldMock));
+
+        var expectedAccessibleField = new AccessibleField<>(finalFieldMock, Set.of());
+
+        // when
+        var accessibleFields = testSubject.findAccessibleFields(accessingTypeMock, typeRefMock);
+
+        // then
+        assertThat(accessibleFields).containsExactly(expectedAccessibleField);
     }
 
     @Test
@@ -203,6 +229,80 @@ class AccessibilityAwareFieldFinderTest {
 
         // then
         assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void isTransientReturnsTrueWhenTransientFieldModifierIsPresent(@Mock CtField<String> fieldMock) {
+        // given
+        given(fieldMock.getModifiers()).willReturn(Set.of(ModifierKind.TRANSIENT, ModifierKind.PUBLIC));
+
+        // when
+        var actualResult = testSubject.isTransient(fieldMock);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isTransientReturnsFalseWhenTransientFieldModifierIsNotPresent(@Mock CtField<String> fieldMock) {
+        // given
+        given(fieldMock.getModifiers()).willReturn(Set.of(ModifierKind.STATIC, ModifierKind.PUBLIC));
+
+        // when
+        var actualResult = testSubject.isTransient(fieldMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void isCompileTimeConstantReturnsTrueWhenStaticAndFinalModifiersPresent(@Mock CtField<String> fieldMock) {
+        // given
+        given(fieldMock.getModifiers()).willReturn(Set.of(ModifierKind.STATIC, ModifierKind.FINAL));
+
+        // when
+        var actualResult = testSubject.isCompileTimeConstant(fieldMock);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isCompileTimeConstantReturnsFalseWhenStaticModifierIsNotPresent(@Mock CtField<String> fieldMock) {
+        // given
+        given(fieldMock.getModifiers()).willReturn(Set.of(ModifierKind.FINAL));
+
+        // when
+        var actualResult = testSubject.isCompileTimeConstant(fieldMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void isCompileTimeConstantReturnsFalseWhenFinalModifierIsNotPresent(@Mock CtField<String> fieldMock) {
+        // given
+        given(fieldMock.getModifiers()).willReturn(Set.of(ModifierKind.STATIC));
+
+        // when
+        var actualResult = testSubject.isCompileTimeConstant(fieldMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void setUpTypeRefMockToReturnFields(CtTypeReference<?> typeRefMock, Set<CtField<?>> fieldMocks) {
+       Set fieldRefMocks = fieldMocks.stream()
+                .map(fieldMock -> {
+                    var fieldRefMock = mock(CtFieldReference.class);
+                    given(fieldRefMock.getFieldDeclaration()).willReturn(fieldMock);
+
+                    return fieldRefMock;
+                })
+                .collect(Collectors.toSet());
+
+        given(typeRefMock.getAllFields()).willReturn(fieldRefMocks);
     }
 
     private static class DefaultAccessibilityAwareFieldFinder extends AccessibilityAwareFieldFinder {

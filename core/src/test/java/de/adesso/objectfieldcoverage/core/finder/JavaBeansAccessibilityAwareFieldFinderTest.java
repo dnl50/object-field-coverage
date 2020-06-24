@@ -12,6 +12,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,6 +53,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(true);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("boolean");
@@ -92,6 +94,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.Boolean");
@@ -135,6 +138,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.Boolean");
@@ -172,6 +176,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.Boolean");
@@ -205,6 +210,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(booleanFieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(true);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("boolean");
@@ -244,6 +250,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.String");
@@ -285,6 +292,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.String");
@@ -319,6 +327,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.String");
@@ -351,6 +360,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.String");
@@ -392,6 +402,7 @@ class JavaBeansAccessibilityAwareFieldFinderTest {
         given(fieldMock.getSimpleName()).willReturn(fieldSimpleName);
         given(fieldMock.getType()).willReturn(fieldReferenceTypeMock);
         given(fieldMock.getDeclaringType()).willReturn(fieldTypeMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         given(fieldReferenceTypeMock.isPrimitive()).willReturn(false);
         given(fieldReferenceTypeMock.getQualifiedName()).willReturn("java.lang.String");

@@ -17,6 +17,7 @@ import spoon.reflect.reference.CtTypeReference;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,6 +53,7 @@ class LombokAccessibilityAwareFieldFinderTest {
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringTypeMock);
         given(fieldMock.getAnnotation(Getter.class)).willReturn(null);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringTypeMock, Data.class, dataAnnotationMock);
 
@@ -79,6 +81,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Data.class, dataAnnotationMock);
 
@@ -116,6 +119,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PUBLIC);
@@ -155,6 +159,9 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(getterAnnotatedField, otherFieldMock));
 
         given(otherFieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(otherFieldMock.getModifiers()).willReturn(Set.of());
+
+        given(getterAnnotatedField.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(getterAnnotatedField, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PUBLIC);
@@ -194,6 +201,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
@@ -237,6 +245,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
@@ -281,6 +290,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PROTECTED);
@@ -325,6 +335,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PACKAGE);
@@ -368,6 +379,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PACKAGE);
@@ -401,6 +413,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PACKAGE);
@@ -444,6 +457,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PRIVATE);
@@ -477,6 +491,7 @@ class LombokAccessibilityAwareFieldFinderTest {
         setUpTypeRefMockToReturnFields(fieldDeclaringClassRefMock, List.of(fieldMock));
 
         given(fieldMock.getDeclaringType()).willReturn(fieldDeclaringClassMock);
+        given(fieldMock.getModifiers()).willReturn(Set.of());
 
         setUpElementMockToReturnAnnotation(fieldDeclaringClassMock, Getter.class, getterAnnotationMock);
         given(getterAnnotationMock.value()).willReturn(AccessLevel.PRIVATE);
