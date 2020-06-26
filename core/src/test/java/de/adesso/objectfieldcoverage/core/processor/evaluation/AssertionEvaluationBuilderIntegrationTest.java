@@ -5,7 +5,6 @@ import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAss
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
-import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
 import de.adesso.objectfieldcoverage.core.analyzer.PseudoFieldEqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.core.analyzer.lombok.LombokEqualsMethodAnalyzer;
 import de.adesso.objectfieldcoverage.core.analyzer.method.ObjectsEqualsMethodEqualsMethodAnalyzer;
@@ -18,6 +17,7 @@ import de.adesso.objectfieldcoverage.core.finder.pseudo.PrimitiveTypePseudoField
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
+import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

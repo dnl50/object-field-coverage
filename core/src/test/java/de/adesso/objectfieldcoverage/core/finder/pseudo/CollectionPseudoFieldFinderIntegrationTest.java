@@ -1,10 +1,10 @@
 package de.adesso.objectfieldcoverage.core.finder.pseudo;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
-import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
+import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;

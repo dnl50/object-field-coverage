@@ -1,7 +1,7 @@
 package de.adesso.objectfieldcoverage.core.processor;
 
-import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
 import de.adesso.objectfieldcoverage.core.finder.executable.AnnotationBasedTargetExecutableFinder;
+import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.declaration.CtExecutable;

@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.processor;
 
 import de.adesso.objectfieldcoverage.annotation.IgnoreCoverage;
 import de.adesso.objectfieldcoverage.api.*;
+import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.AssertionEvaluationBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,10 +60,10 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
                     clazz.getQualifiedName());
         }
 
-        testMethodsInClass.forEach(testMethod -> processTestMethod(testMethod, clazz));
+        testMethodsInClass.forEach(this::processTestMethod);
     }
 
-    private void processTestMethod(CtMethod<?> testMethod, CtClass<?> testClazz) {
+    private void processTestMethod(CtMethod<?> testMethod) {
         log.info("Started processing of test method '{}'!", testMethod.getSimpleName());
 
         var invokedHelperMethods = findInvokedHelperMethods(testMethod);
@@ -82,6 +83,12 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         var invokedTargetExecutables = filterInvokedExecutables(testAndHelperMethods, targetExecutables);
         log.debug("{} of {} target executables are invoked at least once!", invokedTargetExecutables.size(), targetExecutables.size());
 
+        var allAssertions = findAssertions(testMethod, invokedHelperMethods);
+        if(log.isDebugEnabled()) {
+            log.debug("Found {} assertions in test method '{}' and helper methods '{}'!", allAssertions.size(),
+                    testMethod.getSignature(), invokedHelperMethods.stream().map(CtExecutable::getSignature).collect(Collectors.toList()));
+        }
+
         for (var invokedTargetExecutable : invokedTargetExecutables) {
             var invocationsOfTargetExecutable = findInvocationsOfExecutable(testAndHelperMethods, invokedTargetExecutable);
             log.debug("Target executable '{}' invoked {} times!", invokedTargetExecutable.getSignature(),
@@ -99,7 +106,8 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         var assertionEvalInformation = new AssertionEvaluationBuilder(fieldFinders, equalsMethodAnalyzers)
                 .build(testMethod.getDeclaringType(), targetExecutableInvocation.getType());
 
-        int i = 5;
+
+        // Map (executableInvocation -> CtExpressions, die sich auf Rückgabewert beziehen)
     }
 
     /**
@@ -143,6 +151,13 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     Set<CtExecutable<?>> findTargetExecutables(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
         return targetExecutableFinders.stream()
                 .map(finder -> finder.findTargetExecutables(testMethod, helperMethods))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
+    Set<AbstractAssertion<?>> findAssertions(CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+        return assertionFinders.stream()
+                .map(assertionFinder -> assertionFinder.findAssertions(testMethod, helperMethods))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
     }

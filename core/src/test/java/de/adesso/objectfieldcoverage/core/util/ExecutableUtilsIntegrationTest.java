@@ -1,6 +1,6 @@
 package de.adesso.objectfieldcoverage.core.util;
 
-import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.CtModel;

@@ -5,7 +5,6 @@ import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
-import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
 import de.adesso.objectfieldcoverage.core.finder.JavaBeansAccessibilityAwareFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.CollectionPseudoFieldFinder;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.PrimitiveTypePseudoFieldFinder;
@@ -13,6 +12,7 @@ import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGen
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoFieldGeneratorImpl;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.graph.AccessibleFieldGraphBuilder;
+import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

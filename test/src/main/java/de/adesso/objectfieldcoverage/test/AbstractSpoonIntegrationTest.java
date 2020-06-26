@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.core;
+package de.adesso.objectfieldcoverage.test;
 
 import spoon.Launcher;
 import spoon.compiler.SpoonResource;
@@ -16,8 +16,21 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+/**
+ * Abstract base class for abstract Spoon integration tests.
+ */
 public abstract class AbstractSpoonIntegrationTest {
 
+    /**
+     * Uses Java 11 as the compliance level.
+     *
+     * @param sourceFilePaths
+     *          The paths of the Java files which be part of the built model relative to the resources
+     *          directory, may be {@code null}.
+     *
+     * @return
+     *          The built model.
+     */
     protected CtModel buildModel(String... sourceFilePaths) {
         var launcher = new Launcher();
 
@@ -31,21 +44,63 @@ public abstract class AbstractSpoonIntegrationTest {
         return launcher.getModel();
     }
 
-    protected CtClass<?> findClassWithSimpleName(CtModel model, String simpleName) {
+    /**
+     *
+     * @param model
+     *          The model to find the class in, not {@code null}.
+     *
+     * @param simpleName
+     *          The simple name of the {@link CtClass}, not {@code null}.
+     *
+     * @return
+     *          The {@link CtClass} with the given {@code simpleName}.
+     *
+     * @throws NoSuchElementException
+     *          When no {@link CtClass} with a matching name was found in the given {@code model}.
+     */
+    protected static CtClass<?> findClassWithSimpleName(CtModel model, String simpleName) {
         return model.getElements(new TypeFilter<CtClass<?>>(CtClass.class)).stream()
                 .filter(clazz -> simpleName.equals(clazz.getSimpleName()))
                 .findFirst()
                 .orElseThrow(NoSuchElementException::new);
     }
 
-    protected CtInterface<?> findInterfaceWithSimpleName(CtModel model, String simpleName) {
+    /**
+     *
+     * @param model
+     *          The model to find the interface in, not {@code null}.
+     *
+     * @param simpleName
+     *          The simple name of the {@link CtInterface}, not {@code null}.
+     *
+     * @return
+     *          The {@link CtInterface} with the given {@code simpleName}.
+     *
+     * @throws NoSuchElementException
+     *          When no {@link CtInterface} with a matching name was found in the given {@code model}.
+     */
+    protected static CtInterface<?> findInterfaceWithSimpleName(CtModel model, String simpleName) {
         return model.getElements(new TypeFilter<CtInterface<?>>(CtInterface.class)).stream()
                 .filter(clazz -> simpleName.equals(clazz.getSimpleName()))
                 .findFirst()
                 .orElseThrow(NoSuchElementException::new);
     }
 
-    protected CtMethod<?> findMethodWithSimpleName(CtType<?> type, String simpleName) {
+    /**
+     *
+     * @param type
+     *          The type to find the method in, not {@code null}.
+     *
+     * @param simpleName
+     *          The simple name of the {@link CtMethod}, not {@code null}.
+     *
+     * @return
+     *          The {@link CtMethod} with the given {@code simpleName}.
+     *
+     * @throws NoSuchElementException
+     *          When no {@link CtMethod} with a matching name was found in the given {@code type}.
+     */
+    protected static CtMethod<?> findMethodWithSimpleName(CtType<?> type, String simpleName) {
         return type.getMethods().stream()
                 .filter(method -> method.getSimpleName().equals(simpleName))
                 .findFirst()

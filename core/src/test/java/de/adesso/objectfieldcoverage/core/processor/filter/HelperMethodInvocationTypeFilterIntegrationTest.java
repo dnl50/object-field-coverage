@@ -1,6 +1,6 @@
 package de.adesso.objectfieldcoverage.core.processor.filter;
 
-import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.junit.jupiter.api.Test;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.visitor.filter.TypeFilter;

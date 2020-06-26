@@ -1,7 +1,7 @@
 package de.adesso.objectfieldcoverage.core.finder.lombok;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
-import de.adesso.objectfieldcoverage.core.AbstractSpoonIntegrationTest;
+import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
