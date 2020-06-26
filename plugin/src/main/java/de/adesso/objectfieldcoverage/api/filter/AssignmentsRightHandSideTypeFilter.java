@@ -10,6 +10,9 @@ import spoon.reflect.visitor.filter.TypeFilter;
  */
 public class AssignmentsRightHandSideTypeFilter<T> extends TypeFilter<CtAssignment<T, ? extends T>> {
 
+    /**
+     * The {@link CtExpression} which must match the right-hand-side of an {@link CtAssignment}.
+     */
     private CtExpression<?> rightHandSideExpression;
 
     /**
@@ -17,10 +20,28 @@ public class AssignmentsRightHandSideTypeFilter<T> extends TypeFilter<CtAssignme
      * @param rightHandSideExpression
      *          The expression
      */
-    public AssignmentsRightHandSideTypeFilter(CtExpression<?> rightHandSideExpression) {
+    public AssignmentsRightHandSideTypeFilter(CtExpression<T> rightHandSideExpression) {
         super(CtAssignment.class);
 
         this.rightHandSideExpression = rightHandSideExpression;
+    }
+
+    /**
+     *
+     * @param assignment
+     *          The {@link CtAssignment} to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code assignments} right-hand-side is equal to the configured
+     *          expression. {@code false} is returned otherwise.
+     */
+    @Override
+    public boolean matches(CtAssignment<T, ? extends T> assignment) {
+        if(!super.matches(assignment)) {
+            return false;
+        }
+
+        return rightHandSideExpression.equals(assignment.getAssignment());
     }
 
 }

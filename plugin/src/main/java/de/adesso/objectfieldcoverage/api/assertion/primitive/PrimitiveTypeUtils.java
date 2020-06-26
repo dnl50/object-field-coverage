@@ -33,7 +33,7 @@ public class PrimitiveTypeUtils {
     /**
      * A map containing a (wrapper type, primitive type) entry for every primitive type.
      */
-    private static final Map<CtTypeReference<?>, CtTypeReference<?>> PRIMTIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP;
+    private static final Map<CtTypeReference<?>, CtTypeReference<?>> PRIMITIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP;
 
     /*
      * static initializer block for the PRIMITIVE_TYPE_REFERENCES set, PRIMITIVE_TYPE_TO_WRAPPER_MAP map
@@ -51,7 +51,7 @@ public class PrimitiveTypeUtils {
                 TYPE_FACTORY.DOUBLE_PRIMITIVE, TYPE_FACTORY.DOUBLE
         );
 
-        PRIMTIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP = Map.of(
+        PRIMITIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP = Map.of(
                 TYPE_FACTORY.BOOLEAN, TYPE_FACTORY.BOOLEAN_PRIMITIVE,
                 TYPE_FACTORY.CHARACTER, TYPE_FACTORY.CHARACTER_PRIMITIVE,
                 TYPE_FACTORY.BYTE, TYPE_FACTORY.BYTE_PRIMITIVE,
@@ -131,7 +131,7 @@ public class PrimitiveTypeUtils {
         if(typeReference.isPrimitive()) {
             return typeReference;
         } else {
-            return PRIMTIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP.get(typeReference);
+            return PRIMITIVE_WRAPPER_TO_PRIMRITIVE_TYPE_MAP.get(typeReference);
         }
     }
 

@@ -2,7 +2,9 @@ package de.adesso.objectfieldcoverage.core.processor;
 
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.Set;
 
@@ -12,30 +14,9 @@ public class ChildExpressionFinder {
         return Set.of();
     }
 
-
     private boolean getVariableContainingInvocationResult(CtInvocation<?> invocation, CtMethod<?> methodContainingInvocation) {
+        var variablesWithDefaultExpression = invocation.getElements(new TypeFilter<>(CtElement.class));
         return false;
     }
-
-//    private static class ExpressionFilter extends TypeFilter<CtExpression<?>> {
-//
-//        private final CtExpression<?> expression;
-//
-//        public ExpressionFilter(CtExpression<?> expression) {
-//            super(CtExpression.class);
-//
-//            this.expression = expression;
-//        }
-//
-//        @Override
-//        public boolean matches(CtExpression<?> element) {
-//            if(!super.matches(element)) {
-//                return false;
-//            }
-//
-//
-//        }
-//
-//    }
 
 }
