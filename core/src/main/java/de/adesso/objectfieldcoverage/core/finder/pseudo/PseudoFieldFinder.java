@@ -22,11 +22,11 @@ import java.util.stream.Collectors;
 
 /**
  * Abstract {@link AccessibilityAwareFieldFinder} implementation for finding pseudo fields in a given
- * type reference. Annotated with the {@link Order} annotation with its value set to {@value Order#HIGHEST}
+ * type reference. Annotated with the {@link Order} annotation with its value set to {@code 1000}
  * since pseudo field generation is a short circuit operation.
  */
 @Slf4j
-@Order(Order.HIGHEST)
+@Order(1000)
 @RequiredArgsConstructor
 public abstract class PseudoFieldFinder extends AccessibilityAwareFieldFinder {
 

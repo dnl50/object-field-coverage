@@ -3,7 +3,9 @@ package de.adesso.objectfieldcoverage.core.junit.assertion;
 import de.adesso.objectfieldcoverage.api.AssertionFinder;
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
 import de.adesso.objectfieldcoverage.api.filter.QualifiedNameMethodInvocationTypeFilter;
-import de.adesso.objectfieldcoverage.core.junit.assertion.handler.JunitAssertionInvocationHandler;
+import de.adesso.objectfieldcoverage.core.junit.JUnitVersion;
+import de.adesso.objectfieldcoverage.core.junit.assertion.handler.JUnitAssertionInvocationHandler;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import spoon.reflect.code.CtInvocation;
@@ -18,7 +20,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class AbstractJUnitAssertionFinder implements AssertionFinder {
+@RequiredArgsConstructor
+public class JUnitAssertionFinder implements AssertionFinder {
 
     /**
      * The fully qualified name of JUnit 5's Assertions utility class.
@@ -30,13 +33,14 @@ public class AbstractJUnitAssertionFinder implements AssertionFinder {
      */
     private static final String JUNIT_4_ASSERT_QUALIFIED_NAME = "org.junit.Assert";
 
-    private final List<JunitAssertionInvocationHandler> junitAssertionInvocationHandlers;
+    private final List<JUnitAssertionInvocationHandler> JUnitAssertionInvocationHandlers;
 
     /**
      * No-arg constructor as required by the {@link AssertionFinder} interface.
      */
-    public AbstractJUnitAssertionFinder() {
-        this.junitAssertionInvocationHandlers = List.of();
+    @SuppressWarnings("unused")
+    public JUnitAssertionFinder() {
+        this.JUnitAssertionInvocationHandlers = List.of();
     }
 
     /**
@@ -50,7 +54,7 @@ public class AbstractJUnitAssertionFinder implements AssertionFinder {
 
         var allAssertions = new ArrayList<AbstractAssertion<?>>();
         for(var invocationPair : staticJunitAssertInvocationPairs) {
-            var assertions = junitAssertionInvocationHandlers.stream()
+            var assertions = JUnitAssertionInvocationHandlers.stream()
                     .filter(handler -> handler.supports(invocationPair.getLeft(), invocationPair.getRight()))
                     .map(handler -> handler.getAssertion(invocationPair.getLeft(), testMethod, invocationPair.getRight()))
                     .collect(Collectors.toList());

@@ -37,7 +37,9 @@ public interface AbstractAssertion<T> {
      *
      * @param evaluationInformation
      *          The {@link AssertionEvaluationInformation} that contains additional information
-     *          about the type of the {@link #getAssertedExpression() asserted expression}.
+     *          about the type of the {@link #getAssertedExpression() asserted expression}. Must be a
+     *          an instance for a {@link Throwable} in case the {@link #expressionRaisesThrowable()} method
+     *          returns true. A runtime exception might be thrown otherwise.
      *
      * @return
      *          A set containing the {@link Path}s of the {@link AssertionEvaluationInformation#getAccessibleFieldsGraph()
@@ -45,5 +47,15 @@ public interface AbstractAssertion<T> {
      *          covered.
      */
     Set<Path> getCoveredPaths(AssertionEvaluationInformation evaluationInformation);
+
+    /**
+     *
+     * @return
+     *          {@code true}, if the expression {@code this} instance is expected to raise a throwable
+     *          when evaluating. {@code false} is returned otherwise.
+     */
+    default boolean expressionRaisesThrowable() {
+        return false;
+    }
 
 }

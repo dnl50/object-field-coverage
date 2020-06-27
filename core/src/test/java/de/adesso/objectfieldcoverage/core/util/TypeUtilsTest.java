@@ -2,11 +2,16 @@ package de.adesso.objectfieldcoverage.core.util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtTypeReference;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.*;
 
@@ -157,6 +162,61 @@ class TypeUtilsTest {
 
         // then
         assertThat(actualSuperInterfaces).containsExactlyInAnyOrderElementsOf(expectedSuperInterfaces);
+    }
+
+    @Test
+    void isPotentialTestClassReturnsFalseWhenFileNotPresent(@Mock CtClass<?> classMock,
+                                                            @Mock SourcePosition sourcePositionMock) {
+        // given
+        given(classMock.getPosition()).willReturn(sourcePositionMock);
+        given(sourcePositionMock.getFile()).willReturn(null);
+
+        // when
+        var actualResult = TypeUtils.isPotentialTestClass(classMock);
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "C:\\User\\Test\\src\\test\\java\\Test.java", // windows path separators
+            "src\\test\\java\\Test.java", // windows path separators
+            "/user/test/src/test/java/Test.java", // unix path separator
+            "src/test/java/Test.java" // unix path separator
+    })
+    void isPotentialTestClassReturnsTrueWhenAbsolutePathMatches(String absolutePath, @Mock CtClass<?> classMock,
+                                                                @Mock SourcePosition sourcePositionMock, @Mock File fileMock) {
+        // given
+        given(classMock.getPosition()).willReturn(sourcePositionMock);
+        given(sourcePositionMock.getFile()).willReturn(fileMock);
+        given(fileMock.getAbsolutePath()).willReturn(absolutePath);
+
+        // when
+        var actualResult = TypeUtils.isPotentialTestClass(classMock);
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "C:\\User\\Test\\src\\test\\java\\Test", // missing java file ending
+            "src\\main\\java\\Test.java", // production class
+            "main/java/Test.java" // not in src folder
+    })
+    void isPotentialTestClassReturnsFalseWhenAbsolutePathDoesNotMatch(String absolutePath, @Mock CtClass<?> classMock,
+                                                                      @Mock SourcePosition sourcePositionMock, @Mock File fileMock) {
+        // given
+        given(classMock.getPosition()).willReturn(sourcePositionMock);
+        given(sourcePositionMock.getFile()).willReturn(fileMock);
+        given(fileMock.getAbsolutePath()).willReturn(absolutePath);
+
+        // when
+        var actualResult = TypeUtils.isPotentialTestClass(classMock);
+
+        // then
+        assertThat(actualResult).isFalse();
     }
 
 }

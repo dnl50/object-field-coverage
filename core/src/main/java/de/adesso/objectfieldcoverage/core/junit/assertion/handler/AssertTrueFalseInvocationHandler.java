@@ -2,7 +2,7 @@ package de.adesso.objectfieldcoverage.core.junit.assertion.handler;
 
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
 import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
-import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitVersion;
+import de.adesso.objectfieldcoverage.core.junit.JUnitVersion;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtExpression;
@@ -14,12 +14,12 @@ import spoon.reflect.reference.CtTypeReference;
 //TODO: JavaDoc
 
 /**
- * {@link JunitAssertionInvocationHandler} implementation for {@code assertTrue} / {@code assertFalse}
+ * {@link JUnitAssertionInvocationHandler} implementation for {@code assertTrue} / {@code assertFalse}
  * method invocations with primitive boolean arguments.
  */
 @Slf4j
 @NoArgsConstructor
-public class AssertTrueFalseInvocationHandler implements JunitAssertionInvocationHandler {
+public class AssertTrueFalseInvocationHandler implements JUnitAssertionInvocationHandler {
 
     /**
      * The {@link CtTypeReference} of a primitive boolean.

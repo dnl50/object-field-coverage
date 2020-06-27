@@ -4,6 +4,7 @@ import de.adesso.objectfieldcoverage.annotation.IgnoreCoverage;
 import de.adesso.objectfieldcoverage.api.*;
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.AssertionEvaluationBuilder;
+import de.adesso.objectfieldcoverage.core.util.TypeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.processing.AbstractProcessor;
@@ -34,6 +35,12 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
 
     private final List<EqualsMethodAnalyzer> equalsMethodAnalyzers;
 
+    /**
+     * A list of {@link InvocationThrowableAnalyzer}s to check whether an {@link CtInvocation}
+     * is expected to raise a throwable.
+     */
+    private final List<InvocationThrowableAnalyzer> invocationThrowableAnalyzers;
+
     @Override
     public void process(CtClass<?> clazz) {
         try {
@@ -44,6 +51,12 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     }
 
     private void processInternal(CtClass<?> clazz) {
+        if(!TypeUtils.isPotentialTestClass(clazz)) {
+            log.debug("Class '{}' is not a potential test class since it is not declared in a source file matching " +
+                    "the criteria!", clazz.getQualifiedName());
+            return;
+        }
+
         // exclude anonymous classes
         if(clazz.isAnonymous()) {
             log.debug("Anonymous class '{}' will be ignored!", clazz.getQualifiedName());

@@ -25,9 +25,10 @@ class ObjectFieldCoverageProcessorIntegrationTest {
         var testMethodFinders = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(TestMethodFinder.class);
         var assertionFinders = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(AssertionFinder.class);
         var equalsMethodAnalyzers = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(EqualsMethodAnalyzer.class);
+        var invocationThrowableAnalyzers = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(InvocationThrowableAnalyzer.class);
 
         var processor = new ObjectFieldCoverageProcessor(targetExecutableFinders, fieldFinders, testMethodFinders,
-                assertionFinders, equalsMethodAnalyzers);
+                assertionFinders, equalsMethodAnalyzers, invocationThrowableAnalyzers);
         processingManager.addProcessor(processor);
         processingManager.process(factory.Class().getAll());
     }

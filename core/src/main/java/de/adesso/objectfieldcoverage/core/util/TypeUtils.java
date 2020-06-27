@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeInformation;
 import spoon.reflect.reference.CtTypeReference;
@@ -15,6 +16,12 @@ import java.util.stream.Collectors;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TypeUtils {
+
+    /**
+     * A simple regex to check whether the absolute path of a Java class' source file is
+     * located in a directory which contains test source files.
+     */
+    private static final String JAVA_TEST_CLASS_PATH_REGEX = "^.*src([/\\\\])test([/\\\\])java([/\\\\]).*\\.java$";
 
     /**
      * The fully qualified name of the {@link Object} class.
@@ -116,6 +123,28 @@ public class TypeUtils {
 
         return superInterfaces;
     }
+
+    /**
+     *
+     * @param clazz
+     *          The {@link CtClass} to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the given {@code clazz}' source file is present and located in an absolute path
+     *          matching the regex {@value JAVA_TEST_CLASS_PATH_REGEX}. {@code false} is returned otherwise.
+     */
+    public static boolean isPotentialTestClass(CtClass<?> clazz) {
+        var clazzFile = clazz.getPosition()
+                .getFile();
+
+        if(clazzFile != null) {
+            return clazzFile.getAbsolutePath()
+                     .matches(JAVA_TEST_CLASS_PATH_REGEX);
+        }
+
+        return false;
+    }
+
 
     /**
      *

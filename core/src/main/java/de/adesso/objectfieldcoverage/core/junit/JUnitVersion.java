@@ -1,4 +1,4 @@
-package de.adesso.objectfieldcoverage.core.junit.assertion;
+package de.adesso.objectfieldcoverage.core.junit;
 
 /**
  * An enum representing the supported JUnit versions.

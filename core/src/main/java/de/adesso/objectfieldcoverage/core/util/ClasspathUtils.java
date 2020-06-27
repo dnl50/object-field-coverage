@@ -4,6 +4,7 @@ import de.adesso.objectfieldcoverage.api.Order;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.platform.commons.util.ReflectionUtils;
 import org.reflections.Reflections;
@@ -13,9 +14,7 @@ import org.reflections.util.ConfigurationBuilder;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,9 +22,16 @@ import java.util.stream.Collectors;
 public class ClasspathUtils {
 
     /**
-     * The base package where implementations are searched in.
+     * The base package where implementations are searched in. Additional packages can be added by setting the
+     * {@value ADDITIONAL_PACKAGE_SYS_PROP_KEY} JVM system property to a comma-separated list of fully qualified
+     * package names.
      */
     private static final String BASE_PACKAGE = "de.adesso";
+
+    /**
+     * The system property key of the system property used to take additional packages into account.
+     */
+    private static final String ADDITIONAL_PACKAGE_SYS_PROP_KEY = "classpathutils.additional-packages";
 
     /**
      * Reusable Reflections instance for increased performance. Must be initialized once.
@@ -42,9 +48,10 @@ public class ClasspathUtils {
      *
      * @return
      *          A list a single instance of each concrete class implementing/extending the given {@code type} which
-     *          declares a public no-arg constructor inm the {@value #BASE_PACKAGE} package. The list is in descending order
-     *          according to the value specified in the {@link Order} annotation. {@link Order#DEFAULT} used when
-     *          the type is not annotated.
+     *          declares a public no-arg constructor in the {@value #BASE_PACKAGE} package and specified additional
+     *          packages specified in the {@value ADDITIONAL_PACKAGE_SYS_PROP_KEY} system property. The list is in
+     *          descending order according to the value specified in the {@link Order} annotation.
+     *          {@link Order#DEFAULT} used when the type is not annotated.
      */
     public static <T> List<T> loadClassesImplementingInterfaceOrExtendingClass(Class<T> type) {
         Objects.requireNonNull(type, "The given type cannot be null!");
@@ -174,13 +181,43 @@ public class ClasspathUtils {
      */
     private static Reflections initReflections() {
         if(reflections == null) {
+            var additionalPackages = additionalPackages();
+            var packages = new ArrayList<>(additionalPackages);
+            packages.add(BASE_PACKAGE);
+
+            if(!additionalPackages.isEmpty()) {
+                log.debug("The following additional packages are scanned: {}", additionalPackages);
+            }
+
+            var packageUrls = packages.stream()
+                    .distinct()
+                    .map(ClasspathHelper::forPackage)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+
             reflections = new Reflections(new ConfigurationBuilder()
-                    .setUrls(ClasspathHelper.forPackage(BASE_PACKAGE))
+                    .setUrls(packageUrls)
                     .addScanners(new SubTypesScanner())
             );
         }
 
         return reflections;
+    }
+
+    /**
+     *
+     * @return
+     *          An <b>unmodifiable</b> list containing fully qualified package names specified in the
+     *          {@value ADDITIONAL_PACKAGE_SYS_PROP_KEY} system property.
+     */
+    private static List<String> additionalPackages() {
+        var additionalPackages = System.getProperty(ADDITIONAL_PACKAGE_SYS_PROP_KEY, "")
+                .split(",");
+
+        return Arrays.stream(additionalPackages)
+                .filter(StringUtils::isEmpty)
+                .map(String::trim)
+                .collect(Collectors.toList());
     }
 
 }

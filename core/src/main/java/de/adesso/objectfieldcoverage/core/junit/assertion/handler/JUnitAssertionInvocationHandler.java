@@ -1,7 +1,7 @@
 package de.adesso.objectfieldcoverage.core.junit.assertion.handler;
 
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
-import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitVersion;
+import de.adesso.objectfieldcoverage.core.junit.JUnitVersion;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
 
@@ -9,7 +9,7 @@ import spoon.reflect.declaration.CtMethod;
  * Interface abstraction for handlers of different invocations of static methods declared in
  * {@link org.junit.Assert} and {@link org.junit.jupiter.api.Assertions}.
  */
-public interface JunitAssertionInvocationHandler {
+public interface JUnitAssertionInvocationHandler {
 
     /**
      *

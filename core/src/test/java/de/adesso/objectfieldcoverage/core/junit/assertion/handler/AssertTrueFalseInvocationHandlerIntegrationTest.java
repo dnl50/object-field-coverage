@@ -1,7 +1,7 @@
 package de.adesso.objectfieldcoverage.core.junit.assertion.handler;
 
 import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
-import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitVersion;
+import de.adesso.objectfieldcoverage.core.junit.JUnitVersion;
 import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
