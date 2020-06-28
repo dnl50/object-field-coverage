@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 /**
  * {@link ReferenceTypeAssertion} implementation specifically for assertions which cover throwables
- * thrown by an expression.
+ * thrown by an expression. The asserted expression must be the expression which actually throws the exception.
  *
  * @param <T>
  *          The return type of the asserted expression.

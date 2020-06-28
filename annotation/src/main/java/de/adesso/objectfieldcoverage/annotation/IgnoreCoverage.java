@@ -6,10 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Method level annotation used to annotate test methods for which the object field coverage should not
- * be calculated.
+ * Method and type level annotation used to annotate test methods for which the object field coverage should not
+ * be calculated. Annotating a type is equivalent to annotating every method in that type.
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface IgnoreCoverage {
 

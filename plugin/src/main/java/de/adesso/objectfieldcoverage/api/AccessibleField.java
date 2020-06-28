@@ -1,7 +1,6 @@
 package de.adesso.objectfieldcoverage.api;
 
 import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtField;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
  * @see AccessibilityAwareFieldFinder
  */
 @Data
-@AllArgsConstructor
 public class AccessibleField<T> {
 
     /**
@@ -31,7 +29,8 @@ public class AccessibleField<T> {
 
     /**
      * A set containing all typed elements which grant access to the {@link #getActualField()
-     * actual field}. Neither {@code null} nor empty.
+     * actual field}. Neither {@code null} nor empty. Only contains {@link CtMethod} and {@link CtField}
+     * instances.
      */
     private Set<CtTypedElement<T>> accessGrantingElements;
 
@@ -39,6 +38,12 @@ public class AccessibleField<T> {
      * A boolean flag indication whether this field is a pseudo field.
      */
     private boolean pseudo;
+
+    public AccessibleField(CtField<T> actualField, Set<CtTypedElement<T>> accessGrantingElements, boolean pseudo) {
+        this.actualField = actualField;
+        this.accessGrantingElements = accessGrantingElements;
+        this.pseudo = pseudo;
+    }
 
     /**
      * The {@link #isPseudo() pseudo} flag is set to {@code false}.

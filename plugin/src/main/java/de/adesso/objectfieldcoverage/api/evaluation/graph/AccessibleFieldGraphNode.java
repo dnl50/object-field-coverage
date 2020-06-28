@@ -1,13 +1,14 @@
 package de.adesso.objectfieldcoverage.api.evaluation.graph;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Representation of a node in a {@link AccessibleFieldGraph}. Each node represents a single
@@ -39,7 +40,6 @@ import java.util.*;
  */
 @Getter
 @ToString
-@AllArgsConstructor
 public class AccessibleFieldGraphNode {
 
     /**
@@ -48,13 +48,26 @@ public class AccessibleFieldGraphNode {
     private final AccessibleField<?> accessibleField;
 
     /**
-     * The child nodes of {@code this} node. Might contain {@code this} node
-     * itself (cyclic reference).
-     * <br/>
-     * Must be a {@link LinkedHashSet} since a normal {@link HashSet} causes issues when adding child nodes.
+     * The child nodes of {@code this} node. Might contain {@code this} node itself (cyclic reference). Uses
+     * a list internally because of consistency problems with Java's hash set implementations.
      */
+    @Getter(AccessLevel.NONE)
     @ToString.Exclude
-    private final Set<AccessibleFieldGraphNode> children;
+    private final List<AccessibleFieldGraphNode> children;
+
+    /**
+     *
+     * @param accessibleField
+     *          The {@link AccessibleField} instance this node refers to, not {@code null}.
+     *
+     * @param children
+     *          The child nodes of {@code this} node. Might contain {@code this} node itself (cyclic reference),
+     *          not {@code null}.
+     */
+    public AccessibleFieldGraphNode(AccessibleField<?> accessibleField, Collection<AccessibleFieldGraphNode> children) {
+        this.accessibleField = accessibleField;
+        this.children = new ArrayList<>(children);
+    }
 
     /**
      *
@@ -88,13 +101,15 @@ public class AccessibleFieldGraphNode {
     public static AccessibleFieldGraphNode of(AccessibleField<?> accessibleField) {
         Objects.requireNonNull(accessibleField, "The AccessibleField of a node cannot be null!");
 
-        return new AccessibleFieldGraphNode(accessibleField, new LinkedHashSet<>());
+        return new AccessibleFieldGraphNode(accessibleField, new ArrayList<>());
     }
 
     @Override
     public int hashCode() {
-        //TODO: causes illegal reflective access JVM warnings
-        return HashCodeBuilder.reflectionHashCode(this);
+        return new HashCodeBuilder()
+                .append(this.accessibleField)
+                .append(this.getFirstLevelChildrenWithoutChildren())
+                .hashCode();
     }
 
     @Override
@@ -105,10 +120,34 @@ public class AccessibleFieldGraphNode {
             return false;
         }
 
+        var other = (AccessibleFieldGraphNode) obj;
+
         return new EqualsBuilder()
                 .setTestRecursive(true)
-                .append(this, obj)
+                .append(this.accessibleField, other.accessibleField)
+                .append(this.getFirstLevelChildrenWithoutChildren(), other.getFirstLevelChildrenWithoutChildren())
                 .isEquals();
+    }
+
+    /**
+     *
+     * @return
+     *          A <b>unmodifiable</b> set representation of the child nodes.
+     */
+    public Set<AccessibleFieldGraphNode> getChildren() {
+        return Set.copyOf(children);
+    }
+
+    /**
+     *
+     * @return
+     *          A set containing the {@link AccessibleFieldGraphNode} of the direct children of {@code this}
+     *          node without any child nodes set.
+     */
+    private Set<AccessibleFieldGraphNode> getFirstLevelChildrenWithoutChildren() {
+        return children.stream()
+                .map(childNode -> new AccessibleFieldGraphNode(childNode.getAccessibleField(), List.of()))
+                .collect(Collectors.toSet());
     }
 
 }

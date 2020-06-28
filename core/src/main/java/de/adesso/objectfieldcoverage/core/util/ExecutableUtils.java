@@ -8,6 +8,7 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.TypeFactory;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.Collection;
@@ -18,6 +19,11 @@ import java.util.Objects;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExecutableUtils {
+
+    /**
+     * The {@link TypeFactory} used to get type references from.
+     */
+    private static final TypeFactory TYPE_FACTORY = new TypeFactory();
 
     /**
      * Checks whether a given {@link CtExecutable executable} was invoked inside a given
@@ -126,10 +132,23 @@ public class ExecutableUtils {
      *          is returned otherwise.
      */
     public static boolean isVoidExecutable(CtExecutable<?> executable) {
-        var typeFactory = new TypeFactory();
-        var methodReturnType = executable.getType();
+        return isVoidExecutable(executable.getReference());
+    }
 
-        return typeFactory.VOID_PRIMITIVE.equals(methodReturnType) || typeFactory.VOID.equals(methodReturnType);
+    /**
+     *
+     * @param executableRef
+     *          The reference of an executable to check, not {@code null}.
+     *
+     * @return
+     *          {@code true}, if the {@link CtExecutableReference#getType() return type} of the given executable
+     *          is either {@link Void} or the executable is declared as <i>void</i>. {@code false}
+     *          is returned otherwise.
+     */
+    public static boolean isVoidExecutable(CtExecutableReference<?> executableRef) {
+        var methodReturnType = executableRef.getType();
+
+        return TYPE_FACTORY.VOID_PRIMITIVE.equals(methodReturnType) || TYPE_FACTORY.VOID.equals(methodReturnType);
     }
 
 }

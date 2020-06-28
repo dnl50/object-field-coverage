@@ -72,6 +72,102 @@ class PathTest {
     }
 
     @Test
+    void isEmptyReturnsTrueWhenPathDoesNotContainNodes() {
+        // given
+        var testSubject = new Path();
+
+        // when
+        var actualResult = testSubject.isEmpty();
+
+        // then
+        assertThat(actualResult).isTrue();
+    }
+
+    @Test
+    void isEmptyReturnsTrueWhenPathDoesContainsNode(@Mock AccessibleFieldGraphNode nodeMock) {
+        // given
+        var testSubject = new Path(nodeMock);
+
+        // when
+        var actualResult = testSubject.isEmpty();
+
+        // then
+        assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    void prependReturnsSamePathWhenPathIsEmpty() {
+        // given
+        var pathToPrepend = new Path();
+        var testSubject = new Path();
+
+        // when
+        var actualPath = testSubject.prepend(pathToPrepend);
+
+        // then
+        assertThat(actualPath).isSameAs(testSubject);
+    }
+
+    @Test
+    void prependReturnsSamePathWhenPathIsNull() {
+        // given
+        var testSubject = new Path();
+
+        // when
+        var actualPath = testSubject.prepend(null);
+
+        // then
+        assertThat(actualPath).isSameAs(testSubject);
+    }
+
+    @Test
+    void prependReturnsOtherPathWhenPathIsEmpty(@Mock AccessibleFieldGraphNode nodeMock) {
+        // given
+        var pathToPrepend = new Path(nodeMock);
+        var testSubject = new Path();
+
+        // when
+        var actualPath = testSubject.prepend(pathToPrepend);
+
+        // then
+        assertThat(actualPath).isSameAs(pathToPrepend);
+    }
+
+    @Test
+    void prependReturnsNewPathWhenPrependPathIsValid(@Mock AccessibleFieldGraphNode prependNodeMock,
+                                                     @Mock AccessibleFieldGraphNode nodeMock) {
+        // given
+        given(prependNodeMock.getChildren()).willReturn(Set.of(nodeMock));
+
+        var pathToPrepend = new Path(prependNodeMock);
+        var expectedPath = new Path(prependNodeMock, nodeMock);
+
+        var testSubject = new Path(nodeMock);
+
+        // when
+        var actualPath = testSubject.prepend(pathToPrepend);
+
+        // then
+        assertThat(actualPath).isEqualTo(expectedPath);
+    }
+
+    @Test
+    void prependThrowsExceptionWhenLastNodeOfPrependPathIsNotAParent(@Mock AccessibleFieldGraphNode prependNodeMock,
+                                                                     @Mock AccessibleFieldGraphNode nodeMock) {
+        // given
+        var pathToPrepend = new Path(prependNodeMock);
+
+        var testSubject = new Path(nodeMock);
+
+        given(prependNodeMock.getChildren()).willReturn(Set.of());
+
+        // when / then
+        assertThatThrownBy(() -> testSubject.prepend(pathToPrepend))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The last node of the given path is not a parent node of the first node of this path!");
+    }
+
+    @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
     void toStringReturnsExpectedResultForPathOfLengthOne(@Mock AccessibleFieldGraphNode nodeMock,
                                                          @Mock AccessibleField accessibleFieldMock,

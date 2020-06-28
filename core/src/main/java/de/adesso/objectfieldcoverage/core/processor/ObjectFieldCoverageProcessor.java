@@ -4,6 +4,8 @@ import de.adesso.objectfieldcoverage.annotation.IgnoreCoverage;
 import de.adesso.objectfieldcoverage.api.*;
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
 import de.adesso.objectfieldcoverage.core.processor.evaluation.AssertionEvaluationBuilder;
+import de.adesso.objectfieldcoverage.core.util.AnnotationUtils;
+import de.adesso.objectfieldcoverage.core.util.ExecutableUtils;
 import de.adesso.objectfieldcoverage.core.util.TypeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +56,12 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         if(!TypeUtils.isPotentialTestClass(clazz)) {
             log.debug("Class '{}' is not a potential test class since it is not declared in a source file matching " +
                     "the criteria!", clazz.getQualifiedName());
+            return;
+        }
+
+        if(AnnotationUtils.isAnnotatedWith(clazz, IgnoreCoverage.class)) {
+            log.debug("Class '{}' is annotated with @IgnoreCoverage and will therefore be ignored!",
+                    clazz.getQualifiedName());
             return;
         }
 
@@ -138,7 +146,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
                 .flatMap(List::stream)
                 .distinct()
                 .filter(testMethod -> {
-                    if(testMethod.getAnnotation(IgnoreCoverage.class) != null) {
+                    if(AnnotationUtils.isAnnotatedWith(testMethod, IgnoreCoverage.class)) {
                         log.info("Test method '{}' will be ignored since it is annotated with the @IgnoreCoverage annotation!",
                                 testMethod.getSignature());
                         return false;
@@ -173,6 +181,16 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
                 .map(assertionFinder -> assertionFinder.findAssertions(testMethod, helperMethods))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
+    }
+
+    boolean isNonVoidExecutableOrThrows(CtInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+        return !ExecutableUtils.isVoidExecutable(invocation.getExecutable()) ||
+                throwsThrowable(invocation, testMethod, helperMethods);
+    }
+
+    boolean throwsThrowable(CtInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+        return invocationThrowableAnalyzers.stream()
+                .anyMatch(analyzer -> analyzer.isExpectedToRaiseThrowable(invocation, testMethod, helperMethods));
     }
 
 }

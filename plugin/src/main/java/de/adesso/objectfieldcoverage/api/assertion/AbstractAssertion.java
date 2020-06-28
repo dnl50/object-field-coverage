@@ -18,7 +18,8 @@ public interface AbstractAssertion<T> {
     /**
      *
      * @return
-     *          The {@link CtExpression} which {@code this} assertion asserts, not {@code null}.
+     *          The {@link CtExpression} which {@code this} assertion asserts, not {@code null}. Must be the actual
+     *          invocation or field access on the target instance.
      */
     CtExpression<T> getAssertedExpression();
 

@@ -83,6 +83,16 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
     /**
      *
      * @return
+     *          {@code true}, if {@code this} path does not contain any node. {@code false} is returned
+     *          otherwise.
+     */
+    public boolean isEmpty() {
+        return nodes.isEmpty();
+    }
+
+    /**
+     *
+     * @return
      *          An optional of the last node of {@code this} path or an empty
      *          optional in case the path has a {@link #getLength() length} of zero.
      */
@@ -106,7 +116,7 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
      *          The node which should be appended to {@code this} path.
      *
      * @return
-     *          {@code this} path.
+     *          {@code this} path with the given {@code node} appended.
      */
     public Path append(AccessibleFieldGraphNode node) {
         if(node != null) {
@@ -120,6 +130,37 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
         }
 
         return this;
+    }
+
+    /**
+     *
+     * @param path
+     *          The path which should be prepended to {@code this} path, may be {@code null}. The last node
+     *          of the given path must be a parent node of the first node of {@code this} path.
+     *
+     * @return
+     *          A <b>new</b> path which results from prepending the given {@code path} to {@code this} path.
+     */
+    public Path prepend(Path path) {
+        if(path == null || path.isEmpty()) {
+            return this;
+        } else if(this.isEmpty()) {
+            return path;
+        }
+
+        var otherPathLastNode = path.nodes.get(path.nodes.size() - 1);
+        var thisFirstNode = this.nodes.get(0);
+
+        if(!otherPathLastNode.getChildren().contains(thisFirstNode)) {
+            throw new IllegalArgumentException("The last node of the given path is not a parent node of the first " +
+                    "node of this path!");
+        }
+
+        var nodes = new ArrayList<AccessibleFieldGraphNode>(path.nodes.size() + this.nodes.size());
+        nodes.addAll(path.nodes);
+        nodes.addAll(this.nodes);
+
+        return new Path(nodes);
     }
 
     /**
@@ -169,7 +210,7 @@ public class Path implements Iterable<AccessibleFieldGraphNode> {
      *          path as specified on the {@link #nodes} field. {@code false} is returned otherwise.
      */
     private boolean isValidPath(List<AccessibleFieldGraphNode> nodes) {
-        if(nodes == null || nodes.size() <= 1) {
+        if(nodes.size() <= 1) {
             return true;
         }
 

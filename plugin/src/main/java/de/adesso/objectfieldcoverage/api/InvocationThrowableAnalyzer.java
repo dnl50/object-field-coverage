@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Functional interface abstraction to analyze whether a given {@link CtInvocation} is expected to raise
- * a {@link Throwable}.
+ * a {@link Throwable}. Every implementation <b>must</b> provide a public no-arg constructor.
  */
 @FunctionalInterface
 public interface InvocationThrowableAnalyzer {
