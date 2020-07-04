@@ -1,10 +1,12 @@
 package de.adesso.objectfieldcoverage.api.assertion.reference;
 
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtMethod;
 
+@EqualsAndHashCode
 @RequiredArgsConstructor
 public abstract class ReferenceTypeAssertion<T> implements AbstractAssertion<T> {
 

@@ -36,7 +36,7 @@ public class JUnitInvocationThrowableAnalyzer implements InvocationThrowableAnal
      */
     @SuppressWarnings("unused")
     public JUnitInvocationThrowableAnalyzer() {
-        this.jUnitAssertionFinder = new JUnitAssertionFinder(List.of(new AssertThrowsInvocationHandler()));
+        this.jUnitAssertionFinder = new JUnitAssertionFinder(List.of(assertThrowsInvocationHandler));
     }
 
     /**

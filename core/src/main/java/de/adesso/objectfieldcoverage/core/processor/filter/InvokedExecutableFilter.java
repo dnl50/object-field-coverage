@@ -10,6 +10,7 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public class InvokedExecutableFilter implements Predicate<CtExecutable<?>> {
     /**
      * A set containing all executable references which are invoked inside the given methods.
      */
-    private Set<CtExecutableReference<?>> invokedExecutables;
+    private Set<CtExecutable<?>> invokedExecutables;
 
     /**
      *
@@ -47,18 +48,20 @@ public class InvokedExecutableFilter implements Predicate<CtExecutable<?>> {
             initInvokedExecutables();
         }
 
-        return invokedExecutables.contains(executable.getReference());
+        return invokedExecutables.contains(executable);
     }
 
     /**
      * Sets the {@link #invokedExecutables} to a set containing all executables which
-     * are invoked inside the given methods.
+     * are invoked inside the given methods for which a executable reference is present.
      */
     private void initInvokedExecutables() {
         this.invokedExecutables = methodsToFindInvocationsIn.stream()
                 .map(method -> method.getElements(new TypeFilter<CtInvocation<?>>(CtInvocation.class)))
                 .flatMap(Collection::stream)
                 .map(CtAbstractInvocation::getExecutable)
+                .map(CtExecutableReference::getDeclaration)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
         if(log.isDebugEnabled()) {

@@ -5,7 +5,11 @@ import de.adesso.objectfieldcoverage.core.util.ClasspathUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.MavenLauncher;
+import spoon.reflect.declaration.CtClass;
 import spoon.support.QueueProcessingManager;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 class ObjectFieldCoverageProcessorIntegrationTest {
 
@@ -17,6 +21,8 @@ class ObjectFieldCoverageProcessorIntegrationTest {
         launcher.getEnvironment().setAutoImports(true);
         launcher.run();
 
+        var prefilter = (Predicate<CtClass<?>>) clazz -> !clazz.getSimpleName().equals("ImmutablePairTest");
+
         var factory = launcher.getFactory();
         var processingManager = new QueueProcessingManager(factory);
 
@@ -26,9 +32,11 @@ class ObjectFieldCoverageProcessorIntegrationTest {
         var assertionFinders = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(AssertionFinder.class);
         var equalsMethodAnalyzers = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(EqualsMethodAnalyzer.class);
         var invocationThrowableAnalyzers = ClasspathUtils.loadClassesImplementingInterfaceOrExtendingClass(InvocationThrowableAnalyzer.class);
+        var invocationResultTracker = new InvocationResultTracker();
 
         var processor = new ObjectFieldCoverageProcessor(targetExecutableFinders, fieldFinders, testMethodFinders,
-                assertionFinders, equalsMethodAnalyzers, invocationThrowableAnalyzers);
+                assertionFinders, equalsMethodAnalyzers,invocationThrowableAnalyzers, invocationResultTracker, List.of(prefilter));
+
         processingManager.addProcessor(processor);
         processingManager.process(factory.Class().getAll());
     }

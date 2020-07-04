@@ -16,6 +16,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+//TODO: Test
+
 /**
  * Utility class providing static methods for executable invocations and more.
  */
@@ -36,8 +38,8 @@ public class ProcessorUtils {
      *          collection and which are invoked inside the given methods.
      */
     public static Set<CtExecutable<?>> filterInvokedExecutables(Collection<CtMethod<?>> methods, Collection<CtExecutable<?>> executables) {
-        var methodsSet = methods == null ? Set.<CtMethod<?>>of() : Set.copyOf(methods);
-        var invokedExecutableFilter = new InvokedExecutableFilter(methodsSet);
+        var methodSet = methods == null ? Set.<CtMethod<?>>of() : Set.copyOf(methods);
+        var invokedExecutableFilter = new InvokedExecutableFilter(methodSet);
 
         return executables.stream()
                 .filter(invokedExecutableFilter)
@@ -78,13 +80,10 @@ public class ProcessorUtils {
      * @param executable
      *          The executable to find the invocations of, not {@code null}.
      *
-     * @param <T>
-     *          The return type of the executable.
-     *
      * @return
      *          A set containing all invocations of the given {@code executable}.
      */
-    public static <T> Set<CtInvocation<T>> findInvocationsOfExecutable(Set<CtMethod<?>> methods, CtExecutable<T> executable) {
+    public static Set<CtInvocation<?>> findInvocationsOfExecutable(Set<CtMethod<?>> methods, CtExecutable<?> executable) {
         var invocationFilter = new ExecutableInvocationTypeFilter<>(executable);
 
         return methods.stream()

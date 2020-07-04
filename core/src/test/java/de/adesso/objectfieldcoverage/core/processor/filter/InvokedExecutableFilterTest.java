@@ -28,15 +28,16 @@ class InvokedExecutableFilterTest {
                                                 @Mock CtInvocation<Integer> secondInvocationMock,
                                                 @Mock CtExecutableReference<String> firstExecutableRefMock,
                                                 @Mock CtExecutableReference<Integer> secondExecutableRefMock,
-                                                @Mock CtExecutable<String> firstExecutableMock) {
+                                                @Mock CtExecutable<String> firstExecutableMock,
+                                                @Mock CtExecutable<Integer> secondExecutableMock) {
         // given
         given(firstMethodMock.getElements(any(TypeFilter.class))).willReturn(List.of(firstInvocationMock));
         given(secondMethodMock.getElements(any(TypeFilter.class))).willReturn(List.of(secondInvocationMock));
 
         given(firstInvocationMock.getExecutable()).willReturn(firstExecutableRefMock);
+        given(firstExecutableRefMock.getDeclaration()).willReturn(firstExecutableMock);
         given(secondInvocationMock.getExecutable()).willReturn(secondExecutableRefMock);
-
-        given(firstExecutableMock.getReference()).willReturn(firstExecutableRefMock);
+        given(secondExecutableRefMock.getDeclaration()).willReturn(secondExecutableMock);
 
         var testSubject = new InvokedExecutableFilter(Set.of(firstMethodMock, secondMethodMock));
 
@@ -51,13 +52,10 @@ class InvokedExecutableFilterTest {
     @SuppressWarnings("unchecked")
     void testReturnsFalseWhenExecutableIsNotInvoked(@Mock CtMethod<String> firstMethodMock,
                                                     @Mock CtMethod<Integer> secondMethodMock,
-                                                    @Mock CtExecutableReference<String> executableRefMock,
                                                     @Mock CtExecutable<String> executableMock) {
         // given
         given(firstMethodMock.getElements(any(TypeFilter.class))).willReturn(List.of());
         given(secondMethodMock.getElements(any(TypeFilter.class))).willReturn(List.of());
-
-        given(executableMock.getReference()).willReturn(executableRefMock);
 
         var testSubject = new InvokedExecutableFilter(Set.of(firstMethodMock, secondMethodMock));
 

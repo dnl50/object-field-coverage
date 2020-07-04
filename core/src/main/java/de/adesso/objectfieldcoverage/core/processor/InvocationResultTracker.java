@@ -65,7 +65,7 @@ public class InvocationResultTracker {
      *          The expression which is based on the result of the given {@code targetMethodInvocation},
      *          not {@code null}.
      *
-     * @param targetMethodInvocation
+     * @param targetExecutableInvocation
      *          The
      *
      * @param accessibleFieldGraph
@@ -75,15 +75,15 @@ public class InvocationResultTracker {
      *          An optional containing the
      */
     public Optional<Path> getPathPrefixForAccess(CtExpression<?> expression,
-                                                 CtInvocation<?> targetMethodInvocation,
+                                                 CtInvocation<?> targetExecutableInvocation,
                                                  AccessibleFieldGraph accessibleFieldGraph) {
-        if(!accessesTargetInvocationResult(expression, targetMethodInvocation)) {
+        if(!accessesTargetInvocationResult(expression, targetExecutableInvocation)) {
             log.warn("The expression '{}' does not access the result of " +
-                    "the target invocation '{}'!", expression, targetMethodInvocation);
+                    "the target invocation '{}'!", expression, targetExecutableInvocation);
             return Optional.empty();
         }
 
-        return Optional.ofNullable(getPathPrefixForAccessInternal(expression, targetMethodInvocation,
+        return Optional.ofNullable(getPathPrefixForAccessInternal(expression, targetExecutableInvocation,
                 accessibleFieldGraph, new ArrayList<>()));
     }
 
