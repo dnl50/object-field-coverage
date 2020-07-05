@@ -156,10 +156,16 @@ public class AccessibleFieldGraph implements Iterable<AccessibleFieldGraphNode> 
      * the <i>transitive reachability set</i> (<i>transitive Erreichbarkeitsmenge</i>).
      *
      * @return An <b>unmodifiable</b> set containing the {@link Path}s in the <i>transitive reachability set</i>
-     * (<i>transitive Erreichbarkeitsmenge</i>), not {@code null}.
+     * (<i>transitive Erreichbarkeitsmenge</i>), not {@code null}. A set containing a single empty path is returned when
+     * the path does not contain any root nodes.
      */
     public Set<Path> getTransitiveReachabilityPaths() {
         if(transitiveReachabilityPaths != null) {
+            return transitiveReachabilityPaths;
+        }
+
+        if(rootNodes.isEmpty()) {
+            this.transitiveReachabilityPaths = Set.of(new Path());
             return transitiveReachabilityPaths;
         }
 

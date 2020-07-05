@@ -14,7 +14,8 @@ import java.util.List;
 public interface AssertionFinder {
 
     /**
-     * TODO: JavaDoc: what is a helper method?
+     * A helper method is a method which is declared in the same class or a parent class
+     * of the given {@code testMethod} which is invoked inside the given {@code testMethod}.
      *
      * @param testMethod
      *          The test method to find assertions in, not {@code null}.

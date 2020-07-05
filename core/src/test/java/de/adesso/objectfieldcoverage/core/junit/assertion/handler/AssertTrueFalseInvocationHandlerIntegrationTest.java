@@ -1,6 +1,6 @@
 package de.adesso.objectfieldcoverage.core.junit.assertion.handler;
 
-import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
+import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeAssertion;
 import de.adesso.objectfieldcoverage.core.junit.JUnitVersion;
 import de.adesso.objectfieldcoverage.test.AbstractSpoonIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,7 +90,7 @@ class AssertTrueFalseInvocationHandlerIntegrationTest extends AbstractSpoonInteg
                 .get(invocationIndex);
 
         var expectedExpression = (CtExpression<Boolean>) givenInvocation.getArguments().get(0);
-        var expectedAssertion = new BooleanTypeAssertion(expectedExpression, testMethod, false);
+        var expectedAssertion = new PrimitiveTypeAssertion<>(expectedExpression, testMethod, false);
 
         // when
         var actualAssertion = testSubject.getAssertion(givenInvocation, testMethod, JUnitVersion.FIVE);
@@ -111,7 +111,7 @@ class AssertTrueFalseInvocationHandlerIntegrationTest extends AbstractSpoonInteg
                 .get(invocationIndex);
 
         var expectedExpression = (CtExpression<Boolean>) givenInvocation.getArguments().get(0);
-        var expectedAssertion = new BooleanTypeAssertion(expectedExpression, testMethod, false);
+        var expectedAssertion = new PrimitiveTypeAssertion<>(expectedExpression, testMethod, false);
 
         // when
         var actualAssertion = testSubject.getAssertion(givenInvocation, testMethod, JUnitVersion.FOUR);
@@ -132,7 +132,7 @@ class AssertTrueFalseInvocationHandlerIntegrationTest extends AbstractSpoonInteg
                 .get(invocationIndex);
 
         var expectedExpression = (CtExpression<Boolean>) givenInvocation.getArguments().get(1);
-        var expectedAssertion = new BooleanTypeAssertion(expectedExpression, testMethod, false);
+        var expectedAssertion = new PrimitiveTypeAssertion<>(expectedExpression, testMethod, false);
 
         // when
         var actualAssertion = testSubject.getAssertion(givenInvocation, testMethod, JUnitVersion.FOUR);

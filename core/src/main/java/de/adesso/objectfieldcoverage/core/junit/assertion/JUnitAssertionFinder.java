@@ -19,6 +19,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * {@link AssertionFinder} implementation for static assertion method invocations on the
+ * {@link org.junit.Assert} / {@link org.junit.jupiter.api.Assertions} classes.
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class JUnitAssertionFinder implements AssertionFinder {
@@ -33,6 +37,10 @@ public class JUnitAssertionFinder implements AssertionFinder {
      */
     private static final String JUNIT_4_ASSERT_QUALIFIED_NAME = "org.junit.Assert";
 
+    /**
+     * The {@link JUnitAssertionInvocationHandler}s the static method invocations on the {@link org.junit.Assert} /
+     * {@link org.junit.jupiter.api.Assertions} class will be passed to.
+     */
     private final List<JUnitAssertionInvocationHandler> JUnitAssertionInvocationHandlers;
 
     /**

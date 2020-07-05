@@ -1,7 +1,7 @@
 package de.adesso.objectfieldcoverage.core.processor.evaluation;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
-import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
+import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeAssertion;
 import de.adesso.objectfieldcoverage.api.evaluation.AssertionEvaluationInformation;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraph;
 import de.adesso.objectfieldcoverage.api.evaluation.graph.AccessibleFieldGraphNode;
@@ -63,7 +63,7 @@ class AssertionEvaluationBuilderIntegrationTest extends AbstractSpoonIntegration
         var testMethod = (CtMethod<Boolean>) findMethodWithSimpleName(testClass, "isTestReturnsTrue");
         var assertedExpression = (CtInvocation<Boolean>) testMethod.getElements(new TypeFilter<>(CtInvocation.class))
                 .get(1);
-        var givenAssertion = new BooleanTypeAssertion(assertedExpression, testMethod);
+        var givenAssertion = new PrimitiveTypeAssertion<>(assertedExpression, testMethod, false);
 
         // when
         var actualResult = testSubject.build(givenAssertion);

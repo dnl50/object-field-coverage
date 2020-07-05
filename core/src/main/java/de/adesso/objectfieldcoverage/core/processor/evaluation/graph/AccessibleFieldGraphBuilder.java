@@ -146,6 +146,12 @@ public class AccessibleFieldGraphBuilder {
 
             var accessibleFieldsInProcessedType = this.findAccessibleFields(currentlyProcessedTypeRef, fieldFilter);
 
+            if(accessibleFieldsInProcessedType.isEmpty() && isFirstLoop) {
+                log.info("No accessible fields in '{}' found in first loop! Breaking loop...",
+                        currentlyProcessedTypeRef.getQualifiedName());
+                break;
+            }
+
             log.info("Found {} accessible fields in '{}'!",
                     accessibleFieldsInProcessedType.size(), currentlyProcessedTypeRef.getQualifiedName());
 
@@ -161,6 +167,7 @@ public class AccessibleFieldGraphBuilder {
                     .filter(Predicate.not(AccessibleField::isPseudo))
                     .map(AccessibleField::getActualField)
                     .map(CtField::getType)
+                    .map(CtTypeReference::getTypeErasure)
                     .filter(Objects::nonNull)
                     .distinct()
                     .filter(Predicate.not(processedFieldDeclaringTypes::contains))

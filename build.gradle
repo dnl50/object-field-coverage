@@ -36,6 +36,7 @@ subprojects {
             dependency "org.apache.commons:commons-lang3:${commonsLangVersion}"
             dependency "commons-io:commons-io:${commonsIoVersion}"
             dependency "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+            dependency "org.junit.jupiter:junit-jupiter-params:${junitJupiterVersion}"
         }
     }
 
@@ -57,6 +58,7 @@ subprojects {
         // JUnit + Mockito + AssertJ
         testImplementation 'org.junit.jupiter:junit-jupiter-engine'
         testImplementation 'org.mockito:mockito-junit-jupiter'
+        testImplementation 'org.junit.jupiter:junit-jupiter-params'
         testImplementation 'org.assertj:assertj-core'
 
         // Lombok

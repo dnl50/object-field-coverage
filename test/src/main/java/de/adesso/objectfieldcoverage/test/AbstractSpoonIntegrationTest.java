@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractSpoonIntegrationTest {
 
     /**
-     * Uses Java 11 as the compliance level.
+     * Uses Java 11 as the compliance level and disables compilation on the internally used Launcher.
      *
      * @param sourceFilePaths
      *          The paths of the Java files which be part of the built model relative to the resources
@@ -39,6 +39,7 @@ public abstract class AbstractSpoonIntegrationTest {
 
         launcher.getEnvironment().setComplianceLevel(11);
         launcher.getEnvironment().setAutoImports(true);
+        launcher.getEnvironment().setShouldCompile(false);
         launcher.run();
 
         return launcher.getModel();

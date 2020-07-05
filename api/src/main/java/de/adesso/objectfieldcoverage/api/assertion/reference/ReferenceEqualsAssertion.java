@@ -7,8 +7,24 @@ import spoon.reflect.declaration.CtMethod;
 
 import java.util.Set;
 
+/**
+ * {@link ReferenceTypeAssertion} for for reference type expressions which are
+ * compared using the {@code ==} operator.
+ *
+ * @param <T>
+ *          The return type of the asserted expression.
+ */
 public class ReferenceEqualsAssertion<T> extends ReferenceTypeAssertion<T> {
 
+    /**
+     *
+     * @param assertedExpression
+     *          The {@link CtExpression} which {@code this} assertion asserts, not {@code null}. Must be the actual
+     *          invocation or field access on the target instance.
+     *
+     * @param originTestMethod
+     *          The {@link CtMethod} {@code this} assertion originates from, not {@code null}.
+     */
     public ReferenceEqualsAssertion(CtExpression<T> assertedExpression, CtMethod<?> originTestMethod) {
         super(assertedExpression, originTestMethod);
     }

@@ -1,6 +1,5 @@
 package de.adesso.objectfieldcoverage.api.assertion.primitive;
 
-import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import spoon.reflect.code.CtExpression;
@@ -65,7 +64,7 @@ public class PrimitiveTypeUtils {
 
     /**
      * Static utility method to evaluate whether a given {@link CtExpression} can be used
-     * to build a {@link BooleanTypeAssertion}.
+     * to build a {@link PrimitiveTypeAssertion}.
      *
      * @param expression
      *          The expression to check, not {@code null}.
@@ -74,13 +73,12 @@ public class PrimitiveTypeUtils {
      *          {@code true}, if the given {@code expression}'s type is equal to either
      *          {@link TypeFactory#BOOLEAN_PRIMITIVE} or {@link TypeFactory#BOOLEAN}.
      */
-    public static boolean isCandidateForBooleanTypeAssertion(CtExpression<?> expression) {
+    public static boolean isCandidateForPrimitiveTypeAssertion(CtExpression<?> expression) {
         Objects.requireNonNull(expression, "expression cannot be null!");
 
-        var expressionType = expression.getType();
+        var expressionTypeRef = expression.getType();
 
-        return TYPE_FACTORY.BOOLEAN_PRIMITIVE.equals(expressionType) ||
-                TYPE_FACTORY.BOOLEAN.equals(expressionType);
+        return PRIMITIVE_TYPE_REFERENCES.contains(expressionTypeRef);
     }
 
     /**

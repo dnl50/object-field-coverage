@@ -2,10 +2,15 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
+import lombok.NoArgsConstructor;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.Set;
 
+/**
+ * {@link EqualsMethodAnalyzer} implementation for
+ */
+@NoArgsConstructor
 public class JavaPackageEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
 
     /**

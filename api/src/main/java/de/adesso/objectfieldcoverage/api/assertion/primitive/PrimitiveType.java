@@ -1,26 +1,59 @@
 package de.adesso.objectfieldcoverage.api.assertion.primitive;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.EnumSet;
+
+/**
+ * Enum containing an entry for each of the 8 primitive types.
+ */
+@Getter
 @RequiredArgsConstructor
 public enum PrimitiveType {
 
-    BOOLEAN("boolean"),
+    BOOLEAN("boolean", true),
 
-    BYTE("byte"),
+    BYTE("byte", false),
 
-    CHAR("char"),
+    CHAR("char", false),
 
-    SHORT("short"),
+    SHORT("short", false),
 
-    INT("int"),
+    INT("int", false),
 
-    LONG("long"),
+    LONG("long", false),
 
-    FLOAT("float"),
+    FLOAT("float", false),
 
-    DOUBLE("double");
+    DOUBLE("double", false);
 
-    private final String name;
+    /**
+     * The simple name of the primitive type.
+     */
+    private final String simpleName;
+
+    /**
+     * A boolean flag indicating whether reference equality comparisons results in covered paths.
+     */
+    private final boolean referenceEqualitySupported;
+
+    /**
+     *
+     * @param simpleName
+     *          The simple name to find a {@link PrimitiveType} enum constant for.
+     *
+     * @return
+     *          The {@link PrimitiveType} enum constant with the corresponding name, not {@code null}.
+     *
+     * @throws IllegalArgumentException
+     *          When no {@link PrimitiveType} enum constant with the given {@code simpleName} was found.
+     */
+    public static PrimitiveType of(String simpleName) {
+        return EnumSet.allOf(PrimitiveType.class).stream()
+            .filter(primitiveType -> primitiveType.getSimpleName().equals(simpleName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(String.format("No PrimitiveType constant with name '%s' found!", simpleName)));
+    }
 
 }

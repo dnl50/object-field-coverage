@@ -1,7 +1,6 @@
 package de.adesso.objectfieldcoverage.core.junit.assertion.handler;
 
-import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
-import de.adesso.objectfieldcoverage.api.assertion.primitive.bool.BooleanTypeAssertion;
+import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeAssertion;
 import de.adesso.objectfieldcoverage.core.junit.JUnitVersion;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,13 +66,13 @@ public class AssertTrueFalseInvocationHandler implements JUnitAssertionInvocatio
      *          The JUnit version the invoked method is declared in, not {@code null}.
      *
      * @return
-     *
+     *          A {@link PrimitiveTypeAssertion}.
      */
     @Override
-    public AbstractAssertion<?> getAssertion(CtInvocation<?> staticAssertInvocation, CtMethod<?> testMethod, JUnitVersion junitVersion) {
+    public PrimitiveTypeAssertion<Boolean> getAssertion(CtInvocation<?> staticAssertInvocation, CtMethod<?> testMethod, JUnitVersion junitVersion) {
         var assertedBooleanExpression = getBooleanExpression(staticAssertInvocation, junitVersion);
 
-        return new BooleanTypeAssertion(assertedBooleanExpression, testMethod);
+        return new PrimitiveTypeAssertion<>(assertedBooleanExpression, testMethod, false);
     }
 
     private boolean isPrimitiveTypeCall(CtInvocation<?> staticAssertInvocation, JUnitVersion junitVersion) {

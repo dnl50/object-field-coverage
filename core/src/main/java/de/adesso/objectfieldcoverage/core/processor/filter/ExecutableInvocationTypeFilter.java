@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.processor.filter;
 
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 import java.util.Objects;
@@ -45,7 +46,27 @@ public class ExecutableInvocationTypeFilter<T> extends TypeFilter<CtInvocation<T
             return false;
         }
 
-        return executable.getReference().equals(invocation.getExecutable());
+        var invocationQualifiedSignature = buildQualifiedSignature(invocation.getExecutable());
+        var executableSignature = buildQualifiedSignature(executable.getReference());
+
+        return executableSignature.equals(invocationQualifiedSignature);
+    }
+
+    /**
+     *
+     * @param executableReference
+     *          The {@link CtExecutableReference} to build the string for, not {@code null}.
+     *
+     * @return
+     *          The {@link CtExecutableReference#getSignature() signature} of the given {@code executableReference}
+     *          prefixed with the qualified name of the declaring type.
+     */
+    private String buildQualifiedSignature(CtExecutableReference<?> executableReference) {
+        var signature = executableReference.getSignature();
+        var declaringTypeQn = executableReference.getDeclaringType()
+                .getQualifiedName();
+
+        return String.format("%s.%s", declaringTypeQn, signature);
     }
 
 }

@@ -24,7 +24,7 @@ class PrimitiveTypeUtilsTest {
         given(expressionMock.getType()).willReturn(booleanPrimitive);
 
         // when
-        var actualResult = PrimitiveTypeUtils.isCandidateForBooleanTypeAssertion(expressionMock);
+        var actualResult = PrimitiveTypeUtils.isCandidateForPrimitiveTypeAssertion(expressionMock);
 
         // then
         assertThat(actualResult).isTrue();
@@ -38,7 +38,7 @@ class PrimitiveTypeUtilsTest {
         given(expressionMock.getType()).willReturn(booleanWrapper);
 
         // when
-        var actualResult = PrimitiveTypeUtils.isCandidateForBooleanTypeAssertion(expressionMock);
+        var actualResult = PrimitiveTypeUtils.isCandidateForPrimitiveTypeAssertion(expressionMock);
 
         // then
         assertThat(actualResult).isTrue();
@@ -52,7 +52,7 @@ class PrimitiveTypeUtilsTest {
         given(expressionMock.getType()).willReturn(typeRefMock);
 
         // when
-        var actualResult = PrimitiveTypeUtils.isCandidateForBooleanTypeAssertion(expressionMock);
+        var actualResult = PrimitiveTypeUtils.isCandidateForPrimitiveTypeAssertion(expressionMock);
 
         // then
         assertThat(actualResult).isFalse();

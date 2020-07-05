@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeInformation;
+import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.reference.CtTypeReference;
 
 import java.util.*;
@@ -145,6 +146,26 @@ public class TypeUtils {
         return false;
     }
 
+    /**
+     *
+     * @param typeMember
+     *          The type member to get the enclosing types for, not {@code null}.
+     *
+     * @return
+     *          A list containing the enclosing types. Sorted from inner to outer types.
+     */
+    public static List<CtType<?>> getEnclosingTypes(CtTypeMember typeMember) {
+        var enclosingTypes = new ArrayList<CtType<?>>();
+
+        var currentDeclaringType = typeMember.getDeclaringType();
+        while (currentDeclaringType != null) {
+            enclosingTypes.add(currentDeclaringType);
+
+            currentDeclaringType = currentDeclaringType.getDeclaringType();
+        }
+
+        return List.copyOf(enclosingTypes);
+    }
 
     /**
      *

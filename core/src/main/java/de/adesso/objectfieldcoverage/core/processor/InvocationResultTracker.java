@@ -98,7 +98,7 @@ public class InvocationResultTracker {
             var currentNodes = accessibleFieldGraph.getRootNodes();
 
             for(var element : accessingElements) {
-                var childNodeWithAccessGrantingElement = findChildNodeWithAccessGrantingElement(currentNodes, element);
+                var childNodeWithAccessGrantingElement = findNodeWithAccessGrantingElement(currentNodes, element);
 
                 if(childNodeWithAccessGrantingElement == null) {
                     return null;
@@ -171,11 +171,9 @@ public class InvocationResultTracker {
      *          granting elements} contains the given {@code accessGrantingElement} or {@code null} if no such
      *          node exists.
      */
-    private AccessibleFieldGraphNode findChildNodeWithAccessGrantingElement(Collection<AccessibleFieldGraphNode> nodes,
-                                                                            CtTypedElement<?> accessGrantingElement) {
+    private AccessibleFieldGraphNode findNodeWithAccessGrantingElement(Collection<AccessibleFieldGraphNode> nodes,
+                                                                       CtTypedElement<?> accessGrantingElement) {
         var childNodeWithAccessGrantingElement = nodes.stream()
-                .map(AccessibleFieldGraphNode::getChildren)
-                .flatMap(Collection::stream)
                 .filter(childNode -> childNode.getAccessibleField().getAccessGrantingElements().contains(accessGrantingElement))
                 .findFirst();
 

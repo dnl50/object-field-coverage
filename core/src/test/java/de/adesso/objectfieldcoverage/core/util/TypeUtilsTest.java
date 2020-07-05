@@ -8,6 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -217,6 +219,21 @@ class TypeUtilsTest {
 
         // then
         assertThat(actualResult).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void getEnclosingTypesReturnsExpectedResult(@Mock CtTypeMember typeMemberMock,
+                                                @Mock CtType declaringTypeMock) {
+        // given
+        given(typeMemberMock.getDeclaringType()).willReturn(declaringTypeMock);
+        given(declaringTypeMock.getDeclaringType()).willReturn(null);
+
+        // when
+        var actualEnclosingTypes = TypeUtils.getEnclosingTypes(typeMemberMock);
+
+        // then
+        assertThat(actualEnclosingTypes).containsExactly(declaringTypeMock);
     }
 
 }
