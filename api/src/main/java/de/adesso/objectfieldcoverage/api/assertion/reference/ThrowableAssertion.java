@@ -116,6 +116,21 @@ public class ThrowableAssertion<T> extends ReferenceTypeAssertion<T> {
         return true;
     }
 
+    /**
+     *
+     * @param simpleFieldName
+     *          The name of the simple field to find a path for, not {@code null}.
+     *
+     * @param map
+     *          A map mapping the simple name of the last node to a path which ends with a simple
+     *          field with the same simple name, not {@code null}.
+     *
+     * @return
+     *          The
+     *
+     * @throws IllegalStateException
+     *          When the given map does not contain a mapping for the given field name.
+     */
     private Path getPathEndingWithFieldFromMap(String simpleFieldName, Map<String, Path> map) {
         var pathOfField = map.get(simpleFieldName);
 

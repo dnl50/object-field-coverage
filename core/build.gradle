@@ -3,7 +3,7 @@ ext {
 }
 
 dependencies {
-    implementation project(':plugin')
+    implementation project(':api')
     implementation project(':annotation')
 
     // reflection utils for finding classes implementing interfaces and abstract classes

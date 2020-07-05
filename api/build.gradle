@@ -1,4 +1,6 @@
 dependencies {
+    implementation project(':annotation')
+
     // shared test types
     testImplementation project(':test')
 }

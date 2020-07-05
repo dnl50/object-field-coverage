@@ -1,6 +1,5 @@
 package de.adesso.objectfieldcoverage.api;
 
-import de.adesso.objectfieldcoverage.api.assertion.primitive.PrimitiveTypeUtils;
 import lombok.Data;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtField;
@@ -87,30 +86,6 @@ public class AccessibleField<T> {
      */
     public AccessibleField(CtField<T> actualField, Collection<CtTypedElement<T>> accessGrantingElements) {
         this(actualField, Set.copyOf(accessGrantingElements), false);
-    }
-
-    /**
-     *
-     * @return
-     *          {@code true}, if the contained {@link CtField}#s type is a primitive type or
-     *          a wrapper class reference type. {@code false} is returned otherwise.
-     *
-     * @see PrimitiveTypeUtils#isPrimitiveTypeField(CtField)
-     */
-    public boolean isPrimitiveTypeField() {
-        return PrimitiveTypeUtils.isPrimitiveTypeField(actualField);
-    }
-
-    /**
-     *
-     * @return
-     *          {@code true}, if the contained {@link CtField}#s type is a reference type and not one of the
-     *          primitive types wrapper classes. {@code false} is returned otherwise.
-     *
-     * @see PrimitiveTypeUtils#isPrimitiveTypeField(CtField)
-     */
-    public boolean isReferenceTypeField() {
-        return !PrimitiveTypeUtils.isPrimitiveTypeField(actualField);
     }
 
     /**
