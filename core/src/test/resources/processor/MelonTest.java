@@ -40,4 +40,9 @@ public class MelonTest {
 
     }
 
+    @TestTarget("de.adesso.test.Melon#doNothing(Object, Object, Object)")
+    void doNothingWithThreeParams() {
+
+    }
+
 }

@@ -145,6 +145,25 @@ class AnnotationBasedTargetExecutableFinderIntegrationTest extends AbstractSpoon
     }
 
     @Test
+    void findTargetExecutableWithThreeParameters() {
+        // given
+        var model = buildModel("processor/Melon.java", "processor/MelonTest.java");
+        var melonClass = findClassWithSimpleName(model, "Melon");
+        var testMethod = findClassWithSimpleName(model, "MelonTest")
+                .getMethod("doNothingWithThreeParams");
+
+        var objectTypeRef = new TypeFactory().OBJECT;
+        var expectedMethod = melonClass.getMethod("doNothing",
+                objectTypeRef, objectTypeRef, objectTypeRef);
+
+        // when
+        var actualConstructor = testSubject.findTargetExecutables(testMethod, List.of());
+
+        // then
+        assertThat(actualConstructor).containsExactly(expectedMethod);
+    }
+
+    @Test
     void findTargetExecutableWithQualifiedModelClass() {
         // given
         var model = buildModel("processor/Melon.java", "processor/MelonService.java",

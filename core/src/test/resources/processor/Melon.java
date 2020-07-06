@@ -32,4 +32,8 @@ public class Melon {
 
     }
 
+    public void doNothing(Object o1, Object o2, Object o3) {
+
+    }
+
 }

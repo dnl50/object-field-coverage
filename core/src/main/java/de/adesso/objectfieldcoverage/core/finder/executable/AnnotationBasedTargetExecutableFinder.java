@@ -112,7 +112,7 @@ public class AnnotationBasedTargetExecutableFinder implements TargetExecutableFi
      * The regex for a Java <i>FormalParameterList</i> as specified by §8.4.1 of the Java Language Specification. References
      * the simplified regex for a {@link #METHOD_FORMAL_PARAMETER_REGEX FormalParameter}.
      */
-    private static final String METHOD_FORMAL_PARAMETER_LIST_REGEX = "((" + METHOD_FORMAL_PARAMETER_REGEX + "(\\h)*,)*(\\h)*" + METHOD_FORMAL_PARAMETER_REGEX + ")";
+    private static final String METHOD_FORMAL_PARAMETER_LIST_REGEX = "(" + METHOD_FORMAL_PARAMETER_REGEX + "(," + METHOD_FORMAL_PARAMETER_REGEX + ")*)";
 
     /**
      * The complete method identifier regex to validate a given method identifier with. Accepts JavaDoc-like method
@@ -214,14 +214,16 @@ public class AnnotationBasedTargetExecutableFinder implements TargetExecutableFi
         Objects.requireNonNull(methodIdentifier, "The method identifier cannot be null!");
         Objects.requireNonNull(model, "The model cannot be null!");
 
-        if(!matchesMethodIdentifierPattern(methodIdentifier)) {
+        var trimmedIdentifier = methodIdentifier.replaceAll("\\h*", "");
+
+        if(!matchesMethodIdentifierPattern(trimmedIdentifier)) {
             log.warn("Method identifier '{}' is not a valid method identifier!", methodIdentifier);
             throw new IllegalArgumentException(String.format("Method identifier '%s' is not a valid identifier!",
                     methodIdentifier));
         }
 
-        return findTargetClassInModel(methodIdentifier, model)
-                .flatMap(targetClass -> findTargetExecutableOnTargetClass(methodIdentifier, targetClass, model));
+        return findTargetClassInModel(trimmedIdentifier, model)
+                .flatMap(targetClass -> findTargetExecutableOnTargetClass(trimmedIdentifier, targetClass, model));
     }
 
     /**
