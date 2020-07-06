@@ -30,7 +30,13 @@ public class JavaPackageEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
      */
     @Override
     public boolean overridesEquals(CtTypeReference<?> clazzRef) {
-        return clazzRef.getPackage().getQualifiedName().matches(JAVA_PACKAGE_REGEX);
+        var packageRefOfClassRef = clazzRef.getPackage();
+
+        if(packageRefOfClassRef != null) {
+            return packageRefOfClassRef.getQualifiedName().matches(JAVA_PACKAGE_REGEX);
+        }
+
+        return false;
     }
 
     /**

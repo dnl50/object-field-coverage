@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 public class InvocationResultTracker {
 
     public boolean accessesTargetInvocationResult(CtExpression<?> expression, CtAbstractInvocation<?> targetMethodInvocation) {
-        if(expression.equals(targetMethodInvocation)) {
+        if(expression == null) {
+            return false;
+        } else if(expression.equals(targetMethodInvocation)) {
             return true;
         }
 
