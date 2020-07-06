@@ -4,6 +4,7 @@ import de.adesso.objectfieldcoverage.api.*;
 import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitAssertionFinder;
 import de.adesso.objectfieldcoverage.core.junit.assertion.handler.JUnitAssertionInvocationHandler;
 import de.adesso.objectfieldcoverage.core.util.ClasspathUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import spoon.MavenLauncher;
 import spoon.support.QueueProcessingManager;
@@ -13,6 +14,7 @@ import java.util.List;
 class ObjectFieldCoverageProcessorIntegrationTest {
 
     @Test
+    @Disabled
     void process() {
         var launcher = new MavenLauncher("C:\\Users\\Daniel\\Documents\\JavaProjects\\commons-math", MavenLauncher.SOURCE_TYPE.ALL_SOURCE);
         var launcherEnv = launcher.getEnvironment();
