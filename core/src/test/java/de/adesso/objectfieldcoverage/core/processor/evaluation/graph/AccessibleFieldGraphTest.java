@@ -40,7 +40,7 @@ class AccessibleFieldGraphTest {
     }
 
     @Test
-    void getTransitiveReachabilityPathsReturnsNoPathsWhenNoRootNodes(@Mock CtTypeReference<?> typeRefMock) {
+    void getTransitiveReachabilityPathsReturnsEmptyPathWhenNoRootNodes(@Mock CtTypeReference<?> typeRefMock) {
         // given
         var testSubject = new AccessibleFieldGraph(typeRefMock, typeRefMock);
 
@@ -48,7 +48,7 @@ class AccessibleFieldGraphTest {
         var actualPaths = testSubject.getTransitiveReachabilityPaths();
 
         // then
-        assertThat(actualPaths).isEmpty();
+        assertThat(actualPaths).containsExactly(new Path());
     }
 
     @Test

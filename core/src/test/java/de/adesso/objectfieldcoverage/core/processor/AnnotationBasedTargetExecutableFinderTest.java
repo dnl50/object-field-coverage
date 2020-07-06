@@ -605,24 +605,6 @@ class AnnotationBasedTargetExecutableFinderTest {
     }
 
     @Test
-    void findTargetExecutablesThrowsExceptionWhenClassNameContainsSpaces() {
-        // given
-        var givenMethodIdentifier = "Te st#test()";
-
-        // when
-        assertIllegalArgumentExceptionIsThrown(givenMethodIdentifier);
-    }
-
-    @Test
-    void findTargetExecutablesThrowsExceptionWhenMethodNameContainsSpaces() {
-        // given
-        var givenMethodIdentifier = "test.Test#te st()";
-
-        // when
-        assertIllegalArgumentExceptionIsThrown(givenMethodIdentifier);
-    }
-
-    @Test
     void findTargetExecutablesThrowsExceptionWhenMethodNameIsMissing() {
         // given
         var givenMethodIdentifier = "test.Test#()";

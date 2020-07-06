@@ -2,7 +2,6 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
-import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.reference.CtTypeReference;
@@ -24,12 +23,11 @@ public class PseudoFieldEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
      *          The type reference to check, not {@code null}. Must be a real sub-class of {@link Object}.
      *
      * @return
-     *          {@code true}, when the given {@code clazzRef}'s qualified name ends with the suffix of a
-     *          pseudo class.
+     *          {@code true}, since every type must be checked by this implementation.
      */
     @Override
     public boolean overridesEquals(CtTypeReference<?> clazzRef) {
-        return clazzRef.getQualifiedName().endsWith(PseudoClassGenerator.PSEUDO_CLASS_SUFFIX);
+        return true;
     }
 
     /**
