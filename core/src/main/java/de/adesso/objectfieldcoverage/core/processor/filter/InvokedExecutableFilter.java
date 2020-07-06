@@ -3,7 +3,6 @@ package de.adesso.objectfieldcoverage.core.processor.filter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
@@ -57,7 +56,7 @@ public class InvokedExecutableFilter implements Predicate<CtExecutable<?>> {
      */
     private void initInvokedExecutables() {
         this.invokedExecutables = methodsToFindInvocationsIn.stream()
-                .map(method -> method.getElements(new TypeFilter<CtInvocation<?>>(CtInvocation.class)))
+                .map(method -> method.getElements(new TypeFilter<CtAbstractInvocation<?>>(CtAbstractInvocation.class)))
                 .flatMap(Collection::stream)
                 .map(CtAbstractInvocation::getExecutable)
                 .map(CtExecutableReference::getDeclaration)

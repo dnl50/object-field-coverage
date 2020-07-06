@@ -14,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.fraction.Fraction;
 import org.codehaus.plexus.util.CollectionUtils;
 import spoon.processing.AbstractProcessor;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
@@ -79,7 +80,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
     /**
      * Internal result cache.
      */
-    private final Map<Pair<CtClass<?>, CtInvocation<?>>, Fraction> coverageResult = new HashMap<>();
+    private final Map<Pair<CtClass<?>, CtAbstractInvocation<?>>, Fraction> coverageResult = new HashMap<>();
 
     /**
      * The {@link Settings} instance to modify the internal behaviour.
@@ -216,7 +217,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         }
 
         for (var invokedTargetExecutable : invokedTargetExecutables) {
-            Set<CtInvocation<?>> invocationsOfTargetExecutable = findInvocationsOfExecutable(testAndHelperMethods, invokedTargetExecutable);
+            Set<CtAbstractInvocation<?>> invocationsOfTargetExecutable = findInvocationsOfExecutable(testAndHelperMethods, invokedTargetExecutable);
             log.debug("Target executable '{}' invoked {} times!", invokedTargetExecutable.getSignature(),
                     invocationsOfTargetExecutable.size());
 
@@ -239,9 +240,9 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         log.info("Finished processing of test method '{}'!", testMethod.getSimpleName());
     }
 
-    private void processTargetExecutableInvocation(CtClass<?> testClass, CtInvocation<?> targetExecutableInvocation, List<AbstractAssertion<?>> assertions) {
+    private void processTargetExecutableInvocation(CtClass<?> testClass, CtAbstractInvocation<?> targetExecutableInvocation, List<AbstractAssertion<?>> assertions) {
         var evaluationInfoBuilder = new AssertionEvaluationBuilder(fieldFinders, equalsMethodAnalyzers);
-        var fullInfoForReturnedType = evaluationInfoBuilder.build(testClass, targetExecutableInvocation.getType());
+        var fullInfoForReturnedType = evaluationInfoBuilder.build(testClass, targetExecutableInvocation.getExecutable().getType());
 
         var coveredPaths = assertions.stream()
                 .map(assertion -> {
@@ -274,7 +275,7 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         coverageResult.put(Pair.of(testClass, targetExecutableInvocation), coverage);
     }
 
-    private void processThrowingInvocation(CtClass<?> testClass, CtInvocation<?> targetExecutableInvocation, List<AbstractAssertion<?>> assertions) {
+    private void processThrowingInvocation(CtClass<?> testClass, CtAbstractInvocation<?> targetExecutableInvocation, List<AbstractAssertion<?>> assertions) {
         if(!allExpressionsRaiseThrowable(assertions)) {
             throw new IllegalStateException("All asserted expressions must raise a throwable!");
         }
@@ -338,18 +339,18 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
                 .collect(Collectors.toList());
     }
 
-    private boolean isNonVoidExecutableOrThrows(CtInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+    private boolean isNonVoidExecutableOrThrows(CtAbstractInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
         return !ExecutableUtils.isVoidExecutable(invocation.getExecutable()) ||
                 throwsThrowable(invocation, testMethod, helperMethods);
     }
 
-    private boolean throwsThrowable(CtInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+    private boolean throwsThrowable(CtAbstractInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
         return invocationThrowableAnalyzers.stream()
                 .anyMatch(analyzer -> analyzer.isExpectedToRaiseThrowable(invocation, testMethod, helperMethods));
     }
 
-    private Map<CtInvocation<?>, List<AbstractAssertion<?>>> mapInvocationToAssertions(Collection<AbstractAssertion<?>> abstractAssertions,
-                                                                                       Collection<CtInvocation<?>> invocations) {
+    private Map<CtAbstractInvocation<?>, List<AbstractAssertion<?>>> mapInvocationToAssertions(Collection<AbstractAssertion<?>> abstractAssertions,
+                                                                                       Collection<CtAbstractInvocation<?>> invocations) {
         return invocations.stream()
                 .collect(Collectors.toMap(
                         Function.identity(),

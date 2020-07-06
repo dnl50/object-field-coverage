@@ -6,7 +6,7 @@ import de.adesso.objectfieldcoverage.core.junit.assertion.JUnitAssertionFinder;
 import de.adesso.objectfieldcoverage.core.junit.assertion.handler.AssertThrowsInvocationHandler;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.declaration.CtMethod;
 
 import java.util.List;
@@ -50,7 +50,7 @@ public class JUnitInvocationThrowableAnalyzer implements InvocationThrowableAnal
      *          {@code true}. {@code false} is returned otherwise.
      */
     @Override
-    public boolean isExpectedToRaiseThrowable(CtInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
+    public boolean isExpectedToRaiseThrowable(CtAbstractInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods) {
         CtMethod<?> parentMethod = invocation.getParent(CtMethod.class);
 
         return jUnitAssertionFinder.findAssertions(parentMethod, List.of()).stream()

@@ -1,5 +1,6 @@
 package de.adesso.objectfieldcoverage.api;
 
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
 
@@ -15,7 +16,7 @@ public interface InvocationThrowableAnalyzer {
     /**
      *
      * @param invocation
-     *          The {@link CtInvocation} which should be checked, not {@code null}.
+     *          The {@link CtAbstractInvocation} which should be checked, not {@code null}.
      *
      * @param testMethod
      *          The test method the invocation originated from, not {@code null}.
@@ -27,6 +28,6 @@ public interface InvocationThrowableAnalyzer {
      *          {@code true}, if the invocation is expected to raise a {@link Throwable}. {@code false} is returned
      *          otherwise.
      */
-    boolean isExpectedToRaiseThrowable(CtInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods);
+    boolean isExpectedToRaiseThrowable(CtAbstractInvocation<?> invocation, CtMethod<?> testMethod, List<CtMethod<?>> helperMethods);
 
 }

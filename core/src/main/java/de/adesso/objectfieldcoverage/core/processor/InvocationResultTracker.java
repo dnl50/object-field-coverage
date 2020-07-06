@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InvocationResultTracker {
 
-    public boolean accessesTargetInvocationResult(CtExpression<?> expression, CtInvocation<?> targetMethodInvocation) {
+    public boolean accessesTargetInvocationResult(CtExpression<?> expression, CtAbstractInvocation<?> targetMethodInvocation) {
         if(expression.equals(targetMethodInvocation)) {
             return true;
         }
@@ -75,7 +75,7 @@ public class InvocationResultTracker {
      *          An optional containing the
      */
     public Optional<Path> getPathPrefixForAccess(CtExpression<?> expression,
-                                                 CtInvocation<?> targetExecutableInvocation,
+                                                 CtAbstractInvocation<?> targetExecutableInvocation,
                                                  AccessibleFieldGraph accessibleFieldGraph) {
         if(!accessesTargetInvocationResult(expression, targetExecutableInvocation)) {
             log.warn("The expression '{}' does not access the result of " +
@@ -88,7 +88,7 @@ public class InvocationResultTracker {
     }
 
     private Path getPathPrefixForAccessInternal(CtExpression<?> expression,
-                                               CtInvocation<?> targetMethodInvocation,
+                                               CtAbstractInvocation<?> targetMethodInvocation,
                                                AccessibleFieldGraph accessibleFieldGraph,
                                                List<CtTypedElement<?>> accessingElements) {
         if(expression.equals(targetMethodInvocation)) {

@@ -6,6 +6,7 @@ import de.adesso.objectfieldcoverage.core.processor.filter.InvokedExecutableFilt
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
@@ -83,7 +84,7 @@ public class ProcessorUtils {
      * @return
      *          A set containing all invocations of the given {@code executable}.
      */
-    public static Set<CtInvocation<?>> findInvocationsOfExecutable(Set<CtMethod<?>> methods, CtExecutable<?> executable) {
+    public static Set<CtAbstractInvocation<?>> findInvocationsOfExecutable(Set<CtMethod<?>> methods, CtExecutable<?> executable) {
         var invocationFilter = new ExecutableInvocationTypeFilter<>(executable);
 
         return methods.stream()

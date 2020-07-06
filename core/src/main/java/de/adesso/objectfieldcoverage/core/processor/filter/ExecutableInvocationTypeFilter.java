@@ -1,6 +1,6 @@
 package de.adesso.objectfieldcoverage.core.processor.filter;
 
-import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.filter.TypeFilter;
@@ -8,12 +8,12 @@ import spoon.reflect.visitor.filter.TypeFilter;
 import java.util.Objects;
 
 /**
- * {@link TypeFilter} extension which filters for {@link CtInvocation}s of a specific {@link CtExecutable}.
+ * {@link TypeFilter} extension which filters for {@link CtAbstractInvocation}s of a specific {@link CtExecutable}.
  *
  * @param <T>
  *          The return type of the invocation.
  */
-public class ExecutableInvocationTypeFilter<T> extends TypeFilter<CtInvocation<T>> {
+public class ExecutableInvocationTypeFilter<T> extends TypeFilter<CtAbstractInvocation<T>> {
 
     /**
      * The executable to find the invocations of.
@@ -26,7 +26,7 @@ public class ExecutableInvocationTypeFilter<T> extends TypeFilter<CtInvocation<T
      *          The executable to find the invocations of, not {@code null}.
      */
     public ExecutableInvocationTypeFilter(CtExecutable<T> executable) {
-        super(CtInvocation.class);
+        super(CtAbstractInvocation.class);
 
         this.executable = Objects.requireNonNull(executable, "The executable cannot be null!");
     }
@@ -41,7 +41,7 @@ public class ExecutableInvocationTypeFilter<T> extends TypeFilter<CtInvocation<T
      *          executable. {@code false} is returned otherwise.
      */
     @Override
-    public boolean matches(CtInvocation<T> invocation) {
+    public boolean matches(CtAbstractInvocation<T> invocation) {
         if(!super.matches(invocation)) {
             return false;
         }
