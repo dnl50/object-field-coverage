@@ -1,42 +1,40 @@
 package de.adesso.objectfieldcoverage.core.junit.assertion.handler;
 
 import de.adesso.objectfieldcoverage.api.assertion.AbstractAssertion;
-import de.adesso.objectfieldcoverage.api.assertion.reference.ReferenceEqualsAssertion;
+import de.adesso.objectfieldcoverage.api.assertion.reference.NotNullAssertion;
 import de.adesso.objectfieldcoverage.core.junit.JUnitVersion;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
 
-//TODO: Test
-
 /**
- * {@link JUnitAssertionInvocationHandler} implementation for the {@code assertNull} method.
+ * {@link JUnitAssertionInvocationHandler} implementation for {@code assertNotNull} calls.
  */
-public class AssertNullInvocationHandler implements JUnitAssertionInvocationHandler {
+public class AssertNotNullInvocationHandler implements JUnitAssertionInvocationHandler {
 
     /**
-     * The simple name of the {@link org.junit.Assert#assertNull(Object)} and
-     * {@link org.junit.jupiter.api.Assertions#assertNull(Object)} method.
+     * The simple name of the {@link org.junit.Assert#assertNotNull(Object)} and
+     * {@link org.junit.jupiter.api.Assertions#assertNotNull(Object)} method.
      */
-    private static final String ASSERT_NULL_SIMPLE_NAME = "assertNull";
+    private static final String ASSERT_NOT_NULL_SIMPLE_NAME = "assertNotNull";
 
     /**
      * {@inheritDoc}
      *
      * @return
-     *          {@code true}, when the given executables simple name is equal to {@value ASSERT_NULL_SIMPLE_NAME}.
+     *          {@code true}, when the given executables simple name is equal to {@value ASSERT_NOT_NULL_SIMPLE_NAME}.
      *          {@code false} is returned otherwise.
      */
     @Override
     public boolean supports(CtInvocation<?> staticAssertInvocation, JUnitVersion junitVersion) {
-        return ASSERT_NULL_SIMPLE_NAME.equals(staticAssertInvocation.getExecutable().getSimpleName());
+        return ASSERT_NOT_NULL_SIMPLE_NAME.equals(staticAssertInvocation.getExecutable().getSimpleName());
     }
 
     /**
      * {@inheritDoc}
      *
      * @return
-     *          A {@link ReferenceEqualsAssertion} instance.
+     *          A {@link NotNullAssertion} instance.
      */
     @Override
     public AbstractAssertion<?> getAssertion(CtInvocation<?> staticAssertInvocation, CtMethod<?> testMethod, JUnitVersion junitVersion) {
@@ -59,7 +57,7 @@ public class AssertNullInvocationHandler implements JUnitAssertionInvocationHand
                 throw new IllegalStateException(String.format("Unsupported JUnit Version '%s'!", junitVersion));
         }
 
-        return new ReferenceEqualsAssertion<>(assertedExpression, testMethod);
+        return new NotNullAssertion<>(assertedExpression, testMethod);
     }
 
 }
