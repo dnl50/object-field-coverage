@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.analyzer;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
+import de.adesso.objectfieldcoverage.core.finder.pseudo.generator.PseudoClassGenerator;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.reference.CtTypeReference;
@@ -23,12 +24,12 @@ public class PseudoFieldEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
      *          The type reference to check, not {@code null}. Must be a real sub-class of {@link Object}.
      *
      * @return
-     *          {@code true}, since a type reference containing pseudo fields compares them in its equals
-     *          method by definition.
+     *          {@code true}, when the given {@code clazzRef}'s qualified name ends with the suffix of a
+     *          pseudo class.
      */
     @Override
     public boolean overridesEquals(CtTypeReference<?> clazzRef) {
-        return true;
+        return clazzRef.getQualifiedName().endsWith(PseudoClassGenerator.PSEUDO_CLASS_SUFFIX);
     }
 
     /**
@@ -64,15 +65,9 @@ public class PseudoFieldEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
      */
     @Override
     protected Set<AccessibleField<?>> findFieldsComparedInEqualsMethodInternal(CtTypeReference<?> clazzRefOverridingEquals, Set<AccessibleField<?>> accessibleFields) {
-        var accessiblePseudoFields = accessibleFields.stream()
+        return accessibleFields.stream()
                 .filter(AccessibleField::isPseudo)
                 .collect(Collectors.toSet());
-
-        if(accessiblePseudoFields.size() > 0 && accessibleFields.size() != accessiblePseudoFields.size()) {
-            log.warn("");
-        }
-
-        return accessiblePseudoFields;
     }
 
 }

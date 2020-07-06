@@ -2,6 +2,7 @@ package de.adesso.objectfieldcoverage.core.analyzer.method;
 
 import de.adesso.objectfieldcoverage.api.AccessibleField;
 import de.adesso.objectfieldcoverage.api.EqualsMethodAnalyzer;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtExecutable;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
  * objects.
  */
 @Slf4j
+@NoArgsConstructor
 public abstract class CtMethodEqualsMethodAnalyzer extends EqualsMethodAnalyzer {
 
     /**

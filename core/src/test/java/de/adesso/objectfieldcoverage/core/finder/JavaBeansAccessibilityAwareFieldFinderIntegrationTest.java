@@ -65,4 +65,32 @@ class JavaBeansAccessibilityAwareFieldFinderIntegrationTest extends AbstractSpoo
         assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void findAccessibleFieldsReturnsExpectedFieldsWithMethodAccessingGetterInSuperType() {
+        // given
+        var model = buildModel("finder/getter/Pair.java");
+        var pairClass = findClassWithSimpleName(model, "Pair");
+        var pairImplClass = findClassWithSimpleName(model, "PairImpl");
+
+        var leftField = (CtField<Integer>) pairImplClass.getField("left");
+        var getLeftMethod = (CtMethod<Integer>) findMethodWithSimpleName(pairImplClass, "getLeft");
+        var getKeyMethod = (CtMethod<Integer>) findMethodWithSimpleName(pairClass, "getKey");
+
+        var rightField = (CtField<Integer>) pairImplClass.getField("right");
+        var getRightMethod = (CtMethod<Integer>) findMethodWithSimpleName(pairImplClass, "getRight");
+        var getValueMethod = (CtMethod<Integer>) findMethodWithSimpleName(pairClass, "getValue");
+
+        var expectedFields =  Set.<AccessibleField<?>>of(
+                new AccessibleField<>(leftField, Set.of(getLeftMethod, getKeyMethod)),
+                new AccessibleField<>(rightField, Set.of(getRightMethod, getValueMethod)
+        ));
+
+        // when
+        var actualFields = testSubject.findAccessibleFields(pairImplClass, pairImplClass.getReference());
+
+        // then
+        assertThat(actualFields).containsExactlyInAnyOrderElementsOf(expectedFields);
+    }
+
 }

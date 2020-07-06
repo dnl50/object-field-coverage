@@ -19,6 +19,7 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.factory.TypeFactory;
 
 import java.util.*;
 import java.util.function.Function;
@@ -121,8 +122,29 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         log.info("Processing finished! Printing result....");
 
         var coverageResultsGroupedByClass = coverageResult.entrySet().stream()
-                .collect(Collectors.groupingBy(entry -> entry.getKey().getLeft()));
+                .map(entry -> Pair.of(entry.getKey().getLeft(), entry.getValue()))
+                .collect(Collectors.groupingBy(Pair::getKey));
 
+        coverageResultsGroupedByClass.forEach((testClass, testClassInvocationCoveragePairs) -> {
+            Fraction totalCoverage = null;
+
+            for(var invocationCoverage : testClassInvocationCoveragePairs) {
+                var currentCoverage = invocationCoverage.getRight();
+
+                if(totalCoverage == null) {
+                    totalCoverage = currentCoverage;
+                } else {
+                    totalCoverage = totalCoverage.add(currentCoverage);
+                }
+            }
+
+            if(totalCoverage != null) {
+                totalCoverage = totalCoverage.divide(testClassInvocationCoveragePairs.size());
+
+                log.info("Total Object Field Coverage for Test Class '{}': {}%", testClass.getQualifiedName(),
+                        totalCoverage.doubleValue() * 100D);
+            }
+        });
     }
 
     /**
@@ -205,7 +227,12 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
                     throw new IllegalStateException("Target executable invocation is void and does not throw!");
                 }
 
-                processTargetExecutableInvocation(testClass, invocation, assertions);
+                if(throwsThrowable(invocation, testMethod, invokedHelperMethods)) {
+                    processThrowingInvocation(testClass, invocation, assertions);
+                } else {
+                    processTargetExecutableInvocation(testClass, invocation, assertions);
+                }
+
             });
         }
 
@@ -242,9 +269,20 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
         var coverage = Fraction.getReducedFraction(coveredPathsContainedInAllPaths.size(), allPaths.size());
 
         log.info("{} out of {} paths of target executable invocation '{}' are covered! [Object Field Coverage: {}%]",
-                coveredPathsContainedInAllPaths.size(), allPaths.size(), targetExecutableInvocation, coverage);
+                coveredPathsContainedInAllPaths.size(), allPaths.size(), targetExecutableInvocation, coverage.doubleValue() * 100D);
 
         coverageResult.put(Pair.of(testClass, targetExecutableInvocation), coverage);
+    }
+
+    private void processThrowingInvocation(CtClass<?> testClass, CtInvocation<?> targetExecutableInvocation, List<AbstractAssertion<?>> assertions) {
+        if(!allExpressionsRaiseThrowable(assertions)) {
+            throw new IllegalStateException("All asserted expressions must raise a throwable!");
+        }
+
+        var evaluationInfoBuilder = new AssertionEvaluationBuilder(fieldFinders, equalsMethodAnalyzers);
+        var fullInfoForThrownType = evaluationInfoBuilder.build(testClass, new TypeFactory().createReference(Throwable.class));
+
+        log.warn("Properly implement!");
     }
 
     /**
@@ -320,20 +358,6 @@ public class ObjectFieldCoverageProcessor extends AbstractProcessor<CtClass<?>> 
                                         invocation))
                                 .collect(Collectors.toList())
                 ));
-    }
-
-    /**
-     *
-     * @param assertions
-     *          The {@link AbstractAssertion}s to check, not {@code null}.
-     *
-     * @return
-     *           {@code true}, if the {@link AbstractAssertion#expressionRaisesThrowable()} method of at least one of the
-     *           given assertions returns {@code true}. {@code false} is returned otherwise.
-     */
-    private boolean containsThrowingExpression(Collection<AbstractAssertion<?>> assertions) {
-        return assertions.stream()
-                .anyMatch(AbstractAssertion::expressionRaisesThrowable);
     }
 
     /**

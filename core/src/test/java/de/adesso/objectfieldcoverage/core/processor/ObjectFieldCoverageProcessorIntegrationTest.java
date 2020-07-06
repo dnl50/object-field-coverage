@@ -15,8 +15,10 @@ class ObjectFieldCoverageProcessorIntegrationTest {
     @Test
     void process() {
         var launcher = new MavenLauncher("C:\\Users\\Daniel\\Documents\\JavaProjects\\commons-lang", MavenLauncher.SOURCE_TYPE.ALL_SOURCE);
-        launcher.getEnvironment().setComplianceLevel(11);
-        launcher.getEnvironment().setAutoImports(true);
+        var launcherEnv = launcher.getEnvironment();
+        launcherEnv.setComplianceLevel(11);
+        launcherEnv.setCommentEnabled(false);
+        launcherEnv.setShouldCompile(false);
         launcher.run();
 
         var factory = launcher.getFactory();
